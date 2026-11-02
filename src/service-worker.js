@@ -1,7 +1,7 @@
-const CACHE_NAME = 'daymaker-shell-v4';
+const CACHE_NAME = 'daymaker-shell-v5';
 const SHELL = [
-  './', './index.html', './style.css?v=3', './app.js', './manifest.webmanifest',
-  './icons/daymaker.svg', './icons/daymaker-180.png', './icons/daymaker-192.png', './icons/daymaker-512.png'
+  './', './index.html', './style.css?v=3', './app.js', './manifest.webmanifest?v=2',
+  './icons/daymaker-bold.svg', './icons/daymaker-bold-180.png', './icons/daymaker-bold-192.png', './icons/daymaker-bold-512.png'
 ];
 
 self.addEventListener('install', event => {

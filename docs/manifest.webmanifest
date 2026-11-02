@@ -11,8 +11,8 @@
   "background_color": "#e6e5e0",
   "theme_color": "#e6e5e0",
   "icons": [
-    { "src": "./icons/daymaker-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
-    { "src": "./icons/daymaker-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
-    { "src": "./icons/daymaker-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+    { "src": "./icons/daymaker-bold-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "./icons/daymaker-bold-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "./icons/daymaker-bold-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
   ]
 }
