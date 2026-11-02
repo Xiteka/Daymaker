@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#e6e5e0">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Daymark">
+    <link rel="manifest" href="./manifest.webmanifest">
+    <link rel="icon" href="./icons/daymark.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="./icons/daymark-180.png">
+    <title>Daymark · work & money</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="app.js" defer></script>
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="topbar">
+        <a class="wordmark" href="#home" aria-label="Daymark home"><span class="mark">d.</span><span>daymark</span></a>
+        <div class="top-actions"><span class="today-pill" id="today-label">TODAY</span><button class="icon-button" id="settings-open" aria-label="Settings" title="Settings">☷</button></div>
+      </header>
+
+      <section class="page active" id="home-page" aria-labelledby="home-title">
+        <div class="welcome-row"><div><p class="eyebrow" id="month-label">YOUR MONEY THIS MONTH</p><h1 id="home-title">A little more in control<span class="period">.</span></h1></div><span class="date-stamp" id="date-stamp"></span></div>
+        <section class="balance-card">
+          <div class="balance-top"><span class="eyebrow light">TAKE-HOME SO FAR</span><span class="balance-dot" aria-hidden="true">↗</span></div>
+          <div class="balance" id="balance-value">kr 0</div>
+          <div class="balance-foot"><span>earned <b id="earned-value">kr 0</b></span><span>spent <b id="spent-value">kr 0</b></span></div>
+          <div class="balance-rule"><span id="balance-progress"></span></div>
+        </section>
+
+        <div class="stats-grid">
+          <article class="stat-card stat-work"><div class="card-label"><span>WORKED</span><span class="mini-icon">◷</span></div><div class="stat-value" id="hours-value">0<span class="unit">h</span></div><p id="shift-count">No shifts logged yet</p></article>
+          <article class="stat-card stat-expenses"><div class="card-label"><span>EXPENSES</span><span class="mini-icon">↘</span></div><div class="stat-value" id="expense-value">kr 0</div><p id="expense-count">No spending logged yet</p></article>
+        </div>
+
+        <section class="section-block"><div class="section-heading"><div><p class="eyebrow">YOUR NEXT LITTLE WIN</p><h2>Wishlist</h2></div><button class="text-link" data-go="wishlist">See all <span>↗</span></button></div><div id="home-wishlist" class="wish-preview"></div></section>
+        <section class="section-block recent-block"><div class="section-heading"><div><p class="eyebrow">FRESH FROM YOUR POCKET</p><h2>Recent activity</h2></div><button class="text-link" data-go="expenses">View all <span>↗</span></button></div><div id="home-activity" class="activity-list"></div></section>
+      </section>
+
+      <section class="page" id="work-page" aria-labelledby="work-title" hidden>
+        <div class="page-title-row"><div><p class="eyebrow">EVERY HOUR ADDS UP</p><h1 id="work-title">Work log<span class="period">.</span></h1></div><button class="primary-button" data-open="shift-dialog">＋ <span>Log shift</span></button></div>
+        <div class="summary-strip"><div><span class="eyebrow">THIS MONTH</span><strong id="work-month-hours">0 h</strong></div><div><span class="eyebrow">ESTIMATED PAY</span><strong id="work-month-pay">kr 0</strong></div><div><span class="eyebrow">HOURLY RATE</span><strong id="work-rate">kr 220<span class="small-unit">/h</span></strong></div></div>
+        <div class="section-heading list-heading"><div><p class="eyebrow">YOUR TIME, KEPT</p><h2>Shifts</h2></div></div><div id="shift-list" class="record-list"></div>
+      </section>
+
+      <section class="page" id="expenses-page" aria-labelledby="expenses-title" hidden>
+        <div class="page-title-row"><div><p class="eyebrow">SPEND WITH INTENTION</p><h1 id="expenses-title">Expenses<span class="period">.</span></h1></div><button class="primary-button" data-open="expense-dialog">＋ <span>Add expense</span></button></div>
+        <div class="expense-total-card"><span class="eyebrow light">SPENT THIS MONTH</span><strong id="expenses-month-total">kr 0</strong><span id="expenses-month-note">Your spending, all in one place.</span></div>
+        <div class="section-heading list-heading"><div><p class="eyebrow">RECENTLY</p><h2>Transactions</h2></div></div><div id="expense-list" class="record-list"></div>
+      </section>
+
+      <section class="page" id="wishlist-page" aria-labelledby="wishlist-title" hidden>
+        <div class="page-title-row"><div><p class="eyebrow">MAKE ROOM FOR WHAT YOU LOVE</p><h1 id="wishlist-title">Wishlist<span class="period">.</span></h1></div><button class="primary-button" data-open="wish-dialog">＋ <span>Add a wish</span></button></div>
+        <div class="wish-summary"><div><span class="eyebrow">SAVED FOR</span><strong id="wish-total">0 things</strong></div><div class="wish-sparkle">✳</div><p>Little by little, you’ll get there.</p></div>
+        <div id="wishlist-list" class="wishlist-grid"></div>
+      </section>
+
+      <nav class="bottom-nav" aria-label="Main navigation">
+        <button class="tab active" data-page="home" aria-current="page"><span class="tab-icon">⌂</span><span>Home</span></button>
+        <button class="tab" data-page="work"><span class="tab-icon">◷</span><span>Work</span></button>
+        <button class="tab" data-page="expenses"><span class="tab-icon">↘</span><span>Expenses</span></button>
+        <button class="tab" data-page="wishlist"><span class="tab-icon">♡</span><span>Wishlist</span></button>
+      </nav>
+    </main>
+
+    <dialog class="form-dialog" id="shift-dialog"><form id="shift-form" method="dialog"><button class="dialog-close" type="button" data-close="shift-dialog" aria-label="Close">×</button><p class="eyebrow">A GOOD DAY’S WORK</p><h2>Log a shift</h2><label>Date<input name="date" type="date" required></label><div class="field-row"><label>Hours worked<input name="hours" type="number" min="0.25" max="24" step="0.25" placeholder="e.g. 7.5" required></label><label>Hourly rate<input name="rate" type="number" min="0" step="1" placeholder="220"></label></div><label>Note <span class="optional">· optional</span><input name="note" maxlength="60" placeholder="Cafe, weekend shift…"></label><button class="primary-button submit-button" type="submit">Save shift <span>↗</span></button></form></dialog>
+    <dialog class="form-dialog" id="expense-dialog"><form id="expense-form" method="dialog"><button class="dialog-close" type="button" data-close="expense-dialog" aria-label="Close">×</button><p class="eyebrow">KEEP AN EYE ON IT</p><h2>Add an expense</h2><label>What was it?<input name="title" maxlength="60" placeholder="Coffee, groceries…" required></label><div class="field-row"><label>Amount (NOK)<input name="amount" type="number" min="1" step="0.01" placeholder="0" required></label><label>Category<select name="category"><option>Everyday</option><option>Food</option><option>Transport</option><option>Home</option><option>Fun</option><option>Other</option></select></label></div><label>Date<input name="date" type="date" required></label><button class="primary-button submit-button" type="submit">Save expense <span>↗</span></button></form></dialog>
+    <dialog class="form-dialog" id="wish-dialog"><form id="wish-form" method="dialog"><button class="dialog-close" type="button" data-close="wish-dialog" aria-label="Close">×</button><p class="eyebrow">SOMETHING TO LOOK FORWARD TO</p><h2>Add to your wishlist</h2><label>What are you saving for?<input name="title" maxlength="60" placeholder="A weekend away…" required></label><div class="field-row"><label>Price (NOK)<input name="target" type="number" min="1" step="1" placeholder="0" required></label><label>Already saved<input name="saved" type="number" min="0" step="1" value="0"></label></div><button class="primary-button submit-button" type="submit">Save this wish <span>♡</span></button></form></dialog>
+    <dialog class="form-dialog settings-dialog" id="settings-dialog"><form id="settings-form" method="dialog"><button class="dialog-close" type="button" data-close="settings-dialog" aria-label="Close">×</button><p class="eyebrow">MAKE IT YOURS</p><h2>Your settings</h2><label>Hourly pay (NOK)<input name="rate" type="number" min="0" step="1" required></label><p class="settings-note">New shifts will use this rate unless you enter a different one.</p><button class="primary-button submit-button" type="submit">Save settings <span>↗</span></button></form></dialog>
+    <dialog class="form-dialog" id="saving-dialog"><form id="saving-form" method="dialog"><button class="dialog-close" type="button" data-close="saving-dialog" aria-label="Close">×</button><p class="eyebrow">ONE STEP CLOSER</p><h2 id="saving-title">Add to your savings</h2><input name="wishId" type="hidden"><label>Amount to add (NOK)<input name="amount" type="number" min="1" step="1" placeholder="0" required></label><button class="primary-button submit-button" type="submit">Update savings <span>↗</span></button></form></dialog>
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  </body>
+</html>

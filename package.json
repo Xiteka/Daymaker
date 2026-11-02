@@ -1,0 +1,25 @@
+{
+  "name": "daymark-tracker",
+  "productName": "Daymark",
+  "version": "1.1.0",
+  "private": true,
+  "description": "A pocket tracker for work hours, pay, expenses, and savings goals",
+  "main": "main.cjs",
+  "license": "UNLICENSED",
+  "engines": {
+    "node": ">=22.13.0",
+    "npm": ">=10.9.0"
+  },
+  "scripts": {
+    "start": "electron .",
+    "preview": "node preview.cjs",
+    "package": "electron-forge package",
+    "make": "electron-forge make",
+    "make:mac": "electron-forge make --platform=darwin --arch=arm64"
+  },
+  "devDependencies": {
+    "@electron-forge/cli": "8.0.1",
+    "@electron-forge/maker-zip": "8.0.1",
+    "electron": "45.0.0"
+  }
+}

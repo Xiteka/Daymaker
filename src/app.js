@@ -1,0 +1,164 @@
+const $ = selector => document.querySelector(selector);
+const STORAGE_KEY = 'daymark-tracker-v1';
+const dateKey = date => {
+  const d = date || new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+};
+const fresh = () => ({ rate: 220, shifts: [], expenses: [], wishes: [] });
+let state;
+try {
+  const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
+  state = saved && typeof saved === 'object'
+    ? { ...fresh(), ...saved, shifts: Array.isArray(saved.shifts) ? saved.shifts : [], expenses: Array.isArray(saved.expenses) ? saved.expenses : [], wishes: Array.isArray(saved.wishes) ? saved.wishes : [] }
+    : fresh();
+} catch { state = fresh(); }
+
+const money = value => new Intl.NumberFormat('nb-NO', { style: 'currency', currency: 'NOK', maximumFractionDigits: 0 }).format(value || 0).replace(/\s/g, ' ');
+const longDate = value => new Date(`${value}T12:00:00`).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+const monthKey = dateKey().slice(0, 7);
+const monthEntries = entries => entries.filter(item => item.date?.startsWith(monthKey));
+const earnedFor = shift => Number(shift.hours) * Number(shift.rate);
+const esc = value => String(value ?? '').replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
+const persist = () => { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); render(); };
+const empty = (title, hint, symbol = '✳') => `<div class="empty-state"><span>${symbol}</span><strong>${title}</strong><p>${hint}</p></div>`;
+let toastTimer;
+function toast(message) {
+  const node = $('#toast');
+  node.textContent = message;
+  node.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => node.classList.remove('show'), 2200);
+}
+
+function render() {
+  const shifts = monthEntries(state.shifts);
+  const expenses = monthEntries(state.expenses);
+  const hours = shifts.reduce((sum, item) => sum + Number(item.hours), 0);
+  const earned = shifts.reduce((sum, item) => sum + earnedFor(item), 0);
+  const spent = expenses.reduce((sum, item) => sum + Number(item.amount), 0);
+  $('#month-label').textContent = `YOUR MONEY THIS ${new Date().toLocaleDateString('en-GB', { month: 'long' }).toUpperCase()}`;
+  $('#today-label').textContent = new Date().toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }).toUpperCase();
+  $('#date-stamp').textContent = new Date().toLocaleDateString('en-GB', { month: 'short', year: 'numeric' }).toUpperCase();
+  $('#balance-value').textContent = money(earned - spent);
+  $('#earned-value').textContent = money(earned);
+  $('#spent-value').textContent = money(spent);
+  $('#hours-value').innerHTML = `${Number.isInteger(hours) ? hours : hours.toFixed(1)}<span class="unit">h</span>`;
+  $('#shift-count').textContent = shifts.length ? `${shifts.length} ${shifts.length === 1 ? 'shift' : 'shifts'} this month` : 'No shifts logged yet';
+  $('#expense-value').textContent = money(spent);
+  $('#expense-count').textContent = expenses.length ? `${expenses.length} ${expenses.length === 1 ? 'purchase' : 'purchases'} this month` : 'No spending logged yet';
+  $('#balance-progress').style.width = `${earned ? Math.max(3, Math.min(100, ((earned - spent) / earned) * 100)) : 0}%`;
+  $('#work-month-hours').textContent = `${Number.isInteger(hours) ? hours : hours.toFixed(1)} h`;
+  $('#work-month-pay').textContent = money(earned);
+  $('#work-rate').innerHTML = `${money(state.rate)}<span class="small-unit">/h</span>`;
+  $('#expenses-month-total').textContent = money(spent);
+  $('#expenses-month-note').textContent = expenses.length ? `${expenses.length} purchases recorded this month` : 'Your spending, all in one place.';
+  renderShifts(); renderExpenses(); renderWishes(); renderActivity();
+}
+
+function renderShifts() {
+  const rows = [...state.shifts].sort((a, b) => b.date.localeCompare(a.date));
+  $('#shift-list').innerHTML = rows.length ? rows.map(item => `<article class="record-row"><span class="record-icon work-icon">◷</span><div class="record-main"><strong>${esc(item.note || 'Work shift')}</strong><span>${longDate(item.date)} · ${Number(item.hours)} hours at ${money(item.rate)}/h</span></div><div class="record-amount">${money(earnedFor(item))}</div><button class="delete-button" data-delete="shift" data-id="${esc(item.id)}" aria-label="Delete shift">×</button></article>`).join('') : empty('Your hours will add up here', 'Log a shift to see your time and estimated pay.', '◷');
+}
+
+function renderExpenses() {
+  const rows = [...state.expenses].sort((a, b) => b.date.localeCompare(a.date));
+  $('#expense-list').innerHTML = rows.length ? rows.map(item => `<article class="record-row"><span class="record-icon expense-icon">${item.category === 'Food' ? '⌁' : item.category === 'Transport' ? '↗' : '↘'}</span><div class="record-main"><strong>${esc(item.title)}</strong><span>${longDate(item.date)} · ${esc(item.category)}</span></div><div class="record-amount expense-amount">−${money(item.amount)}</div><button class="delete-button" data-delete="expense" data-id="${esc(item.id)}" aria-label="Delete expense">×</button></article>`).join('') : empty('A clear picture starts here', 'Add an expense when you want to keep track.', '↘');
+}
+
+function wishCard(item, index) {
+  const ratio = Math.max(0, Math.min(100, Number(item.saved) / Number(item.target) * 100));
+  const colors = ['wish-peach', 'wish-mint', 'wish-lilac', 'wish-yellow'];
+  return `<article class="wish-card ${colors[index % colors.length]}"><div class="wish-top"><span class="wish-glyph">${['✳', '♡', '✦', '✿'][index % 4]}</span><button class="delete-button" data-delete="wish" data-id="${esc(item.id)}" aria-label="Delete wish">×</button></div><h3>${esc(item.title)}</h3><div class="wish-amounts"><strong>${money(item.saved)}</strong><span>of ${money(item.target)}</span></div><div class="wish-progress"><span style="width:${ratio}%"></span></div><div class="wish-card-foot"><p>${ratio >= 100 ? 'You made it! ✨' : `${Math.round(ratio)}% saved`}</p><button class="save-more" data-add-saving="${esc(item.id)}" type="button">＋ Add</button></div></article>`;
+}
+
+function renderWishes() {
+  const wishes = state.wishes;
+  const total = wishes.reduce((sum, item) => sum + Number(item.target), 0);
+  $('#wish-total').textContent = `${wishes.length} ${wishes.length === 1 ? 'thing' : 'things'}`;
+  $('#wishlist-list').innerHTML = wishes.length ? wishes.map(wishCard).join('') : empty('Your next good thing goes here', 'Add something you are looking forward to.', '♡');
+  const sorted = [...wishes].sort((a, b) => (b.saved / b.target) - (a.saved / a.target));
+  $('#home-wishlist').innerHTML = sorted.length ? `<div class="home-wish">${wishCard(sorted[0], 0)}<div class="wish-total-note"><span class="eyebrow">AIMING FOR</span><strong>${money(total)}</strong><span>across ${wishes.length} ${wishes.length === 1 ? 'wish' : 'wishes'}</span></div></div>` : empty('Dream a little', 'Add your first wishlist item.', '♡');
+}
+
+function renderActivity() {
+  const items = [
+    ...state.shifts.map(item => ({ ...item, kind: 'shift', title: item.note || 'Work shift', amount: earnedFor(item) })),
+    ...state.expenses.map(item => ({ ...item, kind: 'expense', amount: -Number(item.amount) }))
+  ].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 4);
+  $('#home-activity').innerHTML = items.length ? items.map(item => `<article class="activity-row"><span class="activity-dot ${item.kind}">${item.kind === 'shift' ? '↗' : '↘'}</span><span class="activity-name"><strong>${esc(item.title)}</strong><small>${longDate(item.date)}</small></span><strong class="activity-value ${item.kind}">${item.amount > 0 ? '+' : '−'}${money(Math.abs(item.amount))}</strong></article>`).join('') : empty('Nothing here just yet', 'Your shifts and expenses will show up here.', '✳');
+}
+
+function openDialog(id) {
+  const dialog = document.getElementById(id);
+  const form = dialog.querySelector('form');
+  form.reset();
+  const dateInput = form.querySelector('[name="date"]');
+  if (dateInput) dateInput.value = dateKey();
+  const rateInput = form.querySelector('[name="rate"]');
+  if (rateInput) rateInput.value = state.rate;
+  if (id === 'settings-dialog') form.elements.rate.value = state.rate;
+  dialog.showModal();
+}
+
+document.querySelectorAll('[data-open]').forEach(button => button.addEventListener('click', () => openDialog(button.dataset.open)));
+document.querySelectorAll('[data-close]').forEach(button => button.addEventListener('click', () => document.getElementById(button.dataset.close).close()));
+document.querySelectorAll('[data-page], [data-go]').forEach(button => button.addEventListener('click', () => {
+  const page = button.dataset.page || button.dataset.go;
+  document.querySelectorAll('.page').forEach(section => { section.hidden = section.id !== `${page}-page`; section.classList.toggle('active', !section.hidden); });
+  document.querySelectorAll('.tab').forEach(tab => { const active = tab.dataset.page === page; tab.classList.toggle('active', active); if (active) tab.setAttribute('aria-current', 'page'); else tab.removeAttribute('aria-current'); });
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}));
+
+$('#shift-form').addEventListener('submit', event => {
+  event.preventDefault(); const data = new FormData(event.currentTarget); const rate = Number(data.get('rate')) || Number(state.rate);
+  state.shifts.push({ id: crypto.randomUUID(), date: data.get('date'), hours: Number(data.get('hours')), rate, note: data.get('note').trim() });
+  persist(); event.currentTarget.closest('dialog').close(); toast('Shift saved. Nice work.');
+});
+$('#expense-form').addEventListener('submit', event => {
+  event.preventDefault(); const data = new FormData(event.currentTarget);
+  state.expenses.push({ id: crypto.randomUUID(), date: data.get('date'), title: data.get('title').trim(), amount: Number(data.get('amount')), category: data.get('category') });
+  persist(); event.currentTarget.closest('dialog').close(); toast('Expense added.');
+});
+$('#wish-form').addEventListener('submit', event => {
+  event.preventDefault(); const data = new FormData(event.currentTarget);
+  state.wishes.push({ id: crypto.randomUUID(), title: data.get('title').trim(), target: Number(data.get('target')), saved: Number(data.get('saved')) || 0 });
+  persist(); event.currentTarget.closest('dialog').close(); toast('A new thing to look forward to.');
+});
+$('#settings-open').addEventListener('click', () => openDialog('settings-dialog'));
+$('#settings-form').addEventListener('submit', event => { event.preventDefault(); state.rate = Number(new FormData(event.currentTarget).get('rate')); persist(); event.currentTarget.closest('dialog').close(); toast('Hourly rate updated.'); });
+document.addEventListener('click', event => {
+  const saveButton = event.target.closest('[data-add-saving]');
+  if (saveButton) {
+    const wish = state.wishes.find(item => item.id === saveButton.dataset.addSaving);
+    if (wish) {
+      const form = $('#saving-form');
+      form.elements.wishId.value = wish.id;
+      $('#saving-title').textContent = `Add to ${wish.title}`;
+      form.elements.amount.value = '';
+      $('#saving-dialog').showModal();
+    }
+    return;
+  }
+  const button = event.target.closest('[data-delete]'); if (!button) return;
+  const list = button.dataset.delete === 'shift' ? 'shifts' : button.dataset.delete === 'expense' ? 'expenses' : 'wishes';
+  state[list] = state[list].filter(item => item.id !== button.dataset.id); persist(); toast('Removed.');
+});
+$('#saving-form').addEventListener('submit', event => {
+  event.preventDefault();
+  const data = new FormData(event.currentTarget);
+  const wish = state.wishes.find(item => item.id === data.get('wishId'));
+  if (wish) wish.saved = Number(wish.saved) + Number(data.get('amount'));
+  persist(); event.currentTarget.closest('dialog').close(); toast('Savings updated. Keep going!');
+});
+
+$('#date-stamp').textContent = new Date().toLocaleDateString('en-GB', { month: 'short', year: 'numeric' }).toUpperCase();
+render();
+
+
+if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./service-worker.js').catch(error => {
+      console.error('Daymark could not enable offline support:', error);
+    });
+  });
+}
