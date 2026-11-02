@@ -2,8 +2,8 @@ const path = require('node:path');
 
 module.exports = {
   packagerConfig: {
-    name: 'Daymark',
-    executableName: 'Daymark',
+    name: 'Daymaker',
+    executableName: 'Daymaker',
     appBundleId: 'com.daymark.tracker',
     appCategoryType: 'public.app-category.finance',
     asar: true,

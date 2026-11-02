@@ -13,4 +13,4 @@ http.createServer((req, res) => {
   res.setHeader('Content-Type', types[path.extname(name)] || 'application/octet-stream');
   if (name === 'service-worker.js') res.setHeader('Service-Worker-Allowed', '/');
   fs.createReadStream(path.join(root, name)).on('error', () => { res.writeHead(404); res.end(); }).pipe(res);
-}).listen(port, '127.0.0.1', () => console.log(`Daymark PWA preview: http://localhost:${port}`));
+}).listen(port, '127.0.0.1', () => console.log(`Daymaker PWA preview: http://localhost:${port}`));

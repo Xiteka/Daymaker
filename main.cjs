@@ -2,14 +2,14 @@ const { app, BrowserWindow, dialog, session } = require('electron');
 const path = require('node:path');
 const fs = require('node:fs');
 
-// Keep development and packaged builds on the same saved Daymark profile.
+// Keep development and packaged builds on the same saved Daymaker profile.
 const profile = process.argv.find(argument => argument.startsWith('--user-data-dir='));
 const profilePath = profile
   ? path.resolve(profile.slice('--user-data-dir='.length))
   : path.join(app.getPath('appData'), 'daymark');
 fs.mkdirSync(profilePath, { recursive: true });
 app.setPath('userData', profilePath);
-app.setName('Daymark');
+app.setName('Daymaker');
 
 let mainWindow;
 
@@ -20,7 +20,7 @@ function createWindow() {
     minWidth: 360,
     minHeight: 620,
     backgroundColor: '#e6e5e0',
-    title: 'Daymark',
+    title: 'Daymaker',
     show: false,
     webPreferences: {
       nodeIntegration: false,
@@ -35,7 +35,7 @@ function createWindow() {
   mainWindow.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
   mainWindow.webContents.on('will-navigate', event => event.preventDefault());
   mainWindow.loadFile(path.join(__dirname, 'src/index.html')).catch(error => {
-    dialog.showErrorBox('Daymark could not open', error.message);
+    dialog.showErrorBox('Daymaker could not open', error.message);
     app.quit();
   });
 }

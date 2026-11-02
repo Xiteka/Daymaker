@@ -158,7 +158,7 @@ render();
 if ('serviceWorker' in navigator && location.protocol !== 'file:') {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('./service-worker.js').catch(error => {
-      console.error('Daymark could not enable offline support:', error);
+      console.error('Daymaker could not enable offline support:', error);
     });
   });
 }

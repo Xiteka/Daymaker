@@ -1,4 +1,4 @@
-# Daymark
+# Daymaker
 
 A mobile-first tracker for work hours, estimated pay, expenses, and savings wishes. It uses a warm stone background, rounded dashboard cards, dark navigation, and a coral accent inspired by the supplied references.
 
@@ -26,6 +26,6 @@ The default hourly rate is NOK 220 and can be changed from the settings button. 
 
 ## Install on iPhone as a PWA
 
-The app includes a web app manifest, Home Screen icons, and a service worker that caches the app shell for offline use. For iPhone installation, publish the `src` folder at an HTTPS address. Open that address in Safari, choose Share → Add to Home Screen, then add Daymark. The `file://` preview is for viewing only; service workers need HTTPS or localhost.
+The app includes a web app manifest, Home Screen icons, and a service worker that caches the app shell for offline use. For iPhone installation, publish the `src` folder at an HTTPS address. Open that address in Safari, choose Share → Add to Home Screen, then add Daymaker. The `file://` preview is for viewing only; service workers need HTTPS or localhost.
 
 For local development, run `npm run preview` and open the localhost address on your Mac. To install on an iPhone, deploy the `src` folder to an HTTPS static host and open that public address in Safari.

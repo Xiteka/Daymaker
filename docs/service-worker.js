@@ -1,4 +1,4 @@
-const CACHE_NAME = 'daymark-shell-v1';
+const CACHE_NAME = 'daymaker-shell-v2';
 const SHELL = [
   './', './index.html', './style.css', './app.js', './manifest.webmanifest',
   './icons/daymark.svg', './icons/daymark-180.png', './icons/daymark-192.png', './icons/daymark-512.png'

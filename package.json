@@ -1,6 +1,6 @@
 {
-  "name": "daymark-tracker",
-  "productName": "Daymark",
+  "name": "daymaker-tracker",
+  "productName": "Daymaker",
   "version": "1.1.0",
   "private": true,
   "description": "A pocket tracker for work hours, pay, expenses, and savings goals",
