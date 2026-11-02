@@ -14,6 +14,53 @@ try {
 } catch { state = fresh(); }
 
 const money = value => new Intl.NumberFormat('nb-NO', { style: 'currency', currency: 'NOK', maximumFractionDigits: 0 }).format(value || 0).replace(/\s/g, ' ');
+// Draw the balance as a dot matrix while keeping the full amount accessible.
+const balanceDigits = {
+  '0': ['01110','10001','10001','10001','10001','10001','01110'],
+  '1': ['00100','01100','00100','00100','00100','00100','01110'],
+  '2': ['01110','10001','00001','00010','00100','01000','11111'],
+  '3': ['11110','00001','00001','01110','00001','00001','11110'],
+  '4': ['00010','00110','01010','10010','11111','00010','00010'],
+  '5': ['11111','10000','10000','11110','00001','00001','11110'],
+  '6': ['01110','10000','10000','11110','10001','10001','01110'],
+  '7': ['11111','00001','00010','00100','01000','01000','01000'],
+  '8': ['01110','10001','10001','01110','10001','10001','01110'],
+  '9': ['01110','10001','10001','01111','00001','00001','01110'],
+  '-': ['00000','00000','00000','11111','00000','00000','00000']
+};
+function renderBalance(value) {
+  const node = $('#balance-value');
+  const formatted = new Intl.NumberFormat('nb-NO', { maximumFractionDigits: 0 }).format(value || 0).replace(/−/g, '-');
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.setAttribute('class', 'balance-number');
+  svg.setAttribute('aria-hidden', 'true');
+  let offset = 0;
+  for (const character of formatted) {
+    if (/\s/.test(character)) { offset += 2; continue; }
+    const rows = balanceDigits[character];
+    if (!rows) { node.removeAttribute('role'); node.removeAttribute('aria-label'); node.textContent = money(value); return; }
+    rows.forEach((row, y) => [...row].forEach((dot, x) => {
+      if (dot !== '1') return;
+      const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      circle.setAttribute('cx', offset + x + 0.5);
+      circle.setAttribute('cy', y + 0.5);
+      circle.setAttribute('r', '0.43');
+      svg.appendChild(circle);
+    }));
+    offset += 6;
+  }
+  const width = Math.max(1, offset - 1);
+  svg.setAttribute('viewBox', `0 0 ${width} 7`);
+  svg.setAttribute('width', width);
+  svg.setAttribute('height', '7');
+  const currency = document.createElement('span');
+  currency.className = 'balance-currency';
+  currency.setAttribute('aria-hidden', 'true');
+  currency.textContent = 'kr';
+  node.setAttribute('role', 'img');
+  node.setAttribute('aria-label', money(value));
+  node.replaceChildren(svg, currency);
+}
 const longDate = value => new Date(`${value}T12:00:00`).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
 const monthKey = dateKey().slice(0, 7);
 const monthEntries = entries => entries.filter(item => item.date?.startsWith(monthKey));
@@ -39,7 +86,7 @@ function render() {
   $('#month-label').textContent = `YOUR MONEY THIS ${new Date().toLocaleDateString('en-GB', { month: 'long' }).toUpperCase()}`;
   $('#today-label').textContent = new Date().toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }).toUpperCase();
   $('#date-stamp').textContent = new Date().toLocaleDateString('en-GB', { month: 'short', year: 'numeric' }).toUpperCase();
-  $('#balance-value').textContent = money(earned - spent);
+  renderBalance(earned - spent);
   $('#earned-value').textContent = money(earned);
   $('#spent-value').textContent = money(spent);
   $('#hours-value').innerHTML = `${Number.isInteger(hours) ? hours : hours.toFixed(1)}<span class="unit">h</span>`;
