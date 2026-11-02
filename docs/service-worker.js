@@ -1,7 +1,7 @@
-const CACHE_NAME = 'daymaker-shell-v2';
+const CACHE_NAME = 'daymaker-shell-v3';
 const SHELL = [
   './', './index.html', './style.css', './app.js', './manifest.webmanifest',
-  './icons/daymark.svg', './icons/daymark-180.png', './icons/daymark-192.png', './icons/daymark-512.png'
+  './icons/daymaker.svg', './icons/daymaker-180.png', './icons/daymaker-192.png', './icons/daymaker-512.png'
 ];
 
 self.addEventListener('install', event => {
