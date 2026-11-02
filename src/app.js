@@ -14,7 +14,7 @@ try {
 } catch { state = fresh(); }
 
 const money = value => new Intl.NumberFormat('nb-NO', { style: 'currency', currency: 'NOK', maximumFractionDigits: 0 }).format(value || 0).replace(/\s/g, ' ');
-// Draw the balance as a dot matrix while keeping the full amount accessible.
+// Draw key numbers as a dot matrix while keeping their full text accessible.
 const balanceDigits = {
   '0': ['01110','10001','10001','10001','10001','10001','01110'],
   '1': ['00100','01100','00100','00100','00100','00100','01110'],
@@ -26,19 +26,19 @@ const balanceDigits = {
   '7': ['11111','00001','00010','00100','01000','01000','01000'],
   '8': ['01110','10001','10001','01110','10001','10001','01110'],
   '9': ['01110','10001','10001','01111','00001','00001','01110'],
-  '-': ['00000','00000','00000','11111','00000','00000','00000']
+  '-': ['00000','00000','00000','11111','00000','00000','00000'],
+  '.': ['0','0','0','0','0','0','1']
 };
-function renderBalance(value) {
-  const node = $('#balance-value');
-  const formatted = new Intl.NumberFormat('nb-NO', { maximumFractionDigits: 0 }).format(value || 0).replace(/−/g, '-');
+const wholeNumber = value => new Intl.NumberFormat('nb-NO', { maximumFractionDigits: 0 }).format(value || 0).replace(/−/g, '-');
+function renderDotValue(node, formatted, label, unit, kind) {
   const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-  svg.setAttribute('class', 'balance-number');
+  svg.setAttribute('class', `${kind}-number`);
   svg.setAttribute('aria-hidden', 'true');
   let offset = 0;
   for (const character of formatted) {
     if (/\s/.test(character)) { offset += 2; continue; }
     const rows = balanceDigits[character];
-    if (!rows) { node.removeAttribute('role'); node.removeAttribute('aria-label'); node.textContent = money(value); return; }
+    if (!rows) { node.removeAttribute('role'); node.removeAttribute('aria-label'); node.textContent = label; return; }
     rows.forEach((row, y) => [...row].forEach((dot, x) => {
       if (dot !== '1') return;
       const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
@@ -47,18 +47,18 @@ function renderBalance(value) {
       circle.setAttribute('r', '0.43');
       svg.appendChild(circle);
     }));
-    offset += 6;
+    offset += rows[0].length + 1;
   }
   const width = Math.max(1, offset - 1);
   svg.setAttribute('viewBox', `0 0 ${width} 7`);
   svg.setAttribute('width', width);
   svg.setAttribute('height', '7');
   const currency = document.createElement('span');
-  currency.className = 'balance-currency';
+  currency.className = `${kind}-currency`;
   currency.setAttribute('aria-hidden', 'true');
-  currency.textContent = 'kr';
+  currency.textContent = unit;
   node.setAttribute('role', 'img');
-  node.setAttribute('aria-label', money(value));
+  node.setAttribute('aria-label', label);
   node.replaceChildren(svg, currency);
 }
 const longDate = value => new Date(`${value}T12:00:00`).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
@@ -86,12 +86,13 @@ function render() {
   $('#month-label').textContent = `YOUR MONEY THIS ${new Date().toLocaleDateString('en-GB', { month: 'long' }).toUpperCase()}`;
   $('#today-label').textContent = new Date().toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }).toUpperCase();
   $('#date-stamp').textContent = new Date().toLocaleDateString('en-GB', { month: 'short', year: 'numeric' }).toUpperCase();
-  renderBalance(earned - spent);
+  renderDotValue($('#balance-value'), wholeNumber(earned - spent), money(earned - spent), 'kr', 'balance');
   $('#earned-value').textContent = money(earned);
   $('#spent-value').textContent = money(spent);
-  $('#hours-value').innerHTML = `${Number.isInteger(hours) ? hours : hours.toFixed(1)}<span class="unit">h</span>`;
+  const hoursText = Number.isInteger(hours) ? String(hours) : hours.toFixed(1);
+  renderDotValue($('#hours-value'), hoursText, `${hoursText} h`, 'h', 'stat');
   $('#shift-count').textContent = shifts.length ? `${shifts.length} ${shifts.length === 1 ? 'shift' : 'shifts'} this month` : 'No shifts logged yet';
-  $('#expense-value').textContent = money(spent);
+  renderDotValue($('#expense-value'), wholeNumber(spent), money(spent), 'kr', 'stat');
   $('#expense-count').textContent = expenses.length ? `${expenses.length} ${expenses.length === 1 ? 'purchase' : 'purchases'} this month` : 'No spending logged yet';
   $('#balance-progress').style.width = `${earned ? Math.max(3, Math.min(100, ((earned - spent) / earned) * 100)) : 0}%`;
   $('#work-month-hours').textContent = `${Number.isInteger(hours) ? hours : hours.toFixed(1)} h`;
