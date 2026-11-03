@@ -89,13 +89,13 @@ function render() {
   renderDotValue($('#balance-value'), wholeNumber(earned - spent), money(earned - spent), 'kr', 'balance');
   $('#earned-value').textContent = money(earned);
   $('#spent-value').textContent = money(spent);
-  const hoursText = Number.isInteger(hours) ? String(hours) : hours.toFixed(1);
+  const hoursText = calendarHours(hours);
   renderDotValue($('#hours-value'), hoursText, `${hoursText} h`, 'h', 'stat');
   $('#shift-count').textContent = shifts.length ? `${shifts.length} ${shifts.length === 1 ? 'shift' : 'shifts'} this month` : 'No shifts logged yet';
   renderDotValue($('#expense-value'), wholeNumber(spent), money(spent), 'kr', 'stat');
   $('#expense-count').textContent = expenses.length ? `${expenses.length} ${expenses.length === 1 ? 'purchase' : 'purchases'} this month` : 'No spending logged yet';
   $('#balance-progress').style.width = `${earned ? Math.max(3, Math.min(100, ((earned - spent) / earned) * 100)) : 0}%`;
-  $('#work-month-hours').textContent = `${Number.isInteger(hours) ? hours : hours.toFixed(1)} h`;
+  $('#work-month-hours').textContent = `${calendarHours(hours)} h`;
   $('#work-month-pay').textContent = money(earned);
   $('#work-rate').innerHTML = `${money(state.rate)}<span class="small-unit">/h</span>`;
   $('#expenses-month-total').textContent = money(spent);
@@ -109,7 +109,7 @@ let calendarMonth = new Date(calendarStart.getFullYear(), calendarStart.getMonth
 let calendarDay = null;
 let calendarTotals = new Map();
 let calendarHoldTimer;
-const calendarHours = hours => new Intl.NumberFormat('en-GB', { maximumFractionDigits: 2 }).format(hours);
+const calendarHours = hours => new Intl.NumberFormat('en-GB', { maximumFractionDigits: 2, useGrouping: false }).format(hours);
 const calendarDateLabel = date => new Date(`${date}T12:00:00`).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
 
 function showCalendarDay(date) {
@@ -212,7 +212,7 @@ calendarGrid.addEventListener('contextmenu', event => {
 
 function renderShifts() {
   const rows = [...state.shifts].sort((a, b) => b.date.localeCompare(a.date));
-  $('#shift-list').innerHTML = rows.length ? rows.map(item => `<article class="record-row"><span class="record-icon work-icon">◷</span><div class="record-main"><strong>${esc(item.note || 'Work shift')}</strong><span>${longDate(item.date)} · ${Number(item.hours)} hours at ${money(item.rate)}/h</span></div><div class="record-amount">${money(earnedFor(item))}</div><button class="delete-button" data-delete="shift" data-id="${esc(item.id)}" aria-label="Delete shift">×</button></article>`).join('') : empty('Your hours will add up here', 'Log a shift to see your time and estimated pay.', '◷');
+  $('#shift-list').innerHTML = rows.length ? rows.map(item => `<article class="record-row"><span class="record-icon work-icon">◷</span><div class="record-main"><strong>${esc(item.note || 'Work shift')}</strong><span>${longDate(item.date)}${item.startTime && item.endTime ? ` · ${esc(item.startTime)}–${esc(item.endTime)}${item.endTime < item.startTime ? ' (+1 day)' : ''}` : ''} · ${calendarHours(Number(item.hours))} hours at ${money(item.rate)}/h</span></div><div class="record-amount">${money(earnedFor(item))}</div><button class="delete-button" data-delete="shift" data-id="${esc(item.id)}" aria-label="Delete shift">×</button></article>`).join('') : empty('Your hours will add up here', 'Log a shift to see your time and estimated pay.', '◷');
 }
 
 function renderExpenses() {
@@ -252,6 +252,7 @@ function openDialog(id) {
   const rateInput = form.querySelector('[name="rate"]');
   if (rateInput) rateInput.value = state.rate;
   if (id === 'settings-dialog') form.elements.rate.value = state.rate;
+  if (id === 'shift-dialog') updateShiftDuration();
   dialog.showModal();
 }
 
@@ -265,10 +266,35 @@ document.querySelectorAll('[data-page], [data-go]').forEach(button => button.add
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }));
 
-$('#shift-form').addEventListener('submit', event => {
-  event.preventDefault(); const data = new FormData(event.currentTarget); const rate = Number(data.get('rate')) || Number(state.rate);
-  state.shifts.push({ id: crypto.randomUUID(), date: data.get('date'), hours: Number(data.get('hours')), rate, note: data.get('note').trim() });
-  persist(); event.currentTarget.closest('dialog').close(); toast('Shift saved. Nice work.');
+const shiftForm = $('#shift-form');
+function updateShiftDuration() {
+  const start = shiftForm.elements.startTime.value;
+  const end = shiftForm.elements.endTime.value;
+  const endInput = shiftForm.elements.endTime;
+  endInput.setCustomValidity(start && end && start === end ? 'Start and end times must be different.' : '');
+  if (!start || !end || start === end) {
+    shiftForm.elements.hours.value = '';
+    return null;
+  }
+  const minutes = time => { const [hour, minute] = time.split(':').map(Number); return hour * 60 + minute; };
+  const duration = (minutes(end) - minutes(start) + 24 * 60) % (24 * 60);
+  const hours = duration / 60;
+  shiftForm.elements.hours.value = `${calendarHours(hours)} h`;
+  return hours;
+}
+for (const name of ['startTime', 'endTime']) {
+  shiftForm.elements[name].addEventListener('input', updateShiftDuration);
+  shiftForm.elements[name].addEventListener('change', updateShiftDuration);
+}
+shiftForm.addEventListener('submit', event => {
+  event.preventDefault();
+  const form = event.currentTarget;
+  const hours = updateShiftDuration();
+  if (hours === null) { form.reportValidity(); return; }
+  const data = new FormData(form);
+  const rate = data.get('rate') === '' ? Number(state.rate) : Number(data.get('rate'));
+  state.shifts.push({ id: crypto.randomUUID(), date: data.get('date'), startTime: data.get('startTime'), endTime: data.get('endTime'), hours, rate, note: data.get('note').trim() });
+  persist(); form.closest('dialog').close(); toast('Shift saved. Nice work.');
 });
 $('#expense-form').addEventListener('submit', event => {
   event.preventDefault(); const data = new FormData(event.currentTarget);

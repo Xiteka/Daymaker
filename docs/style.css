@@ -36,3 +36,7 @@
 
 #calendar-page .work-calendar{margin-top:0}
 .tab-icon svg{display:block}
+
+.field-row label,.form-dialog input[type="time"]{min-width:0}
+.shift-time-hint{margin:-5px 0 0;color:var(--muted);font-size:11px;line-height:1.4}
+.form-dialog input[readonly]{background:#eeeFEB;color:var(--muted)}
