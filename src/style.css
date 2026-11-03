@@ -61,7 +61,7 @@
 .calendar-day.planned.worked{box-shadow:inset 0 -4px 0 #ffd9c9}
 .calendar-scheduled{margin:9px 0 0;color:#f6a48f;font-size:11px}
 
-.today-shifts{margin-top:19px}
+.today-shifts{margin-top:15px}
 .today-shift+.today-shift{margin-top:14px}
 .today-shift-date{color:var(--ink);font:600 12px var(--mono);letter-spacing:.2px}
 .today-shift .swipe-track{margin-top:8px}

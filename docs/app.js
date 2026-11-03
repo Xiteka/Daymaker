@@ -232,7 +232,11 @@ function renderTodayShifts() {
 }
 
 function renderShifts() {
-  const rows = [...state.shifts].sort((a, b) => b.date.localeCompare(a.date));
+  const today = dateKey();
+  const todayPending = item => !shiftIsComplete(item) && item.date === today;
+  const todayMillis = Date.parse(`${today}T00:00:00Z`);
+  const dayDistance = date => Math.abs((Date.parse(`${date}T00:00:00Z`) - todayMillis) / 86400000);
+  const rows = state.shifts.filter(item => !todayPending(item)).sort((a, b) => dayDistance(a.date) - dayDistance(b.date) || b.date.localeCompare(a.date));
   $('#shift-list').innerHTML = rows.length ? rows.map(item => {
     const completed = shiftIsComplete(item);
     const time = item.startTime && item.endTime ? ` · ${esc(item.startTime)}–${esc(item.endTime)}${item.endTime < item.startTime ? ' (+1 day)' : ''}` : '';
