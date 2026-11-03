@@ -11,8 +11,8 @@
     <link rel="icon" href="./icons/daymaker-bold.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="./icons/daymaker-bold-180.png">
     <title>Daymaker · work & money</title>
-    <link rel="stylesheet" href="style.css?v=16">
-    <script src="app.js?v=15" defer></script>
+    <link rel="stylesheet" href="style.css?v=17">
+    <script src="app.js?v=16" defer></script>
   </head>
   <body>
     <main class="app-shell">
@@ -28,6 +28,7 @@
           <div class="balance" id="balance-value">kr 0</div>
           <div class="balance-foot"><span>earned <b id="earned-value">kr 0</b></span><span>spent <b id="spent-value">kr 0</b></span></div>
           <div class="balance-rule"><span id="balance-progress"></span></div>
+          <div class="payday-note" id="next-payday"></div>
         </section>
 
         <div class="stats-grid">
@@ -65,6 +66,7 @@
       <section class="page" id="expenses-page" aria-labelledby="expenses-title" hidden>
         <div class="page-title-row"><div><p class="eyebrow">SPEND WITH INTENTION</p><h1 id="expenses-title">Expenses<span class="period">.</span></h1></div><button class="primary-button" data-open="expense-dialog">＋ <span>Add expense</span></button></div>
         <div class="expense-total-card"><span class="eyebrow light">SPENT THIS MONTH</span><strong id="expenses-month-total">kr 0</strong><span id="expenses-month-note">Your spending, all in one place.</span></div>
+        <div class="section-heading list-heading"><div><p class="eyebrow">REPEATS EACH MONTH</p><h2>Monthly expenses</h2></div><button class="primary-button" data-open="monthly-expense-dialog">＋ <span>Add monthly</span></button></div><div id="monthly-expense-list" class="monthly-expense-list"></div>
         <div class="section-heading list-heading"><div><p class="eyebrow">RECENTLY</p><h2>Transactions</h2></div></div><div id="expense-list" class="record-list"></div>
       </section>
 
@@ -87,7 +89,8 @@
     <dialog class="form-dialog" id="finish-dialog"><form id="finish-form" method="dialog"><button class="dialog-close" type="button" data-close="finish-dialog" aria-label="Close">×</button><p class="eyebrow">A GOOD DAY’S WORK</p><h2 id="finish-title">Finish shift</h2><p id="finish-date" class="finish-date"></p><p class="finish-hint">Adjust the times or hours to match your day.</p><input name="shiftId" type="hidden"><div id="finish-times" class="field-row"><label>Start time<input name="startTime" type="time"></label><label>End time<input name="endTime" type="time"></label></div><label>Hours worked<input name="hours" type="number" min="0.01" max="24" step="any" required></label><button class="primary-button submit-button" type="submit" id="finish-submit">Finish shift <span>↗</span></button></form></dialog>
     <dialog class="form-dialog" id="expense-dialog"><form id="expense-form" method="dialog"><button class="dialog-close" type="button" data-close="expense-dialog" aria-label="Close">×</button><p class="eyebrow">KEEP AN EYE ON IT</p><h2>Add an expense</h2><label>What was it?<input name="title" maxlength="60" placeholder="Coffee, groceries…" required></label><div class="field-row"><label>Amount (NOK)<input name="amount" type="number" min="1" step="0.01" placeholder="0" required></label><label>Category<select name="category"><option>Everyday</option><option>Food</option><option>Transport</option><option>Home</option><option>Fun</option><option>Other</option></select></label></div><label>Date<input name="date" type="date" required></label><button class="primary-button submit-button" type="submit">Save expense <span>↗</span></button></form></dialog>
     <dialog class="form-dialog" id="wish-dialog"><form id="wish-form" method="dialog"><button class="dialog-close" type="button" data-close="wish-dialog" aria-label="Close">×</button><p class="eyebrow">SOMETHING TO LOOK FORWARD TO</p><h2>Add to your wishlist</h2><label>What are you saving for?<input name="title" maxlength="60" placeholder="A weekend away…" required></label><div class="field-row"><label>Price (NOK)<input name="target" type="number" min="1" step="1" placeholder="0" required></label><label>Already saved<input name="saved" type="number" min="0" step="1" value="0"></label></div><button class="primary-button submit-button" type="submit">Save this wish <span>♡</span></button></form></dialog>
-    <dialog class="form-dialog settings-dialog" id="settings-dialog"><form id="settings-form" method="dialog"><button class="dialog-close" type="button" data-close="settings-dialog" aria-label="Close">×</button><p class="eyebrow">MAKE IT YOURS</p><h2>Your settings</h2><label>Hourly pay (NOK)<input name="rate" type="number" min="0" step="1" required></label><p class="settings-note">New shifts will use this rate unless you enter a different one.</p><button class="primary-button submit-button" type="submit">Save settings <span>↗</span></button></form></dialog>
+    <dialog class="form-dialog settings-dialog" id="settings-dialog"><form id="settings-form" method="dialog"><button class="dialog-close" type="button" data-close="settings-dialog" aria-label="Close">×</button><p class="eyebrow">MAKE IT YOURS</p><h2>Your settings</h2><label>Hourly pay (NOK)<input name="rate" type="number" min="0" step="1" required></label><p class="settings-note">New shifts will use this rate unless you enter a different one.</p><label>Payday each month<input name="paydayDay" type="number" min="1" max="31" step="1" required></label><p class="settings-note">Day of the month you usually get paid.</p><button class="primary-button submit-button" type="submit">Save settings <span>↗</span></button></form></dialog>
+    <dialog class="form-dialog" id="monthly-expense-dialog"><form id="monthly-expense-form" method="dialog"><button class="dialog-close" type="button" data-close="monthly-expense-dialog" aria-label="Close">×</button><p class="eyebrow">A LITTLE EVERY MONTH</p><h2>Add a monthly expense</h2><label>What is it?<input name="title" maxlength="60" placeholder="Gym membership, subscription…" required></label><div class="field-row"><label>Amount (NOK)<input name="amount" type="number" min="1" step="0.01" placeholder="0" required></label><label>Category<select name="category"><option>Everyday</option><option>Food</option><option>Transport</option><option>Home</option><option>Fun</option><option>Other</option></select></label></div><label>Due day each month<input name="dueDay" type="number" min="1" max="31" step="1" required></label><p class="settings-note">You can mark it paid each month; it will then appear in your expense totals.</p><button class="primary-button submit-button" type="submit">Save monthly expense <span>↗</span></button></form></dialog>
     <dialog class="form-dialog" id="saving-dialog"><form id="saving-form" method="dialog"><button class="dialog-close" type="button" data-close="saving-dialog" aria-label="Close">×</button><p class="eyebrow">ONE STEP CLOSER</p><h2 id="saving-title">Add to your savings</h2><input name="wishId" type="hidden"><label>Amount to add (NOK)<input name="amount" type="number" min="1" step="1" placeholder="0" required></label><button class="primary-button submit-button" type="submit">Update savings <span>↗</span></button></form></dialog>
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
   </body>

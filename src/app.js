@@ -4,12 +4,12 @@ const dateKey = date => {
   const d = date || new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 };
-const fresh = () => ({ rate: 220, shifts: [], expenses: [], wishes: [] });
+const fresh = () => ({ rate: 220, paydayDay: 25, shifts: [], expenses: [], monthlyExpenses: [], wishes: [] });
 let state;
 try {
   const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
   state = saved && typeof saved === 'object'
-    ? { ...fresh(), ...saved, shifts: Array.isArray(saved.shifts) ? saved.shifts : [], expenses: Array.isArray(saved.expenses) ? saved.expenses : [], wishes: Array.isArray(saved.wishes) ? saved.wishes : [] }
+    ? { ...fresh(), ...saved, paydayDay: Number(saved.paydayDay) || 25, shifts: Array.isArray(saved.shifts) ? saved.shifts : [], expenses: Array.isArray(saved.expenses) ? saved.expenses : [], monthlyExpenses: Array.isArray(saved.monthlyExpenses) ? saved.monthlyExpenses : [], wishes: Array.isArray(saved.wishes) ? saved.wishes : [] }
     : fresh();
 } catch { state = fresh(); }
 
@@ -86,6 +86,8 @@ function render() {
   $('#month-label').textContent = `YOUR MONEY THIS ${new Date().toLocaleDateString('en-GB', { month: 'long' }).toUpperCase()}`;
   $('#today-label').textContent = new Date().toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }).toUpperCase();
   $('#date-stamp').textContent = new Date().toLocaleDateString('en-GB', { month: 'short', year: 'numeric' }).toUpperCase();
+  const payday = nextPaydayDate();
+  $('#next-payday').textContent = dateKey(payday) === dateKey() ? 'PAYDAY · TODAY' : `NEXT PAYDAY · ${payday.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }).toUpperCase()}`;
   renderDotValue($('#balance-value'), wholeNumber(earned - spent), money(earned - spent), 'kr', 'balance');
   $('#earned-value').textContent = money(earned);
   $('#spent-value').textContent = money(spent);
@@ -100,7 +102,23 @@ function render() {
   $('#work-rate').innerHTML = `${money(state.rate)}<span class="small-unit">/h</span>`;
   $('#expenses-month-total').textContent = money(spent);
   $('#expenses-month-note').textContent = expenses.length ? `${expenses.length} purchases recorded this month` : 'Your spending, all in one place.';
-  renderCalendar(); renderShifts(); renderTodayShifts(); renderExpenses(); renderWishes(); renderActivity();
+  renderCalendar(); renderShifts(); renderTodayShifts(); renderExpenses(); renderMonthlyExpenses(); renderWishes(); renderActivity();
+}
+
+function nextPaydayDate(from = new Date()) {
+  const payDay = Math.max(1, Math.min(31, Number(state.paydayDay) || 25));
+  let year = from.getFullYear();
+  let month = from.getMonth();
+  let day = Math.min(payDay, new Date(year, month + 1, 0).getDate());
+  let payday = new Date(year, month, day, 12);
+  if (dateKey(payday) < dateKey(from)) {
+    month++;
+    year += Math.floor(month / 12);
+    month %= 12;
+    day = Math.min(payDay, new Date(year, month + 1, 0).getDate());
+    payday = new Date(year, month, day, 12);
+  }
+  return payday;
 }
 
 // Calendar totals include completed shifts; scheduled shifts are shown separately.
@@ -262,6 +280,19 @@ function renderExpenses() {
   $('#expense-list').innerHTML = rows.length ? rows.map(item => `<article class="record-row"><span class="record-icon expense-icon">${item.category === 'Food' ? '⌁' : item.category === 'Transport' ? '↗' : '↘'}</span><div class="record-main"><strong>${esc(item.title)}</strong><span>${longDate(item.date)} · ${esc(item.category)}</span></div><div class="record-amount expense-amount">−${money(item.amount)}</div><button class="delete-button" data-delete="expense" data-id="${esc(item.id)}" aria-label="Delete expense">×</button></article>`).join('') : empty('A clear picture starts here', 'Add an expense when you want to keep track.', '↘');
 }
 
+function renderMonthlyExpenses() {
+  const month = dateKey().slice(0, 7);
+  const [year, monthNumber] = month.split('-').map(Number);
+  const lastDay = new Date(year, monthNumber, 0).getDate();
+  const bills = [...state.monthlyExpenses].sort((a, b) => Number(a.dueDay) - Number(b.dueDay));
+  $('#monthly-expense-list').innerHTML = bills.length ? bills.map(bill => {
+    const dueDay = Math.min(Math.max(1, Number(bill.dueDay) || 1), lastDay);
+    const dueDate = `${month}-${String(dueDay).padStart(2, '0')}`;
+    const paid = bill.paidMonth === month;
+    return `<article class="monthly-expense-row"><div class="monthly-expense-top"><span class="record-icon expense-icon">↻</span><div class="record-main"><strong>${esc(bill.title)}</strong><span>${esc(bill.category)}</span></div><div class="record-amount expense-amount">${money(bill.amount)}</div><button class="delete-button" data-delete="monthly-expense" data-id="${esc(bill.id)}" aria-label="Remove monthly expense">×</button></div><div class="monthly-expense-bottom"><span>${paid ? 'Paid this month' : `Due ${longDate(dueDate)}`}</span><button type="button" class="monthly-paid-button${paid ? ' is-paid' : ''}" data-toggle-monthly-paid="${esc(bill.id)}">${paid ? 'Paid ✓' : 'Mark paid'}</button></div></article>`;
+  }).join('') : empty('No monthly expenses yet', 'Add a membership or subscription to keep it on your radar.', '↻');
+}
+
 function wishCard(item, index) {
   const ratio = Math.max(0, Math.min(100, Number(item.saved) / Number(item.target) * 100));
   const colors = ['wish-peach', 'wish-mint', 'wish-lilac', 'wish-yellow'];
@@ -293,7 +324,8 @@ function openDialog(id) {
   if (dateInput) dateInput.value = dateKey();
   const rateInput = form.querySelector('[name="rate"]');
   if (rateInput) rateInput.value = state.rate;
-  if (id === 'settings-dialog') form.elements.rate.value = state.rate;
+  if (id === 'settings-dialog') { form.elements.rate.value = state.rate; form.elements.paydayDay.value = state.paydayDay; }
+  if (id === 'monthly-expense-dialog') form.elements.dueDay.value = state.paydayDay;
   if (id === 'shift-dialog') updateShiftDuration();
   dialog.showModal();
 }
@@ -462,14 +494,37 @@ $('#expense-form').addEventListener('submit', event => {
   state.expenses.push({ id: crypto.randomUUID(), date: data.get('date'), title: data.get('title').trim(), amount: Number(data.get('amount')), category: data.get('category') });
   persist(); event.currentTarget.closest('dialog').close(); toast('Expense added.');
 });
+$('#monthly-expense-form').addEventListener('submit', event => {
+  event.preventDefault(); const data = new FormData(event.currentTarget);
+  state.monthlyExpenses.push({ id: crypto.randomUUID(), title: data.get('title').trim(), amount: Number(data.get('amount')), category: data.get('category'), dueDay: Number(data.get('dueDay')), paidMonth: '' });
+  persist(); event.currentTarget.closest('dialog').close(); toast('Monthly expense added.');
+});
 $('#wish-form').addEventListener('submit', event => {
   event.preventDefault(); const data = new FormData(event.currentTarget);
   state.wishes.push({ id: crypto.randomUUID(), title: data.get('title').trim(), target: Number(data.get('target')), saved: Number(data.get('saved')) || 0 });
   persist(); event.currentTarget.closest('dialog').close(); toast('A new thing to look forward to.');
 });
 $('#settings-open').addEventListener('click', () => openDialog('settings-dialog'));
-$('#settings-form').addEventListener('submit', event => { event.preventDefault(); state.rate = Number(new FormData(event.currentTarget).get('rate')); persist(); event.currentTarget.closest('dialog').close(); toast('Hourly rate updated.'); });
+$('#settings-form').addEventListener('submit', event => { event.preventDefault(); const data = new FormData(event.currentTarget); state.rate = Number(data.get('rate')); state.paydayDay = Number(data.get('paydayDay')); persist(); event.currentTarget.closest('dialog').close(); toast('Settings updated.'); });
 document.addEventListener('click', event => {
+  const paidButton = event.target.closest('[data-toggle-monthly-paid]');
+  if (paidButton) {
+    const bill = state.monthlyExpenses.find(item => item.id === paidButton.dataset.toggleMonthlyPaid);
+    if (bill) {
+      const month = dateKey().slice(0, 7);
+      if (bill.paidMonth === month) {
+        state.expenses = state.expenses.filter(item => !(item.monthlyExpenseId === bill.id && item.monthlyPeriod === month));
+        bill.paidMonth = '';
+        toast('Monthly expense marked unpaid.');
+      } else {
+        bill.paidMonth = month;
+        state.expenses.push({ id: crypto.randomUUID(), date: dateKey(), title: bill.title, amount: Number(bill.amount), category: bill.category, monthlyExpenseId: bill.id, monthlyPeriod: month });
+        toast('Monthly expense marked paid.');
+      }
+      persist();
+    }
+    return;
+  }
   const saveButton = event.target.closest('[data-add-saving]');
   if (saveButton) {
     const wish = state.wishes.find(item => item.id === saveButton.dataset.addSaving);
@@ -483,7 +538,12 @@ document.addEventListener('click', event => {
     return;
   }
   const button = event.target.closest('[data-delete]'); if (!button) return;
-  const list = button.dataset.delete === 'shift' ? 'shifts' : button.dataset.delete === 'expense' ? 'expenses' : 'wishes';
+  if (button.dataset.delete === 'expense') {
+    const expense = state.expenses.find(item => item.id === button.dataset.id);
+    const bill = expense?.monthlyExpenseId && state.monthlyExpenses.find(item => item.id === expense.monthlyExpenseId);
+    if (bill && bill.paidMonth === expense.monthlyPeriod) bill.paidMonth = '';
+  }
+  const list = button.dataset.delete === 'shift' ? 'shifts' : button.dataset.delete === 'expense' ? 'expenses' : button.dataset.delete === 'monthly-expense' ? 'monthlyExpenses' : 'wishes';
   state[list] = state[list].filter(item => item.id !== button.dataset.id); persist(); toast('Removed.');
 });
 $('#saving-form').addEventListener('submit', event => {

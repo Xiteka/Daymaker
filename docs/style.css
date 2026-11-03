@@ -71,3 +71,13 @@
 .shift-locked{margin:10px 0 0;color:var(--muted);font-size:11px}
 .shift-locked-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:9px;color:var(--muted);font-size:11px}
 .shift-late-finish{min-height:36px;padding:0 13px;border:1px solid var(--orange);border-radius:99px;background:transparent;color:#a73c25;font-size:11px;font-weight:600}
+
+.payday-note{margin-top:11px;color:#ffffffc4;font:500 9px var(--mono);letter-spacing:.8px}
+.monthly-expense-list{border-top:1px solid var(--line)}
+.monthly-expense-row{padding:12px 0;border-bottom:1px solid var(--line)}
+.monthly-expense-top,.monthly-expense-bottom{display:flex;align-items:center;gap:10px}
+.monthly-expense-top .record-main{min-width:0}
+.monthly-expense-top .record-main span{font-size:10px}
+.monthly-expense-bottom{justify-content:space-between;margin:7px 0 0 46px;color:var(--muted);font-size:11px}
+.monthly-paid-button{min-height:34px;padding:0 12px;border:0;border-radius:99px;background:var(--orange);color:#fff;font-size:11px;font-weight:600}
+.monthly-paid-button.is-paid{background:var(--mint);color:var(--ink)}
