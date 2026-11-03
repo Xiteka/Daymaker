@@ -135,10 +135,12 @@ const calendarDateLabel = date => new Date(`${date}T12:00:00`).toLocaleDateStrin
 
 function showCalendarDay(date) {
   calendarDay = date;
-  const total = calendarTotals.get(date) || { hours: 0, pay: 0, plannedCount: 0 };
+  const total = calendarTotals.get(date) || { hours: 0, pay: 0, plannedCount: 0, times: [] };
   const detail = $('#calendar-detail');
   const scheduled = total.plannedCount ? `<p class="calendar-scheduled">${total.plannedCount} ${total.plannedCount === 1 ? 'shift' : 'shifts'} scheduled</p>` : '';
-  detail.innerHTML = `<div class="calendar-detail-date">${calendarDateLabel(date)}</div><div class="calendar-detail-stats"><div><span>WORKED</span><strong>${calendarHours(total.hours)} h</strong></div><div><span>ESTIMATED PAY</span><strong>${money(total.pay)}</strong></div></div>${scheduled}`;
+  const times = (total.times || []).map(item => `<div class="calendar-detail-time"><strong>${esc(item.startTime)}–${esc(item.endTime)}${item.endTime < item.startTime ? ' (+1 day)' : ''}</strong>${item.scheduled ? '<small>Scheduled</small>' : ''}</div>`).join('');
+  const timeDetails = times ? `<div class="calendar-detail-times"><span class="calendar-detail-times-label">SHIFT TIMES</span>${times}</div>` : '';
+  detail.innerHTML = `<div class="calendar-detail-date">${calendarDateLabel(date)}</div><div class="calendar-detail-stats"><div><span>WORKED</span><strong>${calendarHours(total.hours)} h</strong></div><div><span>ESTIMATED PAY</span><strong>${money(total.pay)}</strong></div></div>${timeDetails}${scheduled}`;
   $('#calendar-grid').querySelectorAll('.calendar-day').forEach(button => {
     const selected = button.dataset.date === date;
     button.classList.toggle('selected', selected);
@@ -163,7 +165,8 @@ function renderCalendar() {
   calendarTotals = new Map();
   for (const shift of state.shifts) {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(shift.date || '')) continue;
-    const total = calendarTotals.get(shift.date) || { hours: 0, pay: 0, completedCount: 0, plannedCount: 0 };
+    const total = calendarTotals.get(shift.date) || { hours: 0, pay: 0, completedCount: 0, plannedCount: 0, times: [] };
+    if (shift.startTime && shift.endTime) total.times.push({ startTime: shift.startTime, endTime: shift.endTime, scheduled: !shiftIsComplete(shift) });
     if (shiftIsComplete(shift)) {
       total.hours += Number(shift.hours) || 0;
       total.pay += (Number(shift.hours) || 0) * (Number(shift.rate) || 0);
@@ -189,7 +192,7 @@ function renderCalendar() {
   const tiles = Array(leadingDays).fill('<span class="calendar-blank" aria-hidden="true"></span>');
   for (let day = 1; day <= daysInMonth; day++) {
     const date = `${monthPrefix}-${String(day).padStart(2, '0')}`;
-    const total = calendarTotals.get(date) || { hours: 0, pay: 0, completedCount: 0, plannedCount: 0 };
+    const total = calendarTotals.get(date) || { hours: 0, pay: 0, completedCount: 0, plannedCount: 0, times: [] };
     const worked = total.completedCount > 0;
     const today = date === dateKey();
     const label = `${calendarDateLabel(date)}, ${calendarHours(total.hours)} hours worked, ${money(total.pay)} estimated pay${total.plannedCount ? `, ${total.plannedCount} ${total.plannedCount === 1 ? 'shift' : 'shifts'} scheduled` : ''}`;

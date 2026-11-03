@@ -83,3 +83,7 @@
 .monthly-paid-button.is-paid{background:var(--mint);color:var(--ink)}
 .balance-estimate{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-top:9px;padding-top:8px;border-top:1px solid #ffffff30;color:#ffffffc4;font:500 9px var(--mono);letter-spacing:.7px}
 .balance-estimate b{color:#fff;font:500 12px var(--sans);letter-spacing:0}
+.calendar-detail-times{display:flex;flex-wrap:wrap;align-items:center;gap:7px 10px;margin-top:12px;padding-top:10px;border-top:1px solid #ffffff20}
+.calendar-detail-times-label{flex-basis:100%;color:#a8aca8;font:500 9px var(--mono);letter-spacing:.6px}
+.calendar-detail-time{display:inline-flex;align-items:baseline;gap:5px;color:#fff;font-size:12px}
+.calendar-detail-time small{color:#f6a48f;font-size:9px}
