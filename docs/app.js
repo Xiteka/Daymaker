@@ -228,7 +228,10 @@ function renderTodayShifts() {
   const shifts = state.shifts.filter(item => !shiftIsComplete(item) && item.date === today);
   const section = $('#today-shifts');
   section.hidden = shifts.length === 0;
-  $('#home-shift-list').innerHTML = shifts.map(item => `<article class="today-shift"><div class="today-shift-date">${longDate(item.date)}</div>${swipeControl(item)}</article>`).join('');
+  $('#home-shift-list').innerHTML = shifts.map(item => {
+    const time = item.startTime && item.endTime ? `${esc(item.startTime)}–${esc(item.endTime)}${item.endTime < item.startTime ? ' (+1 day)' : ''}` : 'Work shift';
+    return `<article class="today-shift"><div class="today-shift-date">${longDate(item.date)}</div><div class="today-shift-details"><span>${time}</span><span>${calendarHours(Number(item.hours))} hours</span><strong>${money(earnedFor(item))}</strong></div>${swipeControl(item)}</article>`;
+  }).join('');
 }
 
 function renderShifts() {
