@@ -585,8 +585,15 @@ scheduleDayRefresh();
 
 if ('serviceWorker' in navigator && location.protocol !== 'file:') {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./service-worker.js').catch(error => {
-      console.error('Daymaker could not enable offline support:', error);
+    const alreadyControlled = !!navigator.serviceWorker.controller;
+    let reloadedForUpdate = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (!alreadyControlled || reloadedForUpdate) return;
+      reloadedForUpdate = true;
+      window.location.reload();
     });
+    navigator.serviceWorker.register('./service-worker.js', { updateViaCache: 'none' })
+      .then(registration => registration.update())
+      .catch(error => console.error('Daymaker could not check for an update:', error));
   });
 }
