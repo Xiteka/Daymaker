@@ -100,8 +100,115 @@ function render() {
   $('#work-rate').innerHTML = `${money(state.rate)}<span class="small-unit">/h</span>`;
   $('#expenses-month-total').textContent = money(spent);
   $('#expenses-month-note').textContent = expenses.length ? `${expenses.length} purchases recorded this month` : 'Your spending, all in one place.';
-  renderShifts(); renderExpenses(); renderWishes(); renderActivity();
+  renderCalendar(); renderShifts(); renderExpenses(); renderWishes(); renderActivity();
 }
+
+// Calendar totals are based on every shift logged for each local date.
+const calendarStart = new Date();
+let calendarMonth = new Date(calendarStart.getFullYear(), calendarStart.getMonth(), 1);
+let calendarDay = null;
+let calendarTotals = new Map();
+let calendarHoldTimer;
+const calendarHours = hours => new Intl.NumberFormat('en-GB', { maximumFractionDigits: 2 }).format(hours);
+const calendarDateLabel = date => new Date(`${date}T12:00:00`).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+
+function showCalendarDay(date) {
+  calendarDay = date;
+  const total = calendarTotals.get(date) || { hours: 0, pay: 0 };
+  const detail = $('#calendar-detail');
+  detail.innerHTML = `<div class="calendar-detail-date">${calendarDateLabel(date)}</div><div class="calendar-detail-stats"><div><span>WORKED</span><strong>${calendarHours(total.hours)} h</strong></div><div><span>ESTIMATED PAY</span><strong>${money(total.pay)}</strong></div></div>`;
+  $('#calendar-grid').querySelectorAll('.calendar-day').forEach(button => {
+    const selected = button.dataset.date === date;
+    button.classList.toggle('selected', selected);
+    button.setAttribute('aria-pressed', String(selected));
+  });
+  const button = $('#calendar-grid').querySelector(`[data-date="${date}"]`);
+  if (button) {
+    const popover = $('#calendar-popover');
+    popover.innerHTML = detail.innerHTML;
+    popover.hidden = false;
+    const tile = button.getBoundingClientRect();
+    const popup = popover.getBoundingClientRect();
+    const left = Math.max(12, Math.min(tile.left + (tile.width - popup.width) / 2, window.innerWidth - popup.width - 12));
+    const above = tile.top - popup.height - 8;
+    const top = above >= 12 ? above : Math.min(tile.bottom + 8, window.innerHeight - popup.height - 12);
+    popover.style.left = `${left}px`;
+    popover.style.top = `${Math.max(12, top)}px`;
+  }
+}
+
+function renderCalendar() {
+  calendarTotals = new Map();
+  for (const shift of state.shifts) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(shift.date || '')) continue;
+    const total = calendarTotals.get(shift.date) || { hours: 0, pay: 0 };
+    total.hours += Number(shift.hours) || 0;
+    total.pay += (Number(shift.hours) || 0) * (Number(shift.rate) || 0);
+    calendarTotals.set(shift.date, total);
+  }
+  const year = calendarMonth.getFullYear();
+  const month = calendarMonth.getMonth();
+  const monthLabel = calendarMonth.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
+  const monthPrefix = `${year}-${String(month + 1).padStart(2, '0')}`;
+  const workedDays = [...calendarTotals.keys()].filter(date => date.startsWith(monthPrefix + '-')).length;
+  $('#calendar-popover').hidden = true;
+  $('#calendar-month').textContent = monthLabel;
+  $('#calendar-count').textContent = `${workedDays} ${workedDays === 1 ? 'day' : 'days'} worked`;
+  $('#calendar-grid').setAttribute('aria-label', `Work calendar for ${monthLabel}`);
+  const leadingDays = (new Date(year, month, 1).getDay() + 6) % 7;
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const tiles = Array(leadingDays).fill('<span class="calendar-blank" aria-hidden="true"></span>');
+  for (let day = 1; day <= daysInMonth; day++) {
+    const date = `${monthPrefix}-${String(day).padStart(2, '0')}`;
+    const total = calendarTotals.get(date) || { hours: 0, pay: 0 };
+    const worked = calendarTotals.has(date);
+    const today = date === dateKey();
+    const label = `${calendarDateLabel(date)}, ${calendarHours(total.hours)} hours worked, ${money(total.pay)} estimated pay`;
+    tiles.push(`<button type="button" class="calendar-day${worked ? ' worked' : ''}${today ? ' today' : ''}" data-date="${date}" aria-label="${esc(label)}" aria-pressed="false">${day}</button>`);
+  }
+  $('#calendar-grid').innerHTML = tiles.join('');
+  if (calendarDay && calendarDay.startsWith(monthPrefix + '-')) showCalendarDay(calendarDay);
+  else {
+    calendarDay = null;
+    $('#calendar-detail').innerHTML = '<p class="calendar-hint">Tap or hold a day to see your hours and pay.</p>';
+  }
+}
+
+function changeCalendarMonth(amount) {
+  calendarMonth = new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() + amount, 1);
+  calendarDay = null;
+  renderCalendar();
+}
+$('#calendar-prev').addEventListener('click', () => changeCalendarMonth(-1));
+$('#calendar-next').addEventListener('click', () => changeCalendarMonth(1));
+const calendarGrid = $('#calendar-grid');
+calendarGrid.addEventListener('pointerover', event => {
+  const day = event.target.closest('.calendar-day');
+  if (day && (event.pointerType === 'mouse' || event.pointerType === 'pen')) showCalendarDay(day.dataset.date);
+});
+calendarGrid.addEventListener('pointerleave', event => {
+  if (event.pointerType === 'mouse' || event.pointerType === 'pen') $('#calendar-popover').hidden = true;
+});
+window.addEventListener('scroll', () => { $('#calendar-popover').hidden = true; }, { passive: true });
+window.addEventListener('resize', () => { $('#calendar-popover').hidden = true; });
+calendarGrid.addEventListener('focusin', event => {
+  const day = event.target.closest('.calendar-day');
+  if (day) showCalendarDay(day.dataset.date);
+});
+calendarGrid.addEventListener('pointerdown', event => {
+  const day = event.target.closest('.calendar-day');
+  if (!day || event.pointerType !== 'touch') return;
+  clearTimeout(calendarHoldTimer);
+  calendarHoldTimer = setTimeout(() => showCalendarDay(day.dataset.date), 350);
+});
+for (const eventName of ['pointerup', 'pointercancel']) calendarGrid.addEventListener(eventName, () => clearTimeout(calendarHoldTimer));
+calendarGrid.addEventListener('click', event => {
+  const day = event.target.closest('.calendar-day');
+  if (day) showCalendarDay(day.dataset.date);
+});
+calendarGrid.addEventListener('contextmenu', event => {
+  if (event.target.closest('.calendar-day')) event.preventDefault();
+});
 
 function renderShifts() {
   const rows = [...state.shifts].sort((a, b) => b.date.localeCompare(a.date));

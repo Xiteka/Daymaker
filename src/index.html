@@ -11,8 +11,8 @@
     <link rel="icon" href="./icons/daymaker-bold.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="./icons/daymaker-bold-180.png">
     <title>Daymaker · work & money</title>
-    <link rel="stylesheet" href="style.css?v=5">
-    <script src="app.js?v=4" defer></script>
+    <link rel="stylesheet" href="style.css?v=7">
+    <script src="app.js?v=6" defer></script>
   </head>
   <body>
     <main class="app-shell">
@@ -42,6 +42,16 @@
       <section class="page" id="work-page" aria-labelledby="work-title" hidden>
         <div class="page-title-row"><div><p class="eyebrow">EVERY HOUR ADDS UP</p><h1 id="work-title">Work log<span class="period">.</span></h1></div><button class="primary-button" data-open="shift-dialog">＋ <span>Log shift</span></button></div>
         <div class="summary-strip"><div><span class="eyebrow">THIS MONTH</span><strong id="work-month-hours">0 h</strong></div><div><span class="eyebrow">ESTIMATED PAY</span><strong id="work-month-pay">kr 0</strong></div><div><span class="eyebrow">HOURLY RATE</span><strong id="work-rate">kr 220<span class="small-unit">/h</span></strong></div></div>
+        <section class="work-calendar" aria-labelledby="calendar-month">
+          <div class="calendar-heading">
+            <div><p class="calendar-eyebrow">YOUR WORK, DAY BY DAY</p><h2 id="calendar-month"></h2><p id="calendar-count" class="calendar-count"></p></div>
+            <div class="calendar-navigation"><button type="button" id="calendar-prev" aria-label="Previous month">‹</button><button type="button" id="calendar-next" aria-label="Next month">›</button></div>
+          </div>
+          <div class="calendar-weekdays" aria-hidden="true"><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span><span>S</span></div>
+          <div id="calendar-grid" class="calendar-grid" aria-label="Work calendar"></div>
+          <div id="calendar-detail" class="calendar-detail" aria-live="polite"></div>
+          <div id="calendar-popover" class="calendar-popover" aria-hidden="true" hidden></div>
+        </section>
         <div class="section-heading list-heading"><div><p class="eyebrow">YOUR TIME, KEPT</p><h2>Shifts</h2></div></div><div id="shift-list" class="record-list"></div>
       </section>
 
