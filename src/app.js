@@ -321,7 +321,7 @@ function openDialog(id) {
   const form = dialog.querySelector('form');
   form.reset();
   const dateInput = form.querySelector('[name="date"]');
-  if (dateInput) dateInput.value = dateKey();
+  if (dateInput) dateInput.value = id === 'shift-dialog' && !$('#calendar-page').hidden && calendarDay ? calendarDay : dateKey();
   const rateInput = form.querySelector('[name="rate"]');
   if (rateInput) rateInput.value = state.rate;
   if (id === 'settings-dialog') { form.elements.rate.value = state.rate; form.elements.paydayDay.value = state.paydayDay; }
