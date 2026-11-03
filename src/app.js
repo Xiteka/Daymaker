@@ -259,6 +259,7 @@ document.querySelectorAll('[data-open]').forEach(button => button.addEventListen
 document.querySelectorAll('[data-close]').forEach(button => button.addEventListener('click', () => document.getElementById(button.dataset.close).close()));
 document.querySelectorAll('[data-page], [data-go]').forEach(button => button.addEventListener('click', () => {
   const page = button.dataset.page || button.dataset.go;
+  $('#calendar-popover').hidden = true;
   document.querySelectorAll('.page').forEach(section => { section.hidden = section.id !== `${page}-page`; section.classList.toggle('active', !section.hidden); });
   document.querySelectorAll('.tab').forEach(tab => { const active = tab.dataset.page === page; tab.classList.toggle('active', active); if (active) tab.setAttribute('aria-current', 'page'); else tab.removeAttribute('aria-current'); });
   window.scrollTo({ top: 0, behavior: 'smooth' });

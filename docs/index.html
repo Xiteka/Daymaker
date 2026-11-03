@@ -11,8 +11,8 @@
     <link rel="icon" href="./icons/daymaker-bold.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="./icons/daymaker-bold-180.png">
     <title>Daymaker · work & money</title>
-    <link rel="stylesheet" href="style.css?v=7">
-    <script src="app.js?v=6" defer></script>
+    <link rel="stylesheet" href="style.css?v=8">
+    <script src="app.js?v=7" defer></script>
   </head>
   <body>
     <main class="app-shell">
@@ -42,6 +42,11 @@
       <section class="page" id="work-page" aria-labelledby="work-title" hidden>
         <div class="page-title-row"><div><p class="eyebrow">EVERY HOUR ADDS UP</p><h1 id="work-title">Work log<span class="period">.</span></h1></div><button class="primary-button" data-open="shift-dialog">＋ <span>Log shift</span></button></div>
         <div class="summary-strip"><div><span class="eyebrow">THIS MONTH</span><strong id="work-month-hours">0 h</strong></div><div><span class="eyebrow">ESTIMATED PAY</span><strong id="work-month-pay">kr 0</strong></div><div><span class="eyebrow">HOURLY RATE</span><strong id="work-rate">kr 220<span class="small-unit">/h</span></strong></div></div>
+        <div class="section-heading list-heading"><div><p class="eyebrow">YOUR TIME, KEPT</p><h2>Shifts</h2></div></div><div id="shift-list" class="record-list"></div>
+      </section>
+
+      <section class="page" id="calendar-page" aria-labelledby="calendar-title" hidden>
+        <div class="page-title-row"><div><p class="eyebrow">YOUR TIME, AT A GLANCE</p><h1 id="calendar-title">Calendar<span class="period">.</span></h1></div><button class="primary-button" data-open="shift-dialog">＋ <span>Log shift</span></button></div>
         <section class="work-calendar" aria-labelledby="calendar-month">
           <div class="calendar-heading">
             <div><p class="calendar-eyebrow">YOUR WORK, DAY BY DAY</p><h2 id="calendar-month"></h2><p id="calendar-count" class="calendar-count"></p></div>
@@ -52,7 +57,6 @@
           <div id="calendar-detail" class="calendar-detail" aria-live="polite"></div>
           <div id="calendar-popover" class="calendar-popover" aria-hidden="true" hidden></div>
         </section>
-        <div class="section-heading list-heading"><div><p class="eyebrow">YOUR TIME, KEPT</p><h2>Shifts</h2></div></div><div id="shift-list" class="record-list"></div>
       </section>
 
       <section class="page" id="expenses-page" aria-labelledby="expenses-title" hidden>
@@ -70,6 +74,7 @@
       <nav class="bottom-nav" aria-label="Main navigation">
         <button class="tab active" data-page="home" aria-current="page"><span class="tab-icon">⌂</span><span>Home</span></button>
         <button class="tab" data-page="work"><span class="tab-icon">◷</span><span>Work</span></button>
+        <button class="tab" data-page="calendar"><span class="tab-icon" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M7.5 3v4M16.5 3v4M3.5 9.5h17M8 13.5h.01M12 13.5h.01M16 13.5h.01M8 17h.01M12 17h.01"/></svg></span><span>Calendar</span></button>
         <button class="tab" data-page="expenses"><span class="tab-icon">↘</span><span>Expenses</span></button>
         <button class="tab" data-page="wishlist"><span class="tab-icon">♡</span><span>Wishlist</span></button>
       </nav>
