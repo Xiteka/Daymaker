@@ -15,7 +15,9 @@ Open the printed local URL in a browser. To run the Electron desktop wrapper, us
 
 ## Tracker behavior
 
-- Log work shifts with a date, hours, optional note, and hourly pay. New shifts use the saved default hourly rate.
+- Schedule shifts with a date, start and end time, note, and hourly rate. Swipe or hold the orange arrow to finish a shift and adjust the actual hours or times.
+- Only completed shifts count toward work and pay totals; shifts saved before the completion feature remain completed. The calendar shows completed and scheduled days.
+- Estimated pay uses each shift’s hourly rate and does not automatically add an overtime premium.
 - Add expenses with a category and date.
 - Save wishlist items with a target and the amount already saved.
 - Dashboard totals show current-month pay and expenses, with an estimated take-home figure.

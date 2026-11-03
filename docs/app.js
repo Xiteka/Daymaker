@@ -65,6 +65,7 @@ const longDate = value => new Date(`${value}T12:00:00`).toLocaleDateString('en-G
 const monthKey = dateKey().slice(0, 7);
 const monthEntries = entries => entries.filter(item => item.date?.startsWith(monthKey));
 const earnedFor = shift => Number(shift.hours) * Number(shift.rate);
+const shiftIsComplete = shift => shift.completed !== false;
 const esc = value => String(value ?? '').replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
 const persist = () => { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); render(); };
 const empty = (title, hint, symbol = '✳') => `<div class="empty-state"><span>${symbol}</span><strong>${title}</strong><p>${hint}</p></div>`;
@@ -78,7 +79,7 @@ function toast(message) {
 }
 
 function render() {
-  const shifts = monthEntries(state.shifts);
+  const shifts = monthEntries(state.shifts).filter(shiftIsComplete);
   const expenses = monthEntries(state.expenses);
   const hours = shifts.reduce((sum, item) => sum + Number(item.hours), 0);
   const earned = shifts.reduce((sum, item) => sum + earnedFor(item), 0);
@@ -91,7 +92,7 @@ function render() {
   $('#spent-value').textContent = money(spent);
   const hoursText = calendarHours(hours);
   renderDotValue($('#hours-value'), hoursText, `${hoursText} h`, 'h', 'stat');
-  $('#shift-count').textContent = shifts.length ? `${shifts.length} ${shifts.length === 1 ? 'shift' : 'shifts'} this month` : 'No shifts logged yet';
+  $('#shift-count').textContent = shifts.length ? `${shifts.length} ${shifts.length === 1 ? 'shift' : 'shifts'} this month` : 'No shifts completed yet';
   renderDotValue($('#expense-value'), wholeNumber(spent), money(spent), 'kr', 'stat');
   $('#expense-count').textContent = expenses.length ? `${expenses.length} ${expenses.length === 1 ? 'purchase' : 'purchases'} this month` : 'No spending logged yet';
   $('#balance-progress').style.width = `${earned ? Math.max(3, Math.min(100, ((earned - spent) / earned) * 100)) : 0}%`;
@@ -103,7 +104,7 @@ function render() {
   renderCalendar(); renderShifts(); renderExpenses(); renderWishes(); renderActivity();
 }
 
-// Calendar totals are based on every shift logged for each local date.
+// Calendar totals include completed shifts; scheduled shifts are shown separately.
 const calendarStart = new Date();
 let calendarMonth = new Date(calendarStart.getFullYear(), calendarStart.getMonth(), 1);
 let calendarDay = null;
@@ -114,9 +115,10 @@ const calendarDateLabel = date => new Date(`${date}T12:00:00`).toLocaleDateStrin
 
 function showCalendarDay(date) {
   calendarDay = date;
-  const total = calendarTotals.get(date) || { hours: 0, pay: 0 };
+  const total = calendarTotals.get(date) || { hours: 0, pay: 0, plannedCount: 0 };
   const detail = $('#calendar-detail');
-  detail.innerHTML = `<div class="calendar-detail-date">${calendarDateLabel(date)}</div><div class="calendar-detail-stats"><div><span>WORKED</span><strong>${calendarHours(total.hours)} h</strong></div><div><span>ESTIMATED PAY</span><strong>${money(total.pay)}</strong></div></div>`;
+  const scheduled = total.plannedCount ? `<p class="calendar-scheduled">${total.plannedCount} ${total.plannedCount === 1 ? 'shift' : 'shifts'} scheduled</p>` : '';
+  detail.innerHTML = `<div class="calendar-detail-date">${calendarDateLabel(date)}</div><div class="calendar-detail-stats"><div><span>WORKED</span><strong>${calendarHours(total.hours)} h</strong></div><div><span>ESTIMATED PAY</span><strong>${money(total.pay)}</strong></div></div>${scheduled}`;
   $('#calendar-grid').querySelectorAll('.calendar-day').forEach(button => {
     const selected = button.dataset.date === date;
     button.classList.toggle('selected', selected);
@@ -141,30 +143,37 @@ function renderCalendar() {
   calendarTotals = new Map();
   for (const shift of state.shifts) {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(shift.date || '')) continue;
-    const total = calendarTotals.get(shift.date) || { hours: 0, pay: 0 };
-    total.hours += Number(shift.hours) || 0;
-    total.pay += (Number(shift.hours) || 0) * (Number(shift.rate) || 0);
+    const total = calendarTotals.get(shift.date) || { hours: 0, pay: 0, completedCount: 0, plannedCount: 0 };
+    if (shiftIsComplete(shift)) {
+      total.hours += Number(shift.hours) || 0;
+      total.pay += (Number(shift.hours) || 0) * (Number(shift.rate) || 0);
+      total.completedCount++;
+    } else {
+      total.plannedCount++;
+    }
     calendarTotals.set(shift.date, total);
   }
   const year = calendarMonth.getFullYear();
   const month = calendarMonth.getMonth();
   const monthLabel = calendarMonth.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
   const monthPrefix = `${year}-${String(month + 1).padStart(2, '0')}`;
-  const workedDays = [...calendarTotals.keys()].filter(date => date.startsWith(monthPrefix + '-')).length;
+  const monthTotals = [...calendarTotals.entries()].filter(([date]) => date.startsWith(monthPrefix + '-'));
+  const workedDays = monthTotals.filter(([, total]) => total.completedCount > 0).length;
+  const plannedShifts = monthTotals.reduce((sum, [, total]) => sum + total.plannedCount, 0);
   $('#calendar-popover').hidden = true;
   $('#calendar-month').textContent = monthLabel;
-  $('#calendar-count').textContent = `${workedDays} ${workedDays === 1 ? 'day' : 'days'} worked`;
+  $('#calendar-count').textContent = `${workedDays} ${workedDays === 1 ? 'day' : 'days'} worked${plannedShifts ? ` · ${plannedShifts} scheduled` : ''}`;
   $('#calendar-grid').setAttribute('aria-label', `Work calendar for ${monthLabel}`);
   const leadingDays = (new Date(year, month, 1).getDay() + 6) % 7;
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const tiles = Array(leadingDays).fill('<span class="calendar-blank" aria-hidden="true"></span>');
   for (let day = 1; day <= daysInMonth; day++) {
     const date = `${monthPrefix}-${String(day).padStart(2, '0')}`;
-    const total = calendarTotals.get(date) || { hours: 0, pay: 0 };
-    const worked = calendarTotals.has(date);
+    const total = calendarTotals.get(date) || { hours: 0, pay: 0, completedCount: 0, plannedCount: 0 };
+    const worked = total.completedCount > 0;
     const today = date === dateKey();
-    const label = `${calendarDateLabel(date)}, ${calendarHours(total.hours)} hours worked, ${money(total.pay)} estimated pay`;
-    tiles.push(`<button type="button" class="calendar-day${worked ? ' worked' : ''}${today ? ' today' : ''}" data-date="${date}" aria-label="${esc(label)}" aria-pressed="false">${day}</button>`);
+    const label = `${calendarDateLabel(date)}, ${calendarHours(total.hours)} hours worked, ${money(total.pay)} estimated pay${total.plannedCount ? `, ${total.plannedCount} ${total.plannedCount === 1 ? 'shift' : 'shifts'} scheduled` : ''}`;
+    tiles.push(`<button type="button" class="calendar-day${worked ? ' worked' : ''}${total.plannedCount ? ' planned' : ''}${today ? ' today' : ''}" data-date="${date}" aria-label="${esc(label)}" aria-pressed="false">${day}</button>`);
   }
   $('#calendar-grid').innerHTML = tiles.join('');
   if (calendarDay && calendarDay.startsWith(monthPrefix + '-')) showCalendarDay(calendarDay);
@@ -212,7 +221,14 @@ calendarGrid.addEventListener('contextmenu', event => {
 
 function renderShifts() {
   const rows = [...state.shifts].sort((a, b) => b.date.localeCompare(a.date));
-  $('#shift-list').innerHTML = rows.length ? rows.map(item => `<article class="record-row"><span class="record-icon work-icon">◷</span><div class="record-main"><strong>${esc(item.note || 'Work shift')}</strong><span>${longDate(item.date)}${item.startTime && item.endTime ? ` · ${esc(item.startTime)}–${esc(item.endTime)}${item.endTime < item.startTime ? ' (+1 day)' : ''}` : ''} · ${calendarHours(Number(item.hours))} hours at ${money(item.rate)}/h</span></div><div class="record-amount">${money(earnedFor(item))}</div><button class="delete-button" data-delete="shift" data-id="${esc(item.id)}" aria-label="Delete shift">×</button></article>`).join('') : empty('Your hours will add up here', 'Log a shift to see your time and estimated pay.', '◷');
+  $('#shift-list').innerHTML = rows.length ? rows.map(item => {
+    const completed = shiftIsComplete(item);
+    const time = item.startTime && item.endTime ? ` · ${esc(item.startTime)}–${esc(item.endTime)}${item.endTime < item.startTime ? ' (+1 day)' : ''}` : '';
+    const status = completed
+      ? `<div class="shift-complete-row"><span class="shift-complete-label">✓ Completed</span><button type="button" class="shift-edit" data-edit-shift="${esc(item.id)}">Edit hours</button></div>`
+      : `<div class="swipe-track" data-shift-id="${esc(item.id)}"><span class="swipe-fill" aria-hidden="true"></span><span class="swipe-prompt" aria-hidden="true">Slide or hold to finish</span><button type="button" class="swipe-handle" data-finish-shift="${esc(item.id)}" aria-label="Slide, hold or tap to finish shift on ${esc(longDate(item.date))}">›</button></div>`;
+    return `<article class="shift-card"><div class="shift-card-top"><div class="record-main"><strong>${esc(item.note || 'Work shift')}</strong><span>${longDate(item.date)}${time} · ${calendarHours(Number(item.hours))} hours at ${money(item.rate)}/h</span></div><div class="record-amount">${money(earnedFor(item))}${completed ? '' : '<small class="shift-planned-amount">planned</small>'}</div><button class="delete-button" data-delete="shift" data-id="${esc(item.id)}" aria-label="Delete shift">×</button></div>${status}</article>`;
+  }).join('') : empty('Your hours will add up here', 'Log a shift to see your time and estimated pay.', '◷');
 }
 
 function renderExpenses() {
@@ -237,7 +253,7 @@ function renderWishes() {
 
 function renderActivity() {
   const items = [
-    ...state.shifts.map(item => ({ ...item, kind: 'shift', title: item.note || 'Work shift', amount: earnedFor(item) })),
+    ...state.shifts.filter(shiftIsComplete).map(item => ({ ...item, kind: 'shift', title: item.note || 'Work shift', amount: earnedFor(item) })),
     ...state.expenses.map(item => ({ ...item, kind: 'expense', amount: -Number(item.amount) }))
   ].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 4);
   $('#home-activity').innerHTML = items.length ? items.map(item => `<article class="activity-row"><span class="activity-dot ${item.kind}">${item.kind === 'shift' ? '↗' : '↘'}</span><span class="activity-name"><strong>${esc(item.title)}</strong><small>${longDate(item.date)}</small></span><strong class="activity-value ${item.kind}">${item.amount > 0 ? '+' : '−'}${money(Math.abs(item.amount))}</strong></article>`).join('') : empty('Nothing here just yet', 'Your shifts and expenses will show up here.', '✳');
@@ -266,6 +282,11 @@ document.querySelectorAll('[data-page], [data-go]').forEach(button => button.add
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }));
 
+function hoursBetweenTimes(start, end) {
+  if (!start || !end || start === end) return null;
+  const minutes = time => { const [hour, minute] = time.split(':').map(Number); return hour * 60 + minute; };
+  return ((minutes(end) - minutes(start) + 24 * 60) % (24 * 60)) / 60;
+}
 const shiftForm = $('#shift-form');
 function updateShiftDuration() {
   const start = shiftForm.elements.startTime.value;
@@ -276,9 +297,7 @@ function updateShiftDuration() {
     shiftForm.elements.hours.value = '';
     return null;
   }
-  const minutes = time => { const [hour, minute] = time.split(':').map(Number); return hour * 60 + minute; };
-  const duration = (minutes(end) - minutes(start) + 24 * 60) % (24 * 60);
-  const hours = duration / 60;
+  const hours = hoursBetweenTimes(start, end);
   shiftForm.elements.hours.value = `${calendarHours(hours)} h`;
   return hours;
 }
@@ -293,9 +312,121 @@ shiftForm.addEventListener('submit', event => {
   if (hours === null) { form.reportValidity(); return; }
   const data = new FormData(form);
   const rate = data.get('rate') === '' ? Number(state.rate) : Number(data.get('rate'));
-  state.shifts.push({ id: crypto.randomUUID(), date: data.get('date'), startTime: data.get('startTime'), endTime: data.get('endTime'), hours, rate, note: data.get('note').trim() });
-  persist(); form.closest('dialog').close(); toast('Shift saved. Nice work.');
+  state.shifts.push({ id: crypto.randomUUID(), date: data.get('date'), startTime: data.get('startTime'), endTime: data.get('endTime'), hours, rate, note: data.get('note').trim(), completed: false });
+  persist(); form.closest('dialog').close(); toast('Shift scheduled.');
 });
+const finishForm = $('#finish-form');
+const finishDialog = $('#finish-dialog');
+let finishExactHours = null;
+let swipeGesture = null;
+let suppressSwipeClickUntil = 0;
+
+function setFinishHours(hours) {
+  finishExactHours = hours;
+  finishForm.elements.hours.value = calendarHours(hours);
+}
+function openFinishShift(id) {
+  const shift = state.shifts.find(item => item.id === id);
+  if (!shift || finishDialog.open) return;
+  const completed = shift.completed !== false;
+  finishForm.reset();
+  finishForm.elements.shiftId.value = shift.id;
+  $('#finish-title').textContent = completed ? 'Edit shift hours' : 'Finish shift';
+  $('#finish-date').textContent = longDate(shift.date);
+  $('#finish-submit').innerHTML = completed ? 'Save changes <span>↗</span>' : 'Finish shift <span>↗</span>';
+  const hasTimes = !!(shift.startTime && shift.endTime);
+  $('#finish-times').hidden = !hasTimes;
+  for (const name of ['startTime', 'endTime']) {
+    const field = finishForm.elements[name];
+    field.required = hasTimes;
+    field.value = hasTimes ? shift[name] : '';
+    field.setCustomValidity('');
+  }
+  setFinishHours(Number(shift.hours));
+  finishDialog.showModal();
+}
+function updateFinishTimes() {
+  const start = finishForm.elements.startTime.value;
+  const end = finishForm.elements.endTime.value;
+  finishForm.elements.endTime.setCustomValidity(start && end && start === end ? 'Start and end times must be different.' : '');
+  const hours = hoursBetweenTimes(start, end);
+  if (hours !== null) setFinishHours(hours);
+}
+for (const name of ['startTime', 'endTime']) {
+  finishForm.elements[name].addEventListener('input', updateFinishTimes);
+  finishForm.elements[name].addEventListener('change', updateFinishTimes);
+}
+finishForm.elements.hours.addEventListener('input', () => { finishExactHours = null; });
+finishForm.addEventListener('submit', event => {
+  event.preventDefault();
+  const shift = state.shifts.find(item => item.id === finishForm.elements.shiftId.value);
+  if (!shift) { finishDialog.close(); return; }
+  const hours = finishExactHours === null ? Number(finishForm.elements.hours.value) : finishExactHours;
+  if (!Number.isFinite(hours) || hours <= 0 || hours > 24) { finishForm.elements.hours.reportValidity(); return; }
+  const wasCompleted = shiftIsComplete(shift);
+  shift.hours = hours;
+  if (!$('#finish-times').hidden) {
+    shift.startTime = finishForm.elements.startTime.value;
+    shift.endTime = finishForm.elements.endTime.value;
+  }
+  shift.completed = true;
+  persist();
+  finishDialog.close();
+  toast(wasCompleted ? 'Shift updated.' : 'Shift completed.');
+});
+
+function resetSwipe() {
+  if (!swipeGesture) return;
+  clearTimeout(swipeGesture.timer);
+  swipeGesture.handle.style.transform = '';
+  swipeGesture.track.querySelector('.swipe-fill').style.width = '';
+  swipeGesture = null;
+}
+const shiftList = $('#shift-list');
+shiftList.addEventListener('pointerdown', event => {
+  const handle = event.target.closest('.swipe-handle');
+  if (!handle || (event.pointerType === 'mouse' && event.button !== 0)) return;
+  resetSwipe();
+  const track = handle.closest('.swipe-track');
+  const distance = Math.max(1, track.clientWidth - handle.offsetWidth - 8);
+  swipeGesture = { handle, track, pointerId: event.pointerId, startX: event.clientX, startY: event.clientY, distance, progress: 0, moved: false, triggered: false };
+  if (handle.setPointerCapture) handle.setPointerCapture(event.pointerId);
+  const current = swipeGesture;
+  current.timer = setTimeout(() => {
+    if (swipeGesture !== current || current.progress > 0.04) return;
+    current.triggered = true;
+    openFinishShift(handle.dataset.finishShift);
+  }, 700);
+});
+shiftList.addEventListener('pointermove', event => {
+  const gesture = swipeGesture;
+  if (!gesture || gesture.pointerId !== event.pointerId || gesture.triggered) return;
+  const distanceMoved = Math.max(0, event.clientX - gesture.startX);
+  if (Math.abs(event.clientX - gesture.startX) > 6 || Math.abs(event.clientY - gesture.startY) > 6) { gesture.moved = true; clearTimeout(gesture.timer); }
+  gesture.progress = Math.min(1, distanceMoved / gesture.distance);
+  gesture.handle.style.transform = `translateX(${gesture.progress * gesture.distance}px)`;
+  gesture.track.querySelector('.swipe-fill').style.width = `${gesture.progress * 100}%`;
+});
+shiftList.addEventListener('pointerup', event => {
+  const gesture = swipeGesture;
+  if (!gesture || gesture.pointerId !== event.pointerId) return;
+  const shouldFinish = !gesture.triggered && gesture.progress >= 0.75;
+  const id = gesture.handle.dataset.finishShift;
+  if (gesture.moved || gesture.triggered) suppressSwipeClickUntil = Date.now() + 500;
+  resetSwipe();
+  if (shouldFinish) openFinishShift(id);
+});
+shiftList.addEventListener('pointercancel', resetSwipe);
+shiftList.addEventListener('click', event => {
+  const edit = event.target.closest('[data-edit-shift]');
+  if (edit) { openFinishShift(edit.dataset.editShift); return; }
+  const handle = event.target.closest('[data-finish-shift]');
+  if (handle && (event.detail === 0 || Date.now() >= suppressSwipeClickUntil)) openFinishShift(handle.dataset.finishShift);
+});
+shiftList.addEventListener('contextmenu', event => {
+  if (event.target.closest('.swipe-handle')) event.preventDefault();
+});
+
 $('#expense-form').addEventListener('submit', event => {
   event.preventDefault(); const data = new FormData(event.currentTarget);
   state.expenses.push({ id: crypto.randomUUID(), date: data.get('date'), title: data.get('title').trim(), amount: Number(data.get('amount')), category: data.get('category') });
