@@ -226,12 +226,14 @@ function swipeControl(item) {
 function renderTodayShifts() {
   const today = dateKey();
   const shifts = state.shifts.filter(item => !shiftIsComplete(item) && item.date === today);
-  const section = $('#today-shifts');
-  section.hidden = shifts.length === 0;
-  $('#home-shift-list').innerHTML = shifts.map(item => {
+  const content = shifts.map(item => {
     const time = item.startTime && item.endTime ? `${esc(item.startTime)}–${esc(item.endTime)}${item.endTime < item.startTime ? ' (+1 day)' : ''}` : 'Work shift';
     return `<article class="today-shift"><div class="today-shift-date">${longDate(item.date)}</div><div class="today-shift-details"><span>${time}</span><span>${calendarHours(Number(item.hours))} hours</span><strong>${money(earnedFor(item))}</strong></div>${swipeControl(item)}</article>`;
   }).join('');
+  for (const [section, list] of [['#home-today-shifts', '#home-shift-list'], ['#work-today-shifts', '#work-shift-list']]) {
+    $(section).hidden = shifts.length === 0;
+    $(list).innerHTML = content;
+  }
 }
 
 function renderShifts() {
@@ -406,7 +408,7 @@ function resetSwipe() {
   swipeGesture.track.querySelector('.swipe-fill').style.width = '';
   swipeGesture = null;
 }
-for (const shiftList of [$('#shift-list'), $('#home-shift-list')]) {
+for (const shiftList of [$('#shift-list'), $('#home-shift-list'), $('#work-shift-list')]) {
 shiftList.addEventListener('pointerdown', event => {
   const handle = event.target.closest('.swipe-handle');
   if (!handle || (event.pointerType === 'mouse' && event.button !== 0)) return;

@@ -11,8 +11,8 @@
     <link rel="icon" href="./icons/daymaker-bold.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="./icons/daymaker-bold-180.png">
     <title>Daymaker · work & money</title>
-    <link rel="stylesheet" href="style.css?v=14">
-    <script src="app.js?v=13" defer></script>
+    <link rel="stylesheet" href="style.css?v=15">
+    <script src="app.js?v=14" defer></script>
   </head>
   <body>
     <main class="app-shell">
@@ -35,6 +35,8 @@
           <article class="stat-card stat-expenses"><div class="card-label"><span>EXPENSES</span><span class="mini-icon">↘</span></div><div class="stat-value" id="expense-value">kr 0</div><p id="expense-count">No spending logged yet</p></article>
         </div>
 
+        <section id="home-today-shifts" class="today-shifts" aria-label="Today’s shifts" hidden><div id="home-shift-list"></div></section>
+
         <section class="section-block"><div class="section-heading"><div><p class="eyebrow">YOUR NEXT LITTLE WIN</p><h2>Wishlist</h2></div><button class="text-link" data-go="wishlist">See all <span>↗</span></button></div><div id="home-wishlist" class="wish-preview"></div></section>
         <section class="section-block recent-block"><div class="section-heading"><div><p class="eyebrow">FRESH FROM YOUR POCKET</p><h2>Recent activity</h2></div><button class="text-link" data-go="expenses">View all <span>↗</span></button></div><div id="home-activity" class="activity-list"></div></section>
       </section>
@@ -42,7 +44,7 @@
       <section class="page" id="work-page" aria-labelledby="work-title" hidden>
         <div class="page-title-row"><div><p class="eyebrow">EVERY HOUR ADDS UP</p><h1 id="work-title">Work log<span class="period">.</span></h1></div><button class="primary-button" data-open="shift-dialog">＋ <span>Log shift</span></button></div>
         <div class="summary-strip"><div><span class="eyebrow">THIS MONTH</span><strong id="work-month-hours">0 h</strong></div><div><span class="eyebrow">ESTIMATED PAY</span><strong id="work-month-pay">kr 0</strong></div><div><span class="eyebrow">HOURLY RATE</span><strong id="work-rate">kr 220<span class="small-unit">/h</span></strong></div></div>
-        <section id="today-shifts" class="today-shifts" aria-label="Today’s shifts" hidden><div id="home-shift-list"></div></section>
+        <section id="work-today-shifts" class="today-shifts" aria-label="Today’s shifts" hidden><div id="work-shift-list"></div></section>
         <div class="section-heading list-heading"><div><p class="eyebrow">YOUR TIME, KEPT</p><h2>Shifts</h2></div></div><div id="shift-list" class="record-list"></div>
       </section>
 
