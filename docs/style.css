@@ -81,3 +81,5 @@
 .monthly-expense-bottom{justify-content:space-between;margin:7px 0 0 46px;color:var(--muted);font-size:11px}
 .monthly-paid-button{min-height:34px;padding:0 12px;border:0;border-radius:99px;background:var(--orange);color:#fff;font-size:11px;font-weight:600}
 .monthly-paid-button.is-paid{background:var(--mint);color:var(--ink)}
+.balance-estimate{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-top:9px;padding-top:8px;border-top:1px solid #ffffff30;color:#ffffffc4;font:500 9px var(--mono);letter-spacing:.7px}
+.balance-estimate b{color:#fff;font:500 12px var(--sans);letter-spacing:0}

@@ -80,8 +80,10 @@ function toast(message) {
 function render() {
   const shifts = monthEntries(state.shifts).filter(shiftIsComplete);
   const expenses = monthEntries(state.expenses);
+  const today = dateKey();
   const hours = shifts.reduce((sum, item) => sum + Number(item.hours), 0);
   const earned = shifts.reduce((sum, item) => sum + earnedFor(item), 0);
+  const estimate = monthEntries(state.shifts).filter(item => shiftIsComplete(item) || item.date >= today).reduce((sum, item) => sum + earnedFor(item), 0);
   const spent = expenses.reduce((sum, item) => sum + Number(item.amount), 0);
   $('#month-label').textContent = `YOUR MONEY THIS ${new Date().toLocaleDateString('en-GB', { month: 'long' }).toUpperCase()}`;
   $('#today-label').textContent = new Date().toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }).toUpperCase();
@@ -91,6 +93,7 @@ function render() {
   renderDotValue($('#balance-value'), wholeNumber(earned - spent), money(earned - spent), 'kr', 'balance');
   $('#earned-value').textContent = money(earned);
   $('#spent-value').textContent = money(spent);
+  $('#estimate-value').textContent = money(estimate);
   const hoursText = calendarHours(hours);
   renderDotValue($('#hours-value'), hoursText, `${hoursText} h`, 'h', 'stat');
   $('#shift-count').textContent = shifts.length ? `${shifts.length} ${shifts.length === 1 ? 'shift' : 'shifts'} this month` : 'No shifts completed yet';
