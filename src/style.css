@@ -87,3 +87,26 @@
 .calendar-detail-times-label{flex-basis:100%;color:#a8aca8;font:500 9px var(--mono);letter-spacing:.6px}
 .calendar-detail-time{display:inline-flex;align-items:baseline;gap:5px;color:#fff;font-size:12px}
 .calendar-detail-time small{color:#f6a48f;font-size:9px}
+
+.shift-date-trigger{width:100%;height:45px;display:flex;align-items:center;justify-content:space-between;padding:0 12px;border:1px solid var(--line);border-radius:11px;background:#fff;text-align:left;font-size:14px;font-weight:500}
+.shift-date-icon{width:27px;height:27px;display:grid;place-items:center;border-radius:8px;background:var(--peach);color:var(--orange);font-size:15px}
+.shift-date-dialog{padding:26px}
+.shift-date-dialog>.eyebrow{margin:0 0 8px}
+.shift-date-dialog h2{margin-bottom:17px}
+.shift-date-calendar{padding:16px;border-radius:19px;background:var(--deep);color:#fff}
+.shift-date-month{display:grid;grid-template-columns:36px 1fr 36px;align-items:center;gap:8px;margin-bottom:17px}
+.shift-date-month strong{text-align:center;font:500 15px var(--display);letter-spacing:-.2px}
+.shift-date-month button{width:34px;height:34px;border:1px solid #ffffff22;border-radius:50%;background:#ffffff0b;color:#fff;font:400 23px/1 var(--sans)}
+.shift-date-month button:active{background:var(--orange)}
+.shift-date-weekdays,.shift-date-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:7px}
+.shift-date-weekdays{margin-bottom:8px;color:#a8aca8;text-align:center;font:500 9px var(--mono)}
+.shift-date-weekdays span{display:grid;place-items:center;height:22px}
+.shift-date-day,.shift-date-blank{width:100%;aspect-ratio:1;min-width:0}
+.shift-date-day{display:grid;place-items:center;padding:0;border:1px solid transparent;border-radius:10px;background:#191d1d;color:#edece8;font-size:12px;font-variant-numeric:tabular-nums;transition:background .15s,transform .15s}
+.shift-date-day:hover{background:#343a37}
+.shift-date-day.today{border-color:#f05432aa;color:#ff927a}
+.shift-date-day.selected,.shift-date-day.selected.today{border-color:var(--orange);background:var(--orange);color:#fff;font-weight:700;box-shadow:0 4px 12px #f0543240}
+.shift-date-day:active{transform:scale(.94)}
+.shift-date-today{width:100%;height:43px;display:flex;align-items:center;justify-content:center;gap:7px;margin-top:13px;border:0;border-radius:99px;background:var(--peach);color:#a83b25;font-size:12px;font-weight:600}
+.shift-date-today span{color:var(--orange)}
+@media(max-width:370px){.shift-date-dialog{padding:22px 18px}.shift-date-calendar{padding:13px}.shift-date-weekdays,.shift-date-grid{gap:5px}.shift-date-day{border-radius:8px}}

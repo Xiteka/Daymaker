@@ -322,6 +322,32 @@ function renderActivity() {
   $('#home-activity').innerHTML = items.length ? items.map(item => `<article class="activity-row"><span class="activity-dot ${item.kind}">${item.kind === 'shift' ? '↗' : '↘'}</span><span class="activity-name"><strong>${esc(item.title)}</strong><small>${longDate(item.date)}</small></span><strong class="activity-value ${item.kind}">${item.amount > 0 ? '+' : '−'}${money(Math.abs(item.amount))}</strong></article>`).join('') : empty('Nothing here just yet', 'Your shifts and expenses will show up here.', '✳');
 }
 
+let shiftDatePickerMonth = new Date();
+
+function renderShiftDatePicker() {
+  const year = shiftDatePickerMonth.getFullYear();
+  const month = shiftDatePickerMonth.getMonth();
+  const monthLabel = shiftDatePickerMonth.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
+  $('#shift-date-month-label').textContent = monthLabel;
+  const leadingDays = (new Date(year, month, 1).getDay() + 6) % 7;
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const selectedDate = shiftForm.elements.date.value;
+  const today = dateKey();
+  const tiles = Array(leadingDays).fill('<span class="shift-date-blank" aria-hidden="true"></span>');
+  for (let day = 1; day <= daysInMonth; day++) {
+    const date = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    const selected = date === selectedDate;
+    const isToday = date === today;
+    tiles.push(`<button type="button" class="shift-date-day${selected ? ' selected' : ''}${isToday ? ' today' : ''}" data-shift-date="${date}" aria-pressed="${selected}" aria-label="${calendarDateLabel(date)}">${day}</button>`);
+  }
+  $('#shift-date-grid').innerHTML = tiles.join('');
+}
+
+function updateShiftDateLabel() {
+  const date = shiftForm.elements.date.value;
+  $('#shift-date-label').textContent = date ? calendarDateLabel(date) : 'Choose date';
+}
+
 function openDialog(id) {
   const dialog = document.getElementById(id);
   const form = dialog.querySelector('form');
@@ -332,7 +358,7 @@ function openDialog(id) {
   if (rateInput) rateInput.value = state.rate;
   if (id === 'settings-dialog') { form.elements.rate.value = state.rate; form.elements.paydayDay.value = state.paydayDay; }
   if (id === 'monthly-expense-dialog') form.elements.dueDay.value = state.paydayDay;
-  if (id === 'shift-dialog') updateShiftDuration();
+  if (id === 'shift-dialog') { updateShiftDuration(); updateShiftDateLabel(); }
   dialog.showModal();
 }
 
@@ -352,6 +378,32 @@ function hoursBetweenTimes(start, end) {
   return ((minutes(end) - minutes(start) + 24 * 60) % (24 * 60)) / 60;
 }
 const shiftForm = $('#shift-form');
+$('#shift-date-open').addEventListener('click', () => {
+  const selected = shiftForm.elements.date.value || dateKey();
+  shiftDatePickerMonth = new Date(`${selected}T12:00:00`);
+  renderShiftDatePicker();
+  $('#shift-date-dialog').showModal();
+});
+$('#shift-date-prev').addEventListener('click', () => {
+  shiftDatePickerMonth = new Date(shiftDatePickerMonth.getFullYear(), shiftDatePickerMonth.getMonth() - 1, 1);
+  renderShiftDatePicker();
+});
+$('#shift-date-next').addEventListener('click', () => {
+  shiftDatePickerMonth = new Date(shiftDatePickerMonth.getFullYear(), shiftDatePickerMonth.getMonth() + 1, 1);
+  renderShiftDatePicker();
+});
+$('#shift-date-grid').addEventListener('click', event => {
+  const button = event.target.closest('[data-shift-date]');
+  if (!button) return;
+  shiftForm.elements.date.value = button.dataset.shiftDate;
+  updateShiftDateLabel();
+  $('#shift-date-dialog').close();
+});
+$('#shift-date-today').addEventListener('click', () => {
+  shiftForm.elements.date.value = dateKey();
+  updateShiftDateLabel();
+  $('#shift-date-dialog').close();
+});
 function updateShiftDuration() {
   const start = shiftForm.elements.startTime.value;
   const end = shiftForm.elements.endTime.value;
