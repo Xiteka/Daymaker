@@ -15,7 +15,7 @@ Open the printed local URL in a browser. To run the Electron desktop wrapper, us
 
 ## Tracker behavior
 
-- Schedule shifts with a date, start and end time, note, and hourly rate. Swipe or hold the orange arrow to finish a shift and adjust the actual hours or times.
+- Schedule shifts with a date, start and end time, note, and hourly rate. On the scheduled day, swipe or hold the orange arrow on Home or Work to finish a shift and adjust the actual hours or times. Missed shifts can be finished later from Work.
 - Only completed shifts count toward work and pay totals; shifts saved before the completion feature remain completed. The calendar shows completed and scheduled days.
 - Estimated pay uses each shift’s hourly rate and does not automatically add an overtime premium.
 - Add expenses with a category and date.
