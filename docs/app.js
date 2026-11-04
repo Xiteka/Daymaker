@@ -101,7 +101,7 @@ function render() {
   renderDotValue($('#hours-value'), hoursText, `${hoursText} h`, 'h', 'stat');
   $('#shift-count').textContent = shifts.length ? `${shifts.length} ${shifts.length === 1 ? 'shift' : 'shifts'} this month` : 'No shifts completed yet';
   renderDotValue($('#expense-value'), wholeNumber(spent), money(spent), 'kr', 'stat');
-  $('#expense-count').textContent = expenses.length ? `${expenses.length} ${expenses.length === 1 ? 'purchase' : 'purchases'} this month` : 'No spending logged yet';
+  $('#expense-count').textContent = expenses.length ? `${expenses.length} ${expenses.length === 1 ? 'purchase' : 'purchases'} this month` : 'No spending logged';
   $('#balance-progress').style.width = `${earned ? Math.max(3, Math.min(100, ((earned - spent) / earned) * 100)) : 0}%`;
   $('#work-month-hours').textContent = `${calendarHours(hours)} h`;
   $('#work-month-pay').textContent = money(earned);
