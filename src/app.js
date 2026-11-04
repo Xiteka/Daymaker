@@ -63,7 +63,8 @@ function renderDotValue(node, formatted, label, unit, kind) {
 }
 const longDate = value => new Date(`${value}T12:00:00`).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
 const monthEntries = entries => entries.filter(item => item.date?.startsWith(dateKey().slice(0, 7)));
-const earnedFor = shift => Number(shift.hours) * Number(shift.rate);
+const hasEarnedOverride = shift => shift.completed !== false && typeof shift.earnedOverride === 'number' && Number.isFinite(shift.earnedOverride) && shift.earnedOverride >= 0;
+const earnedFor = shift => hasEarnedOverride(shift) ? shift.earnedOverride : Number(shift.hours) * Number(shift.rate);
 const shiftIsComplete = shift => shift.completed !== false;
 const esc = value => String(value ?? '').replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
 const persist = () => { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); render(); };
@@ -171,7 +172,7 @@ function renderCalendar() {
     if (shift.startTime && shift.endTime) total.times.push({ startTime: shift.startTime, endTime: shift.endTime, scheduled: !shiftIsComplete(shift) });
     if (shiftIsComplete(shift)) {
       total.hours += Number(shift.hours) || 0;
-      total.pay += (Number(shift.hours) || 0) * (Number(shift.rate) || 0);
+      total.pay += earnedFor(shift);
       total.completedCount++;
     } else {
       total.plannedCount++;
@@ -498,6 +499,10 @@ function openDialog(id) {
   if (id === 'monthly-expense-dialog') form.elements.dueDay.value = state.paydayDay;
   if (id === 'shift-dialog') {
     shiftEditExactHours = null;
+    shiftEarnedManual = false;
+    form.elements.earned.disabled = true;
+    $('#shift-earned-field').hidden = true;
+    $('#shift-earned-hint').hidden = true;
     form.elements.shiftId.value = '';
     form.elements.hours.readOnly = true;
     form.elements.startTime.required = true;
@@ -528,6 +533,7 @@ function hoursBetweenTimes(start, end) {
 }
 const shiftForm = $('#shift-form');
 let shiftEditExactHours = null;
+let shiftEarnedManual = false;
 $('#shift-date-open').addEventListener('click', () => {
   const selected = shiftForm.elements.date.value || dateKey();
   shiftDatePickerMonth = new Date(`${selected}T12:00:00`);
@@ -563,6 +569,12 @@ function openEditShift(id) {
   shiftForm.elements.shiftId.value = shift.id;
   for (const name of ['date', 'startTime', 'endTime', 'note']) shiftForm.elements[name].value = shift[name] || '';
   shiftForm.elements.rate.value = shift.rate ?? state.rate;
+  const completed = shiftIsComplete(shift);
+  shiftForm.elements.earned.disabled = !completed;
+  $('#shift-earned-field').hidden = !completed;
+  $('#shift-earned-hint').hidden = !completed;
+  shiftEarnedManual = completed && hasEarnedOverride(shift);
+  shiftForm.elements.earned.value = completed ? earnedFor(shift).toFixed(2) : '';
   shiftForm.elements.hours.readOnly = false;
   shiftEditExactHours = Number(shift.hours);
   shiftForm.elements.hours.value = calendarHours(shiftEditExactHours);
@@ -574,6 +586,13 @@ function openEditShift(id) {
   $('#shift-time-hint').textContent = 'Adjust the times or hours to match your shift. An earlier end time means the next day.';
   updateShiftDateLabel();
   dialog.showModal();
+}
+function updateShiftEarnedEstimate() {
+  if (shiftForm.elements.earned.disabled || shiftEarnedManual) return;
+  const hours = shiftEditExactHours ?? Number(shiftForm.elements.hours.value);
+  const rate = shiftForm.elements.rate.value === '' ? Number(state.rate) : Number(shiftForm.elements.rate.value);
+  const amount = hours * rate;
+  shiftForm.elements.earned.value = shiftForm.elements.hours.value !== '' && Number.isFinite(amount) && amount >= 0 ? amount.toFixed(2) : '';
 }
 function validateShiftTimes() {
   const start = shiftForm.elements.startTime.value;
@@ -587,17 +606,21 @@ function updateShiftDuration() {
   const hours = hoursBetweenTimes(shiftForm.elements.startTime.value, shiftForm.elements.endTime.value);
   if (hours === null) {
     if (!shiftForm.elements.shiftId.value) shiftForm.elements.hours.value = '';
+    updateShiftEarnedEstimate();
     return null;
   }
   shiftEditExactHours = hours;
   shiftForm.elements.hours.value = calendarHours(hours);
+  updateShiftEarnedEstimate();
   return hours;
 }
 for (const name of ['startTime', 'endTime']) {
   shiftForm.elements[name].addEventListener('input', updateShiftDuration);
   shiftForm.elements[name].addEventListener('change', updateShiftDuration);
 }
-shiftForm.elements.hours.addEventListener('input', () => { shiftEditExactHours = null; });
+shiftForm.elements.hours.addEventListener('input', () => { shiftEditExactHours = null; updateShiftEarnedEstimate(); });
+shiftForm.elements.rate.addEventListener('input', updateShiftEarnedEstimate);
+shiftForm.elements.earned.addEventListener('input', () => { shiftEarnedManual = shiftForm.elements.earned.value !== ''; });
 shiftForm.addEventListener('submit', event => {
   event.preventDefault();
   const form = event.currentTarget;
@@ -610,8 +633,14 @@ shiftForm.addEventListener('submit', event => {
   const data = new FormData(form);
   const rate = data.get('rate') === '' ? Number(state.rate) : Number(data.get('rate'));
   const details = { date: data.get('date'), startTime: data.get('startTime'), endTime: data.get('endTime'), hours, rate, note: data.get('note').trim() };
-  if (existing) Object.assign(existing, details);
-  else state.shifts.push({ id: crypto.randomUUID(), ...details, completed: false });
+  if (existing) {
+    const manualEarned = shiftIsComplete(existing) && shiftEarnedManual && form.elements.earned.value !== '';
+    const earned = manualEarned ? Number(data.get('earned')) : null;
+    if (manualEarned && (!Number.isFinite(earned) || earned < 0)) return;
+    Object.assign(existing, details);
+    if (manualEarned) existing.earnedOverride = earned;
+    else delete existing.earnedOverride;
+  } else state.shifts.push({ id: crypto.randomUUID(), ...details, completed: false });
   persist(); form.closest('dialog').close(); toast(existing ? 'Shift updated.' : 'Shift scheduled.');
 });
 const finishForm = $('#finish-form');
