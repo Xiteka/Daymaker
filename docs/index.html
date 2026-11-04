@@ -11,8 +11,8 @@
     <link rel="icon" href="./icons/daymaker-bold.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="./icons/daymaker-bold-180.png">
     <title>Daymaker · work & money</title>
-    <link rel="stylesheet" href="style.css?v=24">
-    <script src="app.js?v=25" defer></script>
+    <link rel="stylesheet" href="style.css?v=25">
+    <script src="app.js?v=26" defer></script>
   </head>
   <body>
     <main class="app-shell">
@@ -36,6 +36,8 @@
           <article class="stat-card stat-work"><div class="card-label"><span>WORKED</span><span class="mini-icon">◷</span></div><div class="stat-value" id="hours-value">0<span class="unit">h</span></div><p id="shift-count">No shifts logged yet</p></article>
           <article class="stat-card stat-expenses"><div class="card-label"><span>EXPENSES</span><span class="mini-icon">↘</span></div><div class="stat-value" id="expense-value">kr 0</div><p id="expense-count">No spending logged yet</p></article>
         </div>
+
+        <section id="home-upcoming-shift" class="home-upcoming-shift" aria-label="Upcoming shift" hidden><div id="home-next-shift"></div></section>
 
         <section id="home-today-shifts" class="today-shifts" aria-label="Today’s shifts" hidden><div id="home-shift-list"></div></section>
 

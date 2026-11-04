@@ -119,7 +119,6 @@
 .upcoming-shift-pay{min-width:0;color:var(--orange);font:500 18px var(--display);letter-spacing:-.5px;font-variant-numeric:tabular-nums;text-align:right;overflow-wrap:anywhere}
 .upcoming-shift-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
 .upcoming-shift-top h3{min-width:0;margin:0;font:500 16px/1.3 var(--display);letter-spacing:-.3px;overflow-wrap:anywhere}
-.upcoming-shift-top .delete-button{width:25px;height:25px;margin-top:-2px;background:#ffffff16;color:#c4c8c2}
 .upcoming-shift-details{display:flex;flex-wrap:wrap;align-items:center;gap:3px 8px;margin-top:4px;color:#b9bdb6;font-size:11px;font-variant-numeric:tabular-nums}
 .upcoming-shift-details>span{white-space:nowrap}
 .upcoming-shift-details>span+span:before{content:'·';margin-right:8px;color:#777f77}
@@ -138,5 +137,7 @@
 .shift-swipe-next .upcoming-shift-card{margin-bottom:0}
 #work-shift-list .shift-swipe-row+.shift-swipe-row{margin-top:14px}
 .today-shift-heading{display:flex;align-items:center;justify-content:space-between;gap:10px}
-.shift-actions-toggle{font-size:22px;letter-spacing:1px;line-height:1}
 @media(prefers-reduced-motion:reduce){.shift-swipe-content{transition:none}}
+
+.home-upcoming-shift{margin-top:15px}
+.shift-swipe-row:focus-visible{outline:2px solid var(--orange);outline-offset:3px}
