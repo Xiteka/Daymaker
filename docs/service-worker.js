@@ -1,6 +1,6 @@
-const CACHE_NAME = 'daymaker-shell-v40';
+const CACHE_NAME = 'daymaker-shell-v41';
 const SHELL = [
-  './', './index.html', './style.css?v=33', './app.js?v=33', './manifest.webmanifest?v=2',
+  './', './index.html', './style.css?v=34', './app.js?v=34', './manifest.webmanifest?v=2',
   './icons/daymaker-bold.svg', './icons/daymaker-bold-180.png', './icons/daymaker-bold-192.png', './icons/daymaker-bold-512.png'
 ];
 

@@ -17,6 +17,9 @@ Open the printed local URL in a browser. To run the Electron desktop wrapper, us
 
 - Schedule shifts with a date, start and end time, note, and hourly rate. On the scheduled day, swipe or hold the orange arrow on Home or Work to finish a shift and adjust the actual hours or times. Missed shifts can be finished later from Work.
 - Only completed shifts count toward work and pay totals; shifts saved before the completion feature remain completed. The calendar shows completed and scheduled days.
+- New shifts use the hourly rate from Your settings and start with a 30-minute unpaid break. Adjust the break or check Paid to include it in paid hours. Existing shifts retain their recorded hours until edited.
+- Break minutes and paid status can also be updated when finishing or editing a shift; dashboard, calendar, and pay estimates use the resulting paid hours.
+- Home and Work show today’s unfinished shift with its completion slider, then show the next shift after today’s shifts are finished.
 - Estimated pay uses each shift’s hourly rate and does not automatically add an overtime premium.
 - Add expenses with a category and date.
 - Save wishlist items with a target and the amount already saved.

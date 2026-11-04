@@ -56,7 +56,6 @@
 .shift-planned-amount{display:block;margin-top:2px;color:var(--muted);font:400 10px var(--sans);text-align:right}
 .calendar-day.planned:not(.worked){border:1px dashed #f7856a;color:#ffcfbf}
 .calendar-day.planned.worked{box-shadow:inset 0 -4px 0 #ffd9c9}
-.calendar-scheduled{margin:9px 0 0;color:#f6a48f;font-size:11px}
 
 .today-shifts{margin-top:15px}
 .today-shift+.today-shift{margin-top:14px}
@@ -169,7 +168,10 @@
 .balance-card{padding:18px 20px 16px}
 .balance-top{position:absolute;z-index:1;top:18px;right:20px}
 .balance{margin:0 0 12px;padding-right:42px}
-#home-today-shifts .today-shift-heading{justify-content:flex-start;align-items:baseline;flex-wrap:wrap;gap:4px 10px}
-.home-shift-time{color:var(--muted);font:500 12px var(--mono);white-space:nowrap}
 
 #home-page .welcome-row{margin-bottom:8px}
+
+.form-dialog .break-fields{align-items:end}
+.form-dialog .break-paid-field{min-height:45px;flex-direction:row;align-items:center;gap:9px;padding:0 8px;font-size:12px;cursor:pointer}
+.form-dialog .break-paid-field input{flex:none;width:20px;height:20px;margin:0;padding:0;accent-color:var(--orange)}
+.upcoming-shift-card .swipe-track{margin-top:12px}

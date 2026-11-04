@@ -141,10 +141,9 @@ function showCalendarDay(date, showPopover = false) {
   calendarDay = date;
   const total = calendarTotals.get(date) || { hours: 0, pay: 0, plannedCount: 0, times: [] };
   const detail = $('#calendar-detail');
-  const scheduled = total.plannedCount ? `<p class="calendar-scheduled">${total.plannedCount} ${total.plannedCount === 1 ? 'shift' : 'shifts'} scheduled</p>` : '';
   const times = (total.times || []).map(item => `<div class="calendar-detail-time"><strong>${esc(item.startTime)}–${esc(item.endTime)}${item.endTime < item.startTime ? ' (+1 day)' : ''}</strong>${item.scheduled ? '<small>Scheduled</small>' : ''}</div>`).join('');
   const timeDetails = times ? `<div class="calendar-detail-times"><span class="calendar-detail-times-label">SHIFT TIMES</span>${times}</div>` : '';
-  detail.innerHTML = `<div class="calendar-detail-date">${calendarDateLabel(date)}</div><div class="calendar-detail-stats"><div><span>WORKED</span><strong>${calendarHours(total.hours)} h</strong></div><div><span>ESTIMATED PAY</span><strong>${money(total.pay)}</strong></div></div>${timeDetails}${scheduled}`;
+  detail.innerHTML = `<div class="calendar-detail-date">${calendarDateLabel(date)}</div><div class="calendar-detail-stats"><div><span>WORKED</span><strong>${calendarHours(total.hours)} h</strong></div><div><span>ESTIMATED PAY</span><strong>${money(total.pay)}</strong></div></div>${timeDetails}`;
   $('#calendar-grid').querySelectorAll('.calendar-day').forEach(button => {
     const selected = button.dataset.date === date;
     button.classList.toggle('selected', selected);
@@ -347,24 +346,16 @@ function swipeControl(item) {
 }
 function renderTodayShifts() {
   const today = dateKey();
-  const shifts = state.shifts.filter(item => !shiftIsComplete(item) && item.date === today);
-  for (const [section, list] of [['#home-today-shifts', '#home-shift-list'], ['#work-today-shifts', '#work-shift-list']]) {
-    const onWork = section === '#work-today-shifts';
-    $(section).hidden = shifts.length === 0;
-    $(list).innerHTML = shifts.map(item => {
-      const time = item.startTime && item.endTime ? `${esc(item.startTime)}–${esc(item.endTime)}${item.endTime < item.startTime ? ' (+1 day)' : ''}` : 'Work shift';
-      const note = item.note ? `<div class="today-shift-note">${esc(item.note)}</div>` : '';
-      const homeTime = !onWork && item.startTime && item.endTime ? `<span class="home-shift-time">${time}</span>` : '';
-      const details = onWork ? `<div class="today-shift-details"><span>${time}</span><span>${calendarHours(Number(item.hours))} hours</span><strong>${money(earnedFor(item))}</strong></div>` : '';
-      const card = `<article class="today-shift"><div class="today-shift-heading"><div class="today-shift-date">${longDate(item.date)}</div>${homeTime}</div>${note}${details}${swipeControl(item)}</article>`;
-      return onWork ? shiftSwipeRow(item, card, 'today') : card;
-    }).join('');
-  }
+  const shifts = state.shifts.filter(item => !shiftIsComplete(item) && item.date === today)
+    .sort((a, b) => (a.startTime || '').localeCompare(b.startTime || ''));
+  $('#work-today-shifts').hidden = shifts.length === 0;
+  $('#work-shift-list').innerHTML = shifts.map(item => nextShiftCard(item, true)).join('');
 }
 
-function nextShiftCard(item) {
+function nextShiftCard(item, isToday = false) {
   const time = item.startTime && item.endTime ? `${esc(item.startTime)}–${esc(item.endTime)}${item.endTime < item.startTime ? ' (+1 day)' : ''}` : '';
-  return shiftSwipeRow(item, `<article class="upcoming-shift-card"><div class="upcoming-shift-header"><p class="upcoming-shift-badge">NEXT SHIFT</p><strong class="upcoming-shift-pay" aria-label="${esc(`Estimated earnings ${money(earnedFor(item))}`)}">${money(earnedFor(item))}</strong></div><div class="upcoming-shift-top"><h3>${esc(item.note || 'Work shift')}</h3></div><div class="upcoming-shift-details"><span>${longDate(item.date)}</span>${time ? `<span>${time}</span>` : ''}<span>${calendarHours(Number(item.hours))} h</span></div></article>`, 'next');
+  const badge = isToday ? 'TODAY’S SHIFT' : 'NEXT SHIFT';
+  return shiftSwipeRow(item, `<article class="upcoming-shift-card"><div class="upcoming-shift-header"><p class="upcoming-shift-badge">${badge}</p><strong class="upcoming-shift-pay" aria-label="${esc(`Estimated earnings ${money(earnedFor(item))}`)}">${money(earnedFor(item))}</strong></div><div class="upcoming-shift-top"><h3>${esc(item.note || 'Work shift')}</h3></div><div class="upcoming-shift-details"><span>${longDate(item.date)}</span>${time ? `<span>${time}</span>` : ''}<span>${calendarHours(Number(item.hours))} h</span></div>${isToday ? swipeControl(item) : ''}</article>`, 'next');
 }
 
 function showWorkShiftView(view) {
@@ -399,11 +390,15 @@ function renderShifts() {
   const today = dateKey();
   const upcoming = state.shifts.filter(item => !shiftIsComplete(item) && item.date > today)
     .sort((a, b) => a.date.localeCompare(b.date) || (a.startTime || '').localeCompare(b.startTime || ''));
-  $('#home-upcoming-shift').hidden = upcoming.length === 0;
-  $('#home-next-shift').innerHTML = upcoming.length ? nextShiftCard(upcoming[0]) : '';
-  $('#work-next-shift').hidden = upcoming.length === 0;
-  $('#work-next-shift').innerHTML = upcoming.length ? nextShiftCard(upcoming[0]) : '';
-  const remainingUpcoming = upcoming.slice(1);
+  const homeShift = state.shifts.filter(item => !shiftIsComplete(item) && item.date >= today)
+    .sort((a, b) => a.date.localeCompare(b.date) || (a.startTime || '').localeCompare(b.startTime || ''))[0];
+  const hasTodayShift = homeShift?.date === today;
+  $('#home-upcoming-shift').hidden = !homeShift;
+  $('#home-upcoming-shift').setAttribute('aria-label', hasTodayShift ? 'Today’s shift' : 'Next shift');
+  $('#home-next-shift').innerHTML = homeShift ? nextShiftCard(homeShift, homeShift.date === today) : '';
+  $('#work-next-shift').hidden = hasTodayShift || upcoming.length === 0;
+  $('#work-next-shift').innerHTML = !hasTodayShift && upcoming.length ? nextShiftCard(upcoming[0]) : '';
+  const remainingUpcoming = hasTodayShift ? upcoming : upcoming.slice(1);
   $('#upcoming-shift-list').innerHTML = remainingUpcoming.length ? remainingUpcoming.map(item => {
     const time = item.startTime && item.endTime ? `${esc(item.startTime)}–${esc(item.endTime)}${item.endTime < item.startTime ? ' (+1 day)' : ''}` : '';
     return shiftSwipeRow(item, `<article class="shift-card"><div class="shift-card-top"><div class="record-main"><strong>${esc(item.note || 'Work shift')}</strong><span>${longDate(item.date)}${time ? ` · ${time}` : ''} · ${calendarHours(Number(item.hours))} hours at ${money(item.rate)}/h</span></div><div class="record-amount">${money(earnedFor(item))}<small class="shift-planned-amount">planned</small></div></div></article>`);
@@ -504,6 +499,7 @@ function openDialog(id) {
   if (id === 'monthly-expense-dialog') form.elements.dueDay.value = state.paydayDay;
   if (id === 'shift-dialog') {
     shiftEditExactHours = null;
+    shiftGrossHours = null;
     shiftEarnedManual = false;
     form.elements.earned.disabled = true;
     $('#shift-earned-field').hidden = true;
@@ -536,8 +532,19 @@ function hoursBetweenTimes(start, end) {
   const minutes = time => { const [hour, minute] = time.split(':').map(Number); return hour * 60 + minute; };
   return ((minutes(end) - minutes(start) + 24 * 60) % (24 * 60)) / 60;
 }
+const breakMinutesFor = shift => Math.max(0, Number(shift.breakMinutes) || 0);
+const unpaidBreakHours = (minutes, paid) => paid ? 0 : Math.max(0, Number(minutes) || 0) / 60;
+function applyBreakToForm(form, grossHours) {
+  const minutes = Number(form.elements.breakMinutes.value) || 0;
+  const paid = form.elements.breakPaid.checked;
+  const message = Number.isFinite(grossHours) && minutes > grossHours * 60
+    ? 'Break cannot be longer than the shift.' : '';
+  form.elements.breakMinutes.setCustomValidity(message);
+  return Math.max(0, grossHours - unpaidBreakHours(minutes, paid));
+}
 const shiftForm = $('#shift-form');
 let shiftEditExactHours = null;
+let shiftGrossHours = null;
 let shiftEarnedManual = false;
 $('#shift-date-open').addEventListener('click', () => {
   const selected = shiftForm.elements.date.value || dateKey();
@@ -574,6 +581,9 @@ function openEditShift(id) {
   shiftForm.elements.shiftId.value = shift.id;
   for (const name of ['date', 'startTime', 'endTime', 'note']) shiftForm.elements[name].value = shift[name] || '';
   shiftForm.elements.rate.value = shift.rate ?? state.rate;
+  shiftForm.elements.breakMinutes.value = breakMinutesFor(shift);
+  shiftForm.elements.breakPaid.checked = shift.breakPaid === true;
+  shiftForm.elements.breakMinutes.setCustomValidity('');
   const completed = shiftIsComplete(shift);
   shiftForm.elements.earned.disabled = !completed;
   $('#shift-earned-field').hidden = !completed;
@@ -582,6 +592,7 @@ function openEditShift(id) {
   shiftForm.elements.earned.value = completed ? earnedFor(shift).toFixed(2) : '';
   shiftForm.elements.hours.readOnly = false;
   shiftEditExactHours = Number(shift.hours);
+  shiftGrossHours = shiftEditExactHours + unpaidBreakHours(breakMinutesFor(shift), shift.breakPaid === true);
   shiftForm.elements.hours.value = calendarHours(shiftEditExactHours);
   shiftForm.elements.startTime.required = false;
   shiftForm.elements.endTime.required = false;
@@ -606,24 +617,42 @@ function validateShiftTimes() {
   shiftForm.elements.endTime.setCustomValidity(message);
   return !message;
 }
-function updateShiftDuration() {
-  validateShiftTimes();
-  const hours = hoursBetweenTimes(shiftForm.elements.startTime.value, shiftForm.elements.endTime.value);
-  if (hours === null) {
-    if (!shiftForm.elements.shiftId.value) shiftForm.elements.hours.value = '';
-    updateShiftEarnedEstimate();
+function updateShiftBreak() {
+  if (shiftGrossHours === null) {
+    shiftForm.elements.breakMinutes.setCustomValidity('');
     return null;
   }
+  const hours = applyBreakToForm(shiftForm, shiftGrossHours);
   shiftEditExactHours = hours;
   shiftForm.elements.hours.value = calendarHours(hours);
   updateShiftEarnedEstimate();
   return hours;
 }
+function updateShiftDuration() {
+  validateShiftTimes();
+  shiftGrossHours = hoursBetweenTimes(shiftForm.elements.startTime.value, shiftForm.elements.endTime.value);
+  if (shiftGrossHours === null) {
+    if (!shiftForm.elements.shiftId.value) shiftForm.elements.hours.value = '';
+    shiftForm.elements.breakMinutes.setCustomValidity('');
+    updateShiftEarnedEstimate();
+    return null;
+  }
+  return updateShiftBreak();
+}
 for (const name of ['startTime', 'endTime']) {
   shiftForm.elements[name].addEventListener('input', updateShiftDuration);
   shiftForm.elements[name].addEventListener('change', updateShiftDuration);
 }
-shiftForm.elements.hours.addEventListener('input', () => { shiftEditExactHours = null; updateShiftEarnedEstimate(); });
+for (const name of ['breakMinutes', 'breakPaid']) {
+  shiftForm.elements[name].addEventListener('input', updateShiftBreak);
+  shiftForm.elements[name].addEventListener('change', updateShiftBreak);
+}
+shiftForm.elements.hours.addEventListener('input', () => {
+  shiftEditExactHours = null;
+  shiftGrossHours = shiftForm.elements.hours.value === '' ? null : Number(shiftForm.elements.hours.value) + unpaidBreakHours(shiftForm.elements.breakMinutes.value, shiftForm.elements.breakPaid.checked);
+  shiftForm.elements.breakMinutes.setCustomValidity('');
+  updateShiftEarnedEstimate();
+});
 shiftForm.elements.rate.addEventListener('input', updateShiftEarnedEstimate);
 shiftForm.elements.earned.addEventListener('input', () => { shiftEarnedManual = shiftForm.elements.earned.value !== ''; });
 shiftForm.addEventListener('submit', event => {
@@ -637,7 +666,7 @@ shiftForm.addEventListener('submit', event => {
   if (!form.reportValidity() || hours === null || !Number.isFinite(hours) || hours <= 0 || hours > 24) return;
   const data = new FormData(form);
   const rate = data.get('rate') === '' ? Number(state.rate) : Number(data.get('rate'));
-  const details = { date: data.get('date'), startTime: data.get('startTime'), endTime: data.get('endTime'), hours, rate, note: data.get('note').trim() };
+  const details = { date: data.get('date'), startTime: data.get('startTime'), endTime: data.get('endTime'), hours, rate, breakMinutes: Number(data.get('breakMinutes')) || 0, breakPaid: form.elements.breakPaid.checked, note: data.get('note').trim() };
   if (existing) {
     const manualEarned = shiftIsComplete(existing) && shiftEarnedManual && form.elements.earned.value !== '';
     const earned = manualEarned ? Number(data.get('earned')) : null;
@@ -651,6 +680,7 @@ shiftForm.addEventListener('submit', event => {
 const finishForm = $('#finish-form');
 const finishDialog = $('#finish-dialog');
 let finishExactHours = null;
+let finishGrossHours = null;
 let swipeGesture = null;
 let suppressSwipeClickUntil = 0;
 
@@ -665,6 +695,10 @@ function openFinishShift(id, allowLate = false) {
   const completed = shiftIsComplete(shift);
   finishForm.reset();
   finishForm.elements.shiftId.value = shift.id;
+  finishForm.elements.breakMinutes.value = breakMinutesFor(shift);
+  finishForm.elements.breakPaid.checked = shift.breakPaid === true;
+  finishForm.elements.breakMinutes.setCustomValidity('');
+  finishGrossHours = Number(shift.hours) + unpaidBreakHours(breakMinutesFor(shift), shift.breakPaid === true);
   $('#finish-title').textContent = completed ? 'Edit shift hours' : 'Finish shift';
   $('#finish-date').textContent = longDate(shift.date);
   $('#finish-submit').innerHTML = completed ? 'Save changes <span>↗</span>' : 'Finish shift <span>↗</span>';
@@ -684,21 +718,35 @@ function updateFinishTimes() {
   const end = finishForm.elements.endTime.value;
   finishForm.elements.endTime.setCustomValidity(start && end && start === end ? 'Start and end times must be different.' : '');
   const hours = hoursBetweenTimes(start, end);
-  if (hours !== null) setFinishHours(hours);
+  if (hours !== null) { finishGrossHours = hours; updateFinishBreak(); }
 }
 for (const name of ['startTime', 'endTime']) {
   finishForm.elements[name].addEventListener('input', updateFinishTimes);
   finishForm.elements[name].addEventListener('change', updateFinishTimes);
 }
-finishForm.elements.hours.addEventListener('input', () => { finishExactHours = null; });
+function updateFinishBreak() {
+  if (finishGrossHours !== null) setFinishHours(applyBreakToForm(finishForm, finishGrossHours));
+}
+for (const name of ['breakMinutes', 'breakPaid']) {
+  finishForm.elements[name].addEventListener('input', updateFinishBreak);
+  finishForm.elements[name].addEventListener('change', updateFinishBreak);
+}
+finishForm.elements.hours.addEventListener('input', () => {
+  finishExactHours = null;
+  finishGrossHours = finishForm.elements.hours.value === '' ? null : Number(finishForm.elements.hours.value) + unpaidBreakHours(finishForm.elements.breakMinutes.value, finishForm.elements.breakPaid.checked);
+  finishForm.elements.breakMinutes.setCustomValidity('');
+});
 finishForm.addEventListener('submit', event => {
   event.preventDefault();
   const shift = state.shifts.find(item => item.id === finishForm.elements.shiftId.value);
   if (!shift) { finishDialog.close(); return; }
   const hours = finishExactHours === null ? Number(finishForm.elements.hours.value) : finishExactHours;
   if (!Number.isFinite(hours) || hours <= 0 || hours > 24) { finishForm.elements.hours.reportValidity(); return; }
+  if (!finishForm.reportValidity()) return;
   const wasCompleted = shiftIsComplete(shift);
   shift.hours = hours;
+  shift.breakMinutes = Number(finishForm.elements.breakMinutes.value) || 0;
+  shift.breakPaid = finishForm.elements.breakPaid.checked;
   if (!$('#finish-times').hidden) {
     shift.startTime = finishForm.elements.startTime.value;
     shift.endTime = finishForm.elements.endTime.value;
@@ -716,7 +764,7 @@ function resetSwipe() {
   swipeGesture.track.querySelector('.swipe-fill').style.width = '';
   swipeGesture = null;
 }
-for (const shiftList of [$('#shift-list'), $('#home-shift-list'), $('#work-shift-list')]) {
+for (const shiftList of [$('#shift-list'), $('#home-next-shift'), $('#work-shift-list')]) {
 shiftList.addEventListener('pointerdown', event => {
   const handle = event.target.closest('.swipe-handle');
   if (!handle || (event.pointerType === 'mouse' && event.button !== 0)) return;
