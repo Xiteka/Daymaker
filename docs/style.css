@@ -164,3 +164,10 @@
 }
 
 @media(hover:none),(pointer:coarse){.calendar-popover{display:none!important}}
+
+
+.balance-card{padding:18px 20px 16px}
+.balance-top{position:absolute;z-index:1;top:18px;right:20px}
+.balance{margin:0 0 12px;padding-right:42px}
+#home-today-shifts .today-shift-heading{justify-content:flex-start;align-items:baseline;flex-wrap:wrap;gap:4px 10px}
+.home-shift-time{color:var(--muted);font:500 12px var(--mono);white-space:nowrap}

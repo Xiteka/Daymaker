@@ -354,7 +354,9 @@ function renderTodayShifts() {
     $(list).innerHTML = shifts.map(item => {
       const time = item.startTime && item.endTime ? `${esc(item.startTime)}–${esc(item.endTime)}${item.endTime < item.startTime ? ' (+1 day)' : ''}` : 'Work shift';
       const note = item.note ? `<div class="today-shift-note">${esc(item.note)}</div>` : '';
-      const card = `<article class="today-shift"><div class="today-shift-heading"><div class="today-shift-date">${longDate(item.date)}</div></div>${note}<div class="today-shift-details"><span>${time}</span><span>${calendarHours(Number(item.hours))} hours</span><strong>${money(earnedFor(item))}</strong></div>${swipeControl(item)}</article>`;
+      const homeTime = !onWork && item.startTime && item.endTime ? `<span class="home-shift-time">${time}</span>` : '';
+      const details = onWork ? `<div class="today-shift-details"><span>${time}</span><span>${calendarHours(Number(item.hours))} hours</span><strong>${money(earnedFor(item))}</strong></div>` : '';
+      const card = `<article class="today-shift"><div class="today-shift-heading"><div class="today-shift-date">${longDate(item.date)}</div>${homeTime}</div>${note}${details}${swipeControl(item)}</article>`;
       return onWork ? shiftSwipeRow(item, card, 'today') : card;
     }).join('');
   }
