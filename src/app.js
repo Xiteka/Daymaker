@@ -263,10 +263,15 @@ function renderTodayShifts() {
 
 function renderShifts() {
   const today = dateKey();
-  const todayPending = item => !shiftIsComplete(item) && item.date === today;
+  const upcoming = state.shifts.filter(item => !shiftIsComplete(item) && item.date > today)
+    .sort((a, b) => a.date.localeCompare(b.date) || (a.startTime || '').localeCompare(b.startTime || ''));
+  $('#upcoming-shift-list').innerHTML = upcoming.length ? upcoming.map((item, index) => {
+    const time = item.startTime && item.endTime ? `<span>${esc(item.startTime)}–${esc(item.endTime)}${item.endTime < item.startTime ? ' (+1 day)' : ''}</span>` : '';
+    return `<article class="upcoming-shift-card${index === 0 ? ' is-next' : ''}">${index === 0 ? '<p class="upcoming-shift-badge">NEXT SHIFT</p>' : ''}<div class="upcoming-shift-top"><h3>${esc(item.note || 'Work shift')}</h3><button type="button" class="delete-button" data-delete="shift" data-id="${esc(item.id)}" aria-label="Delete shift">×</button></div><p class="upcoming-shift-date">${longDate(item.date)}</p><div class="upcoming-shift-details">${time}<span>${calendarHours(Number(item.hours))} hours</span></div><div class="upcoming-shift-pay"><span>ESTIMATED EARNINGS</span><strong>${money(earnedFor(item))}</strong></div></article>`;
+  }).join('') : empty('No upcoming shifts', 'Log your next shift to see your hours and estimated earnings.', '◷');
   const todayMillis = Date.parse(`${today}T00:00:00Z`);
   const dayDistance = date => Math.abs((Date.parse(`${date}T00:00:00Z`) - todayMillis) / 86400000);
-  const rows = state.shifts.filter(item => !todayPending(item)).sort((a, b) => dayDistance(a.date) - dayDistance(b.date) || b.date.localeCompare(a.date));
+  const rows = state.shifts.filter(item => shiftIsComplete(item) || item.date < today).sort((a, b) => dayDistance(a.date) - dayDistance(b.date) || b.date.localeCompare(a.date));
   $('#shift-list').innerHTML = rows.length ? rows.map(item => {
     const completed = shiftIsComplete(item);
     const time = item.startTime && item.endTime ? ` · ${esc(item.startTime)}–${esc(item.endTime)}${item.endTime < item.startTime ? ' (+1 day)' : ''}` : '';
@@ -278,7 +283,7 @@ function renderShifts() {
           ? `<div class="shift-locked-row"><span>Scheduled date has passed</span><button type="button" class="shift-late-finish" data-late-finish="${esc(item.id)}">Finish shift</button></div>`
           : `<p class="shift-locked">Available to finish on ${longDate(item.date)}</p>`;
     return `<article class="shift-card"><div class="shift-card-top"><div class="record-main"><strong>${esc(item.note || 'Work shift')}</strong><span>${longDate(item.date)}${time} · ${calendarHours(Number(item.hours))} hours at ${money(item.rate)}/h</span></div><div class="record-amount">${money(earnedFor(item))}${completed ? '' : '<small class="shift-planned-amount">planned</small>'}</div><button class="delete-button" data-delete="shift" data-id="${esc(item.id)}" aria-label="Delete shift">×</button></div>${status}</article>`;
-  }).join('') : empty('Your hours will add up here', 'Log a shift to see your time and estimated pay.', '◷');
+  }).join('') : empty('Your shift history starts here', 'Completed and past shifts will appear here.', '◷');
 }
 
 function renderExpenses() {
