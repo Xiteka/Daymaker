@@ -112,20 +112,14 @@
 @media(max-width:370px){.shift-date-dialog{padding:22px 18px}.shift-date-calendar{padding:13px}.shift-date-weekdays,.shift-date-grid{gap:5px}.shift-date-day{border-radius:8px}}
 
 
-.upcoming-shift-list{display:grid;gap:12px}
-.upcoming-shift-card{padding:18px;border-radius:19px;background:var(--card)}
-.upcoming-shift-card.is-next{background:var(--deep);color:#fff}
-.upcoming-shift-badge{display:inline-block;margin:0 0 12px;padding:5px 9px;border-radius:99px;background:var(--orange);color:#fff;font:600 9px var(--mono);letter-spacing:.7px}
-.upcoming-shift-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
-.upcoming-shift-top h3{min-width:0;margin:0;font:500 19px/1.25 var(--display);letter-spacing:-.4px;overflow-wrap:anywhere}
-.upcoming-shift-top .delete-button{width:28px;height:28px;margin-top:-3px}
-.upcoming-shift-card.is-next .delete-button{background:#ffffff16;color:#c4c8c2}
-.upcoming-shift-date{margin:5px 0 0;color:var(--muted);font-size:12px}
-.upcoming-shift-details{display:flex;flex-wrap:wrap;gap:6px 12px;margin-top:12px;font-size:12px;font-variant-numeric:tabular-nums}
-.upcoming-shift-card.is-next .upcoming-shift-date{color:#b9bdb6}
-.upcoming-shift-pay{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:8px;margin-top:14px;padding-top:13px;border-top:1px solid var(--line)}
-.upcoming-shift-pay>span{color:var(--muted);font:500 9px var(--mono);letter-spacing:.5px}
-.upcoming-shift-pay strong{font:500 22px var(--display);letter-spacing:-.6px;font-variant-numeric:tabular-nums}
-.upcoming-shift-card.is-next .upcoming-shift-pay{border-color:#ffffff20}
-.upcoming-shift-card.is-next .upcoming-shift-pay>span{color:#b9bdb6}
-.upcoming-shift-card.is-next .upcoming-shift-pay strong{color:#ff937b}
+.upcoming-shift-list{display:grid;gap:0}
+.upcoming-shift-card{margin-bottom:4px;padding:14px 16px;border-radius:17px;background:var(--deep);color:#fff}
+.upcoming-shift-header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:9px}
+.upcoming-shift-badge{flex:none;margin:0;padding:5px 9px;border-radius:99px;background:var(--orange);color:#fff;font:600 9px var(--mono);letter-spacing:.7px}
+.upcoming-shift-pay{min-width:0;color:var(--orange);font:500 18px var(--display);letter-spacing:-.5px;font-variant-numeric:tabular-nums;text-align:right;overflow-wrap:anywhere}
+.upcoming-shift-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.upcoming-shift-top h3{min-width:0;margin:0;font:500 16px/1.3 var(--display);letter-spacing:-.3px;overflow-wrap:anywhere}
+.upcoming-shift-top .delete-button{width:25px;height:25px;margin-top:-2px;background:#ffffff16;color:#c4c8c2}
+.upcoming-shift-details{display:flex;flex-wrap:wrap;align-items:center;gap:3px 8px;margin-top:4px;color:#b9bdb6;font-size:11px;font-variant-numeric:tabular-nums}
+.upcoming-shift-details>span{white-space:nowrap}
+.upcoming-shift-details>span+span:before{content:'·';margin-right:8px;color:#777f77}
