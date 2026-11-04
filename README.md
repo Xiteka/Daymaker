@@ -31,3 +31,10 @@ The default hourly rate is NOK 220 and can be changed from the settings button. 
 The app includes a web app manifest, Home Screen icons, and a service worker that caches the app shell for offline use. For iPhone installation, publish the `src` folder at an HTTPS address. Open that address in Safari, choose Share → Add to Home Screen, then add Daymaker. The `file://` preview is for viewing only; service workers need HTTPS or localhost.
 
 For local development, run `npm run preview` and open the localhost address on your Mac. To install on an iPhone, deploy the `src` folder to an HTTPS static host and open that public address in Safari.
+
+
+## Publish with GitHub Pages
+
+GitHub Pages uses the GitHub Actions publishing source. The `Publish Daymaker` workflow in `.github/workflows/pages.yml` uploads `docs/` and publishes it on every push to `main`. It can also be started manually from the Actions tab.
+
+After changing the app, copy the changed files from `src/` to `docs/`, update the service worker cache and asset versions, and push the changes. Wait for the `Publish Daymaker` workflow to succeed before checking the live app.
