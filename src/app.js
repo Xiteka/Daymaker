@@ -401,7 +401,7 @@ function renderShifts() {
   const remainingUpcoming = upcoming.slice(1);
   $('#upcoming-shift-list').innerHTML = remainingUpcoming.length ? remainingUpcoming.map(item => {
     const time = item.startTime && item.endTime ? `${esc(item.startTime)}–${esc(item.endTime)}${item.endTime < item.startTime ? ' (+1 day)' : ''}` : '';
-    return shiftSwipeRow(item, `<article class="shift-card"><div class="shift-card-top"><div class="record-main"><strong>${esc(item.note || 'Work shift')}</strong><span>${longDate(item.date)}${time ? ` · ${time}` : ''} · ${calendarHours(Number(item.hours))} hours at ${money(item.rate)}/h</span></div><div class="record-amount">${money(earnedFor(item))}<small class="shift-planned-amount">planned</small></div></div><p class="shift-locked">Available to finish on ${longDate(item.date)}</p></article>`);
+    return shiftSwipeRow(item, `<article class="shift-card"><div class="shift-card-top"><div class="record-main"><strong>${esc(item.note || 'Work shift')}</strong><span>${longDate(item.date)}${time ? ` · ${time}` : ''} · ${calendarHours(Number(item.hours))} hours at ${money(item.rate)}/h</span></div><div class="record-amount">${money(earnedFor(item))}<small class="shift-planned-amount">planned</small></div></div></article>`);
   }).join('') : `<p class="work-shift-empty">${upcoming.length ? 'No other upcoming shifts.' : 'No upcoming shifts. Log a shift to plan your next workday.'}</p>`;
   const todayMillis = Date.parse(`${today}T00:00:00Z`);
   const dayDistance = date => Math.abs((Date.parse(`${date}T00:00:00Z`) - todayMillis) / 86400000);
@@ -415,7 +415,7 @@ function renderShifts() {
         ? swipeControl(item)
         : item.date < dateKey()
           ? `<div class="shift-locked-row"><span>Scheduled date has passed</span><button type="button" class="shift-late-finish" data-late-finish="${esc(item.id)}">Finish shift</button></div>`
-          : `<p class="shift-locked">Available to finish on ${longDate(item.date)}</p>`;
+          : ``;
     return shiftSwipeRow(item, `<article class="shift-card"><div class="shift-card-top"><div class="record-main"><div class="shift-title-row"><strong>${esc(item.note || 'Work shift')}</strong>${completed ? '<span class="shift-complete-label">✓ Completed</span>' : ''}</div><span>${longDate(item.date)}${time} · ${calendarHours(Number(item.hours))} hours at ${money(item.rate)}/h</span></div><div class="record-amount">${money(earnedFor(item))}${completed ? '' : '<small class="shift-planned-amount">planned</small>'}</div></div>${status}</article>`);
   }).join('') : empty('Your shift history starts here', 'Completed and past shifts will appear here.', '◷');
 }

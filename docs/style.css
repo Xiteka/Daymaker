@@ -65,7 +65,6 @@
 .today-shift-details{display:flex;align-items:center;gap:10px;margin-top:5px;color:var(--muted);font-size:11px}
 .today-shift-details strong{margin-left:auto;color:var(--ink);font:500 12px var(--mono);white-space:nowrap}
 .today-shift .swipe-track{margin-top:8px}
-.shift-locked{margin:10px 0 0;color:var(--muted);font-size:11px}
 .shift-locked-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:9px;color:var(--muted);font-size:11px}
 .shift-late-finish{min-height:36px;padding:0 13px;border:1px solid var(--orange);border-radius:99px;background:transparent;color:#a73c25;font-size:11px;font-weight:600}
 
@@ -137,7 +136,7 @@
 @media(prefers-reduced-motion:reduce){.shift-swipe-content{transition:none}}
 
 .home-upcoming-shift{margin-top:15px}
-.shift-swipe-row:focus-visible{outline:2px solid var(--orange);outline-offset:3px}
+.shift-swipe-row:focus-visible{outline:2px solid var(--muted);outline-offset:3px}
 
 
 .work-shift-tabs{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-top:16px;padding:4px;border-radius:99px;background:#d9dbd3}
@@ -157,3 +156,9 @@
 .form-dialog input[type="time"]::-webkit-date-and-time-value{text-align:left;min-width:0}
 .form-dialog input[type="time"]::-webkit-datetime-edit{min-width:0;padding:0}
 .form-dialog input[type="time"]::-webkit-calendar-picker-indicator{margin:0;padding:0}
+
+
+#shift-dialog :is(input,select,button):focus-visible,#finish-dialog :is(input,select,button):focus-visible{outline-color:var(--muted)}
+@media(hover:none),(pointer:coarse){
+  #shift-dialog :is(input,select,button):focus,#finish-dialog :is(input,select,button):focus,.shift-swipe-row:focus{outline:none;box-shadow:none}
+}
