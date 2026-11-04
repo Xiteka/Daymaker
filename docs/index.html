@@ -11,8 +11,8 @@
     <link rel="icon" href="./icons/daymaker-bold.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="./icons/daymaker-bold-180.png">
     <title>Daymaker · work & money</title>
-    <link rel="stylesheet" href="style.css?v=25">
-    <script src="app.js?v=26" defer></script>
+    <link rel="stylesheet" href="style.css?v=26">
+    <script src="app.js?v=27" defer></script>
   </head>
   <body>
     <main class="app-shell">
@@ -52,9 +52,14 @@
         <section class="section-block upcoming-shifts" aria-labelledby="upcoming-shifts-title">
           <div class="section-heading"><div><p class="eyebrow">WHAT’S NEXT</p><h2 id="upcoming-shifts-title">Upcoming shifts</h2></div></div>
           <p class="shift-swipe-hint">Swipe a shift right to edit or delete.</p>
-          <div id="upcoming-shift-list" class="upcoming-shift-list"></div>
+          <div id="work-next-shift" hidden></div>
+          <div class="work-shift-tabs" role="tablist" aria-label="Shift lists">
+            <button type="button" class="work-shift-tab active" id="work-upcoming-tab" role="tab" data-shift-view="upcoming" aria-controls="work-upcoming-panel" aria-selected="true">Upcoming shifts</button>
+            <button type="button" class="work-shift-tab" id="work-history-tab" role="tab" data-shift-view="history" aria-controls="work-history-panel" aria-selected="false" tabindex="-1">Shift history</button>
+          </div>
+          <div id="work-upcoming-panel" class="work-shift-panel" role="tabpanel" aria-labelledby="work-upcoming-tab" tabindex="0"><div id="upcoming-shift-list" class="upcoming-shift-list"></div></div>
+          <div id="work-history-panel" class="work-shift-panel" role="tabpanel" aria-labelledby="work-history-tab" tabindex="0" hidden><div id="shift-list" class="record-list"></div></div>
         </section>
-        <div class="section-heading list-heading"><div><p class="eyebrow">YOUR TIME, KEPT</p><h2>Shift history</h2></div></div><div id="shift-list" class="record-list"></div>
       </section>
 
       <section class="page" id="calendar-page" aria-labelledby="calendar-title" hidden>

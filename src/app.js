@@ -361,17 +361,47 @@ function nextShiftCard(item) {
   return shiftSwipeRow(item, `<article class="upcoming-shift-card"><div class="upcoming-shift-header"><p class="upcoming-shift-badge">NEXT SHIFT</p><strong class="upcoming-shift-pay" aria-label="${esc(`Estimated earnings ${money(earnedFor(item))}`)}">${money(earnedFor(item))}</strong></div><div class="upcoming-shift-top"><h3>${esc(item.note || 'Work shift')}</h3></div><div class="upcoming-shift-details"><span>${longDate(item.date)}</span>${time ? `<span>${time}</span>` : ''}<span>${calendarHours(Number(item.hours))} h</span></div></article>`, 'next');
 }
 
+function showWorkShiftView(view) {
+  if (view !== 'upcoming' && view !== 'history') return;
+  resetShiftRowGesture();
+  closeShiftRow();
+  for (const tab of document.querySelectorAll('[data-shift-view]')) {
+    const active = tab.dataset.shiftView === view;
+    tab.classList.toggle('active', active);
+    tab.setAttribute('aria-selected', String(active));
+    tab.tabIndex = active ? 0 : -1;
+  }
+  $('#work-upcoming-panel').hidden = view !== 'upcoming';
+  $('#work-history-panel').hidden = view !== 'history';
+}
+const workShiftTabs = [...document.querySelectorAll('[data-shift-view]')];
+workShiftTabs.forEach((tab, index) => {
+  tab.addEventListener('click', () => showWorkShiftView(tab.dataset.shiftView));
+  tab.addEventListener('keydown', event => {
+    let next;
+    if (event.key === 'ArrowRight' || event.key === 'ArrowLeft') next = workShiftTabs[(index + 1) % workShiftTabs.length];
+    else if (event.key === 'Home') next = workShiftTabs[0];
+    else if (event.key === 'End') next = workShiftTabs[workShiftTabs.length - 1];
+    if (!next) return;
+    event.preventDefault();
+    showWorkShiftView(next.dataset.shiftView);
+    next.focus();
+  });
+});
+
 function renderShifts() {
   const today = dateKey();
   const upcoming = state.shifts.filter(item => !shiftIsComplete(item) && item.date > today)
     .sort((a, b) => a.date.localeCompare(b.date) || (a.startTime || '').localeCompare(b.startTime || ''));
   $('#home-upcoming-shift').hidden = upcoming.length === 0;
   $('#home-next-shift').innerHTML = upcoming.length ? nextShiftCard(upcoming[0]) : '';
-  $('#upcoming-shift-list').innerHTML = upcoming.length ? upcoming.map((item, index) => {
+  $('#work-next-shift').hidden = upcoming.length === 0;
+  $('#work-next-shift').innerHTML = upcoming.length ? nextShiftCard(upcoming[0]) : '';
+  const remainingUpcoming = upcoming.slice(1);
+  $('#upcoming-shift-list').innerHTML = remainingUpcoming.length ? remainingUpcoming.map(item => {
     const time = item.startTime && item.endTime ? `${esc(item.startTime)}–${esc(item.endTime)}${item.endTime < item.startTime ? ' (+1 day)' : ''}` : '';
-    if (index > 0) return shiftSwipeRow(item, `<article class="shift-card"><div class="shift-card-top"><div class="record-main"><strong>${esc(item.note || 'Work shift')}</strong><span>${longDate(item.date)}${time ? ` · ${time}` : ''} · ${calendarHours(Number(item.hours))} hours at ${money(item.rate)}/h</span></div><div class="record-amount">${money(earnedFor(item))}<small class="shift-planned-amount">planned</small></div></div><p class="shift-locked">Available to finish on ${longDate(item.date)}</p></article>`);
-    return nextShiftCard(item);
-  }).join('') : empty('No upcoming shifts', 'Log your next shift to see your hours and estimated earnings.', '◷');
+    return shiftSwipeRow(item, `<article class="shift-card"><div class="shift-card-top"><div class="record-main"><strong>${esc(item.note || 'Work shift')}</strong><span>${longDate(item.date)}${time ? ` · ${time}` : ''} · ${calendarHours(Number(item.hours))} hours at ${money(item.rate)}/h</span></div><div class="record-amount">${money(earnedFor(item))}<small class="shift-planned-amount">planned</small></div></div><p class="shift-locked">Available to finish on ${longDate(item.date)}</p></article>`);
+  }).join('') : `<p class="work-shift-empty">${upcoming.length ? 'No other upcoming shifts.' : 'No upcoming shifts. Log a shift to plan your next workday.'}</p>`;
   const todayMillis = Date.parse(`${today}T00:00:00Z`);
   const dayDistance = date => Math.abs((Date.parse(`${date}T00:00:00Z`) - todayMillis) / 86400000);
   const rows = state.shifts.filter(item => shiftIsComplete(item) || item.date < today).sort((a, b) => dayDistance(a.date) - dayDistance(b.date) || b.date.localeCompare(a.date));

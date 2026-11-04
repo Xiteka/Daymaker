@@ -141,3 +141,10 @@
 
 .home-upcoming-shift{margin-top:15px}
 .shift-swipe-row:focus-visible{outline:2px solid var(--orange);outline-offset:3px}
+
+
+.work-shift-tabs{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-top:16px;padding:4px;border-radius:99px;background:#d9dbd3}
+.work-shift-tab{min-height:40px;padding:8px 10px;border:0;border-radius:99px;background:transparent;color:var(--muted);font-size:12px;font-weight:600}
+.work-shift-tab.active{background:var(--orange);color:#fff}
+.work-shift-panel{margin-top:14px}
+.work-shift-empty{margin:0;padding:15px 2px;color:var(--muted);font-size:12px}
