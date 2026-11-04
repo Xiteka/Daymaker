@@ -78,6 +78,8 @@ function toast(message) {
 }
 
 function render() {
+  resetShiftRowGesture();
+  closeShiftRow();
   const shifts = monthEntries(state.shifts).filter(shiftIsComplete);
   const expenses = monthEntries(state.expenses);
   const today = dateKey();
@@ -242,6 +244,94 @@ calendarGrid.addEventListener('contextmenu', event => {
   if (event.target.closest('.calendar-day')) event.preventDefault();
 });
 
+let shiftRowGesture = null;
+let openShiftRow = null;
+let suppressShiftRowClickUntil = 0;
+const SHIFT_ACTION_WIDTH = 132;
+
+function shiftActionsButton(item) {
+  return `<button type="button" class="delete-button shift-actions-toggle" data-shift-actions="${esc(item.id)}" aria-expanded="false" aria-label="${esc(`Edit or delete ${item.note || 'shift'}`)}">⋯</button>`;
+}
+function shiftSwipeRow(item, content, kind = '') {
+  return `<div class="shift-swipe-row${kind ? ` shift-swipe-${kind}` : ''}" data-row-shift="${esc(item.id)}"><div class="shift-row-actions" aria-hidden="true" inert><button type="button" class="shift-row-edit" data-edit-details="${esc(item.id)}">Edit</button><button type="button" class="shift-row-delete" data-delete="shift" data-id="${esc(item.id)}">Delete</button></div><div class="shift-swipe-content">${content}</div></div>`;
+}
+
+function setShiftRowOpen(row, open) {
+  if (!row) return;
+  if (openShiftRow && openShiftRow !== row) closeShiftRow();
+  row.classList.toggle('actions-open', open);
+  row.style.setProperty('--shift-row-offset', `${open ? SHIFT_ACTION_WIDTH : 0}px`);
+  const actions = row.querySelector('.shift-row-actions');
+  actions.inert = !open;
+  actions.setAttribute('aria-hidden', String(!open));
+  row.querySelector('[data-shift-actions]')?.setAttribute('aria-expanded', String(open));
+  if (open) openShiftRow = row;
+  else if (openShiftRow === row) openShiftRow = null;
+}
+function closeShiftRow() {
+  if (openShiftRow) setShiftRowOpen(openShiftRow, false);
+}
+function resetShiftRowGesture() {
+  const gesture = shiftRowGesture;
+  if (!gesture) return;
+  shiftRowGesture = null;
+  gesture.row.classList.remove('is-dragging');
+  setShiftRowOpen(gesture.row, gesture.wasOpen);
+  if (gesture.content.hasPointerCapture(gesture.pointerId)) gesture.content.releasePointerCapture(gesture.pointerId);
+}
+const workShiftPage = $('#work-page');
+workShiftPage.addEventListener('pointerdown', event => {
+  if (!event.isPrimary || (event.pointerType === 'mouse' && event.button !== 0)) return;
+  if (event.target.closest('button, input, select, a, .swipe-track, .shift-row-actions')) return;
+  const content = event.target.closest('.shift-swipe-content');
+  if (!content) return;
+  resetShiftRowGesture();
+  const row = content.closest('.shift-swipe-row');
+  if (openShiftRow && openShiftRow !== row) closeShiftRow();
+  const wasOpen = row.classList.contains('actions-open');
+  shiftRowGesture = { row, content, pointerId: event.pointerId, startX: event.clientX, startY: event.clientY, wasOpen, offset: wasOpen ? SHIFT_ACTION_WIDTH : 0, horizontal: false };
+});
+workShiftPage.addEventListener('pointermove', event => {
+  const gesture = shiftRowGesture;
+  if (!gesture || gesture.pointerId !== event.pointerId) return;
+  const dx = event.clientX - gesture.startX;
+  const dy = event.clientY - gesture.startY;
+  if (!gesture.horizontal) {
+    if (Math.max(Math.abs(dx), Math.abs(dy)) < 8) return;
+    if (Math.abs(dy) >= Math.abs(dx)) { resetShiftRowGesture(); return; }
+    gesture.horizontal = true;
+    gesture.row.classList.add('is-dragging');
+    gesture.content.setPointerCapture(event.pointerId);
+  }
+  event.preventDefault();
+  gesture.offset = Math.max(0, Math.min(SHIFT_ACTION_WIDTH, (gesture.wasOpen ? SHIFT_ACTION_WIDTH : 0) + dx));
+  gesture.row.style.setProperty('--shift-row-offset', `${gesture.offset}px`);
+}, { passive: false });
+workShiftPage.addEventListener('pointerup', event => {
+  const gesture = shiftRowGesture;
+  if (!gesture || gesture.pointerId !== event.pointerId) return;
+  shiftRowGesture = null;
+  gesture.row.classList.remove('is-dragging');
+  if (gesture.horizontal) {
+    suppressShiftRowClickUntil = Date.now() + 350;
+    setShiftRowOpen(gesture.row, gesture.offset >= SHIFT_ACTION_WIDTH / 2);
+  }
+  if (gesture.content.hasPointerCapture(event.pointerId)) gesture.content.releasePointerCapture(event.pointerId);
+});
+workShiftPage.addEventListener('pointercancel', resetShiftRowGesture);
+workShiftPage.addEventListener('click', event => {
+  if (Date.now() < suppressShiftRowClickUntil && event.target.closest('.shift-swipe-content')) {
+    event.preventDefault();
+    event.stopPropagation();
+  }
+}, true);
+document.addEventListener('keydown', event => {
+  if (event.key !== 'Escape' || !openShiftRow) return;
+  const toggle = openShiftRow.querySelector('[data-shift-actions]');
+  closeShiftRow();
+  toggle?.focus();
+});
+
 function swipeControl(item) {
   const name = item.note || 'shift';
   const time = item.startTime && item.endTime ? `, ${item.startTime} to ${item.endTime}` : '';
@@ -250,14 +340,15 @@ function swipeControl(item) {
 function renderTodayShifts() {
   const today = dateKey();
   const shifts = state.shifts.filter(item => !shiftIsComplete(item) && item.date === today);
-  const content = shifts.map(item => {
-    const time = item.startTime && item.endTime ? `${esc(item.startTime)}–${esc(item.endTime)}${item.endTime < item.startTime ? ' (+1 day)' : ''}` : 'Work shift';
-    const note = item.note ? `<div class="today-shift-note">${esc(item.note)}</div>` : '';
-    return `<article class="today-shift"><div class="today-shift-date">${longDate(item.date)}</div>${note}<div class="today-shift-details"><span>${time}</span><span>${calendarHours(Number(item.hours))} hours</span><strong>${money(earnedFor(item))}</strong></div>${swipeControl(item)}</article>`;
-  }).join('');
   for (const [section, list] of [['#home-today-shifts', '#home-shift-list'], ['#work-today-shifts', '#work-shift-list']]) {
+    const onWork = section === '#work-today-shifts';
     $(section).hidden = shifts.length === 0;
-    $(list).innerHTML = content;
+    $(list).innerHTML = shifts.map(item => {
+      const time = item.startTime && item.endTime ? `${esc(item.startTime)}–${esc(item.endTime)}${item.endTime < item.startTime ? ' (+1 day)' : ''}` : 'Work shift';
+      const note = item.note ? `<div class="today-shift-note">${esc(item.note)}</div>` : '';
+      const card = `<article class="today-shift"><div class="today-shift-heading"><div class="today-shift-date">${longDate(item.date)}</div>${onWork ? shiftActionsButton(item) : ''}</div>${note}<div class="today-shift-details"><span>${time}</span><span>${calendarHours(Number(item.hours))} hours</span><strong>${money(earnedFor(item))}</strong></div>${swipeControl(item)}</article>`;
+      return onWork ? shiftSwipeRow(item, card, 'today') : card;
+    }).join('');
   }
 }
 
@@ -267,8 +358,8 @@ function renderShifts() {
     .sort((a, b) => a.date.localeCompare(b.date) || (a.startTime || '').localeCompare(b.startTime || ''));
   $('#upcoming-shift-list').innerHTML = upcoming.length ? upcoming.map((item, index) => {
     const time = item.startTime && item.endTime ? `${esc(item.startTime)}–${esc(item.endTime)}${item.endTime < item.startTime ? ' (+1 day)' : ''}` : '';
-    if (index > 0) return `<article class="shift-card"><div class="shift-card-top"><div class="record-main"><strong>${esc(item.note || 'Work shift')}</strong><span>${longDate(item.date)}${time ? ` · ${time}` : ''} · ${calendarHours(Number(item.hours))} hours at ${money(item.rate)}/h</span></div><div class="record-amount">${money(earnedFor(item))}<small class="shift-planned-amount">planned</small></div><button type="button" class="delete-button" data-delete="shift" data-id="${esc(item.id)}" aria-label="Delete shift">×</button></div><p class="shift-locked">Available to finish on ${longDate(item.date)}</p></article>`;
-    return `<article class="upcoming-shift-card"><div class="upcoming-shift-header"><p class="upcoming-shift-badge">NEXT SHIFT</p><strong class="upcoming-shift-pay" aria-label="${esc(`Estimated earnings ${money(earnedFor(item))}`)}">${money(earnedFor(item))}</strong></div><div class="upcoming-shift-top"><h3>${esc(item.note || 'Work shift')}</h3><button type="button" class="delete-button" data-delete="shift" data-id="${esc(item.id)}" aria-label="Delete shift">×</button></div><div class="upcoming-shift-details"><span>${longDate(item.date)}</span>${time ? `<span>${time}</span>` : ''}<span>${calendarHours(Number(item.hours))} h</span></div></article>`;
+    if (index > 0) return shiftSwipeRow(item, `<article class="shift-card"><div class="shift-card-top"><div class="record-main"><strong>${esc(item.note || 'Work shift')}</strong><span>${longDate(item.date)}${time ? ` · ${time}` : ''} · ${calendarHours(Number(item.hours))} hours at ${money(item.rate)}/h</span></div><div class="record-amount">${money(earnedFor(item))}<small class="shift-planned-amount">planned</small></div>${shiftActionsButton(item)}</div><p class="shift-locked">Available to finish on ${longDate(item.date)}</p></article>`);
+    return shiftSwipeRow(item, `<article class="upcoming-shift-card"><div class="upcoming-shift-header"><p class="upcoming-shift-badge">NEXT SHIFT</p><strong class="upcoming-shift-pay" aria-label="${esc(`Estimated earnings ${money(earnedFor(item))}`)}">${money(earnedFor(item))}</strong></div><div class="upcoming-shift-top"><h3>${esc(item.note || 'Work shift')}</h3>${shiftActionsButton(item)}</div><div class="upcoming-shift-details"><span>${longDate(item.date)}</span>${time ? `<span>${time}</span>` : ''}<span>${calendarHours(Number(item.hours))} h</span></div></article>`, 'next');
   }).join('') : empty('No upcoming shifts', 'Log your next shift to see your hours and estimated earnings.', '◷');
   const todayMillis = Date.parse(`${today}T00:00:00Z`);
   const dayDistance = date => Math.abs((Date.parse(`${date}T00:00:00Z`) - todayMillis) / 86400000);
@@ -283,7 +374,7 @@ function renderShifts() {
         : item.date < dateKey()
           ? `<div class="shift-locked-row"><span>Scheduled date has passed</span><button type="button" class="shift-late-finish" data-late-finish="${esc(item.id)}">Finish shift</button></div>`
           : `<p class="shift-locked">Available to finish on ${longDate(item.date)}</p>`;
-    return `<article class="shift-card"><div class="shift-card-top"><div class="record-main"><strong>${esc(item.note || 'Work shift')}</strong><span>${longDate(item.date)}${time} · ${calendarHours(Number(item.hours))} hours at ${money(item.rate)}/h</span></div><div class="record-amount">${money(earnedFor(item))}${completed ? '' : '<small class="shift-planned-amount">planned</small>'}</div><button class="delete-button" data-delete="shift" data-id="${esc(item.id)}" aria-label="Delete shift">×</button></div>${status}</article>`;
+    return shiftSwipeRow(item, `<article class="shift-card"><div class="shift-card-top"><div class="record-main"><strong>${esc(item.note || 'Work shift')}</strong><span>${longDate(item.date)}${time} · ${calendarHours(Number(item.hours))} hours at ${money(item.rate)}/h</span></div><div class="record-amount">${money(earnedFor(item))}${completed ? '' : '<small class="shift-planned-amount">planned</small>'}</div>${shiftActionsButton(item)}</div>${status}</article>`);
   }).join('') : empty('Your shift history starts here', 'Completed and past shifts will appear here.', '◷');
 }
 
@@ -364,7 +455,17 @@ function openDialog(id) {
   if (rateInput) rateInput.value = state.rate;
   if (id === 'settings-dialog') { form.elements.rate.value = state.rate; form.elements.paydayDay.value = state.paydayDay; }
   if (id === 'monthly-expense-dialog') form.elements.dueDay.value = state.paydayDay;
-  if (id === 'shift-dialog') { updateShiftDuration(); updateShiftDateLabel(); }
+  if (id === 'shift-dialog') {
+    shiftEditExactHours = null;
+    form.elements.shiftId.value = '';
+    form.elements.hours.readOnly = true;
+    form.elements.startTime.required = true;
+    form.elements.endTime.required = true;
+    $('#shift-title').textContent = 'Log a shift';
+    $('#shift-submit').innerHTML = 'Save shift <span>↗</span>';
+    $('#shift-time-hint').textContent = 'An end time before the start means your shift ends the next day.';
+    updateShiftDuration(); updateShiftDateLabel();
+  }
   dialog.showModal();
 }
 
@@ -372,6 +473,7 @@ document.querySelectorAll('[data-open]').forEach(button => button.addEventListen
 document.querySelectorAll('[data-close]').forEach(button => button.addEventListener('click', () => document.getElementById(button.dataset.close).close()));
 document.querySelectorAll('[data-page], [data-go]').forEach(button => button.addEventListener('click', () => {
   const page = button.dataset.page || button.dataset.go;
+  resetShiftRowGesture(); closeShiftRow();
   $('#calendar-popover').hidden = true;
   document.querySelectorAll('.page').forEach(section => { section.hidden = section.id !== `${page}-page`; section.classList.toggle('active', !section.hidden); });
   document.querySelectorAll('.tab').forEach(tab => { const active = tab.dataset.page === page; tab.classList.toggle('active', active); if (active) tab.setAttribute('aria-current', 'page'); else tab.removeAttribute('aria-current'); });
@@ -384,6 +486,7 @@ function hoursBetweenTimes(start, end) {
   return ((minutes(end) - minutes(start) + 24 * 60) % (24 * 60)) / 60;
 }
 const shiftForm = $('#shift-form');
+let shiftEditExactHours = null;
 $('#shift-date-open').addEventListener('click', () => {
   const selected = shiftForm.elements.date.value || dateKey();
   shiftDatePickerMonth = new Date(`${selected}T12:00:00`);
@@ -410,32 +513,65 @@ $('#shift-date-today').addEventListener('click', () => {
   updateShiftDateLabel();
   $('#shift-date-dialog').close();
 });
-function updateShiftDuration() {
+function openEditShift(id) {
+  const shift = state.shifts.find(item => item.id === id);
+  const dialog = $('#shift-dialog');
+  if (!shift || dialog.open) return;
+  closeShiftRow();
+  shiftForm.reset();
+  shiftForm.elements.shiftId.value = shift.id;
+  for (const name of ['date', 'startTime', 'endTime', 'note']) shiftForm.elements[name].value = shift[name] || '';
+  shiftForm.elements.rate.value = shift.rate ?? state.rate;
+  shiftForm.elements.hours.readOnly = false;
+  shiftEditExactHours = Number(shift.hours);
+  shiftForm.elements.hours.value = calendarHours(shiftEditExactHours);
+  shiftForm.elements.startTime.required = false;
+  shiftForm.elements.endTime.required = false;
+  validateShiftTimes();
+  $('#shift-title').textContent = 'Edit shift';
+  $('#shift-submit').innerHTML = 'Save changes <span>↗</span>';
+  $('#shift-time-hint').textContent = 'Adjust the times or hours to match your shift. An earlier end time means the next day.';
+  updateShiftDateLabel();
+  dialog.showModal();
+}
+function validateShiftTimes() {
   const start = shiftForm.elements.startTime.value;
   const end = shiftForm.elements.endTime.value;
-  const endInput = shiftForm.elements.endTime;
-  endInput.setCustomValidity(start && end && start === end ? 'Start and end times must be different.' : '');
-  if (!start || !end || start === end) {
-    shiftForm.elements.hours.value = '';
+  const message = (start || end) && (!start || !end) ? 'Enter both a start and an end time.' : start && end && start === end ? 'Start and end times must be different.' : '';
+  shiftForm.elements.endTime.setCustomValidity(message);
+  return !message;
+}
+function updateShiftDuration() {
+  validateShiftTimes();
+  const hours = hoursBetweenTimes(shiftForm.elements.startTime.value, shiftForm.elements.endTime.value);
+  if (hours === null) {
+    if (!shiftForm.elements.shiftId.value) shiftForm.elements.hours.value = '';
     return null;
   }
-  const hours = hoursBetweenTimes(start, end);
-  shiftForm.elements.hours.value = `${calendarHours(hours)} h`;
+  shiftEditExactHours = hours;
+  shiftForm.elements.hours.value = calendarHours(hours);
   return hours;
 }
 for (const name of ['startTime', 'endTime']) {
   shiftForm.elements[name].addEventListener('input', updateShiftDuration);
   shiftForm.elements[name].addEventListener('change', updateShiftDuration);
 }
+shiftForm.elements.hours.addEventListener('input', () => { shiftEditExactHours = null; });
 shiftForm.addEventListener('submit', event => {
   event.preventDefault();
   const form = event.currentTarget;
-  const hours = updateShiftDuration();
-  if (hours === null) { form.reportValidity(); return; }
+  const editId = form.elements.shiftId.value;
+  const existing = editId ? state.shifts.find(item => item.id === editId) : null;
+  if (editId && !existing) { form.closest('dialog').close(); return; }
+  validateShiftTimes();
+  const hours = existing ? (shiftEditExactHours ?? Number(form.elements.hours.value)) : updateShiftDuration();
+  if (!form.reportValidity() || hours === null || !Number.isFinite(hours) || hours <= 0 || hours > 24) return;
   const data = new FormData(form);
   const rate = data.get('rate') === '' ? Number(state.rate) : Number(data.get('rate'));
-  state.shifts.push({ id: crypto.randomUUID(), date: data.get('date'), startTime: data.get('startTime'), endTime: data.get('endTime'), hours, rate, note: data.get('note').trim(), completed: false });
-  persist(); form.closest('dialog').close(); toast('Shift scheduled.');
+  const details = { date: data.get('date'), startTime: data.get('startTime'), endTime: data.get('endTime'), hours, rate, note: data.get('note').trim() };
+  if (existing) Object.assign(existing, details);
+  else state.shifts.push({ id: crypto.randomUUID(), ...details, completed: false });
+  persist(); form.closest('dialog').close(); toast(existing ? 'Shift updated.' : 'Shift scheduled.');
 });
 const finishForm = $('#finish-form');
 const finishDialog = $('#finish-dialog');
@@ -571,6 +707,16 @@ $('#wish-form').addEventListener('submit', event => {
 $('#settings-open').addEventListener('click', () => openDialog('settings-dialog'));
 $('#settings-form').addEventListener('submit', event => { event.preventDefault(); const data = new FormData(event.currentTarget); state.rate = Number(data.get('rate')); state.paydayDay = Number(data.get('paydayDay')); persist(); event.currentTarget.closest('dialog').close(); toast('Settings updated.'); });
 document.addEventListener('click', event => {
+  const toggle = event.target.closest('[data-shift-actions]');
+  if (toggle) {
+    const row = toggle.closest('.shift-swipe-row');
+    setShiftRowOpen(row, !row.classList.contains('actions-open'));
+    if (event.detail === 0 && row.classList.contains('actions-open')) row.querySelector('[data-edit-details]').focus();
+    return;
+  }
+  const editDetails = event.target.closest('[data-edit-details]');
+  if (editDetails) { openEditShift(editDetails.dataset.editDetails); return; }
+  if (openShiftRow && !openShiftRow.contains(event.target)) closeShiftRow();
   const paidButton = event.target.closest('[data-toggle-monthly-paid]');
   if (paidButton) {
     const bill = state.monthlyExpenses.find(item => item.id === paidButton.dataset.toggleMonthlyPaid);
