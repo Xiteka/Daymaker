@@ -162,3 +162,5 @@
 @media(hover:none),(pointer:coarse){
   #shift-dialog :is(input,select,button):focus,#finish-dialog :is(input,select,button):focus,.shift-swipe-row:focus{outline:none;box-shadow:none}
 }
+
+@media(hover:none),(pointer:coarse){.calendar-popover{display:none!important}}

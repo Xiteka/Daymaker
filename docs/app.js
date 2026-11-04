@@ -133,10 +133,11 @@ let calendarMonth = new Date(calendarStart.getFullYear(), calendarStart.getMonth
 let calendarDay = null;
 let calendarTotals = new Map();
 let calendarHoldTimer;
+const calendarHoverMedia = window.matchMedia('(hover: hover) and (pointer: fine)');
 const calendarHours = hours => new Intl.NumberFormat('en-GB', { maximumFractionDigits: 2, useGrouping: false }).format(hours);
 const calendarDateLabel = date => new Date(`${date}T12:00:00`).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
 
-function showCalendarDay(date) {
+function showCalendarDay(date, showPopover = false) {
   calendarDay = date;
   const total = calendarTotals.get(date) || { hours: 0, pay: 0, plannedCount: 0, times: [] };
   const detail = $('#calendar-detail');
@@ -149,9 +150,10 @@ function showCalendarDay(date) {
     button.classList.toggle('selected', selected);
     button.setAttribute('aria-pressed', String(selected));
   });
+  const popover = $('#calendar-popover');
+  popover.hidden = true;
   const button = $('#calendar-grid').querySelector(`[data-date="${date}"]`);
-  if (button) {
-    const popover = $('#calendar-popover');
+  if (button && showPopover && calendarHoverMedia.matches) {
     popover.innerHTML = detail.innerHTML;
     popover.hidden = false;
     const tile = button.getBoundingClientRect();
@@ -217,9 +219,10 @@ function changeCalendarMonth(amount) {
 $('#calendar-prev').addEventListener('click', () => changeCalendarMonth(-1));
 $('#calendar-next').addEventListener('click', () => changeCalendarMonth(1));
 const calendarGrid = $('#calendar-grid');
+calendarHoverMedia.addEventListener('change', () => { $('#calendar-popover').hidden = true; });
 calendarGrid.addEventListener('pointerover', event => {
   const day = event.target.closest('.calendar-day');
-  if (day && (event.pointerType === 'mouse' || event.pointerType === 'pen')) showCalendarDay(day.dataset.date);
+  if (day && calendarHoverMedia.matches && (event.pointerType === 'mouse' || event.pointerType === 'pen')) showCalendarDay(day.dataset.date, true);
 });
 calendarGrid.addEventListener('pointerleave', event => {
   if (event.pointerType === 'mouse' || event.pointerType === 'pen') $('#calendar-popover').hidden = true;
