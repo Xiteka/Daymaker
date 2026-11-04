@@ -4,6 +4,11 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      build_version:
+        description: 'Recovery only: full commit SHA to republish'
+        required: false
+        type: string
 
 permissions:
   contents: read
@@ -23,6 +28,8 @@ jobs:
     steps:
       - name: Check out Daymaker
         uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.build_version || github.sha }}
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
       - name: Upload the published app
@@ -31,4 +38,41 @@ jobs:
           path: docs
       - name: Publish Daymaker
         id: deployment
+        if: ${{ !inputs.build_version }}
         uses: actions/deploy-pages@v5
+      - name: Recover the selected Pages version
+        if: ${{ inputs.build_version }}
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const version = context.payload.inputs.build_version;
+            if (!/^[a-f0-9]{40}$/.test(version)) {
+              throw new Error('Recovery requires a full commit SHA.');
+            }
+            const artifacts = await github.rest.actions.listWorkflowRunArtifacts({
+              ...context.repo, run_id: context.runId
+            });
+            const artifact = artifacts.data.artifacts.find(item => item.name === 'github-pages');
+            if (!artifact) throw new Error('Published app artifact was not found.');
+            const token = await core.getIDToken();
+            const response = await github.request('POST /repos/{owner}/{repo}/pages/deployments', {
+              ...context.repo,
+              artifact_id: artifact.id,
+              pages_build_version: version,
+              oidc_token: token
+            });
+            const id = response.data.id || version;
+            core.info(`Recovering Pages deployment ${id}`);
+            for (let attempt = 0; attempt < 60; attempt++) {
+              await new Promise(resolve => setTimeout(resolve, 10000));
+              const result = await github.request('GET /repos/{owner}/{repo}/pages/deployments/{id}', {
+                ...context.repo, id
+              });
+              const status = result.data.status;
+              core.info(`Pages status: ${status}`);
+              if (status === 'succeed') return;
+              if (['deployment_failed', 'deployment_content_failed', 'deployment_cancelled', 'deployment_lost'].includes(status)) {
+                throw new Error(`Pages recovery failed: ${status}`);
+              }
+            }
+            throw new Error('Pages recovery timed out.');
