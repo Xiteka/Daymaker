@@ -171,3 +171,5 @@
 .balance{margin:0 0 12px;padding-right:42px}
 #home-today-shifts .today-shift-heading{justify-content:flex-start;align-items:baseline;flex-wrap:wrap;gap:4px 10px}
 .home-shift-time{color:var(--muted);font:500 12px var(--mono);white-space:nowrap}
+
+#home-page .welcome-row{margin-bottom:8px}
