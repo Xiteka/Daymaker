@@ -635,7 +635,7 @@ function updateShiftDuration() {
   validateShiftTimes();
   shiftGrossHours = hoursBetweenTimes(shiftForm.elements.startTime.value, shiftForm.elements.endTime.value);
   if (!shiftForm.elements.shiftId.value && !shiftBreakManual) {
-    shiftForm.elements.breakMinutes.value = shiftGrossHours !== null && shiftGrossHours > 6 ? '30' : '';
+    shiftForm.elements.breakMinutes.value = shiftGrossHours !== null && shiftGrossHours >= 6 ? '30' : '';
   }
   if (shiftGrossHours === null) {
     if (!shiftForm.elements.shiftId.value) shiftForm.elements.hours.value = '';
