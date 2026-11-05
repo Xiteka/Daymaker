@@ -20,7 +20,6 @@
 .calendar-day,.calendar-blank{aspect-ratio:1;min-width:0}
 .calendar-day{display:grid;place-items:center;padding:0;border:1px solid transparent;border-radius:9px;background:#181c1c;color:#d9dcd8;font:500 12px var(--sans);-webkit-touch-callout:none;user-select:none;touch-action:manipulation}
 .calendar-day.worked{background:var(--orange);color:#fff}
-.calendar-day.today{border-color:#f7856a}
 .calendar-day.selected{outline:2px solid #fff;outline-offset:-3px}
 .calendar-day:focus-visible{outline:2px solid #fff;outline-offset:2px}
 .calendar-detail{min-height:80px;margin-top:15px;padding:13px 14px;border:1px solid #ffffff20;border-radius:13px;background:#ffffff08}
@@ -175,3 +174,8 @@
 .form-dialog .break-paid-field{min-height:45px;flex-direction:row;align-items:center;gap:9px;padding:0 8px;font-size:12px;cursor:pointer}
 .form-dialog .break-paid-field input{flex:none;width:20px;height:20px;margin:0;padding:0;accent-color:var(--orange)}
 .upcoming-shift-card .swipe-track{margin-top:12px}
+
+.calendar-grid .calendar-day.today{position:relative;border:2px solid var(--orange);font-weight:700}
+.calendar-grid .calendar-day.today::after{content:'';position:absolute;bottom:4px;left:50%;width:4px;height:4px;border-radius:50%;background:var(--orange);transform:translateX(-50%);pointer-events:none}
+.calendar-grid .calendar-day.today.worked{border-color:#fff}
+.calendar-grid .calendar-day.today.worked::after{background:#fff}

@@ -199,8 +199,8 @@ function renderCalendar() {
     const total = calendarTotals.get(date) || { hours: 0, pay: 0, completedCount: 0, plannedCount: 0, times: [] };
     const worked = total.completedCount > 0;
     const today = date === dateKey();
-    const label = `${calendarDateLabel(date)}, ${calendarHours(total.hours)} hours worked, ${money(total.pay)} estimated pay${total.plannedCount ? `, ${total.plannedCount} ${total.plannedCount === 1 ? 'shift' : 'shifts'} scheduled` : ''}`;
-    tiles.push(`<button type="button" class="calendar-day${worked ? ' worked' : ''}${total.plannedCount ? ' planned' : ''}${today ? ' today' : ''}" data-date="${date}" aria-label="${esc(label)}" aria-pressed="false">${day}</button>`);
+    const label = `${today ? 'Today, ' : ''}${calendarDateLabel(date)}, ${calendarHours(total.hours)} hours worked, ${money(total.pay)} estimated pay${total.plannedCount ? `, ${total.plannedCount} ${total.plannedCount === 1 ? 'shift' : 'shifts'} scheduled` : ''}`;
+    tiles.push(`<button type="button" class="calendar-day${worked ? ' worked' : ''}${total.plannedCount ? ' planned' : ''}${today ? ' today' : ''}" data-date="${date}" aria-label="${esc(label)}"${today ? ' aria-current="date"' : ''} aria-pressed="false">${day}</button>`);
   }
   $('#calendar-grid').innerHTML = tiles.join('');
   if (calendarDay && calendarDay.startsWith(monthPrefix + '-')) showCalendarDay(calendarDay);
