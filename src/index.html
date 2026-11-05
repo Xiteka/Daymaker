@@ -11,11 +11,19 @@
     <link rel="icon" href="./icons/daymaker-bold.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="./icons/daymaker-bold-180.png">
     <title>Daymaker · work & money</title>
-    <link rel="stylesheet" href="style.css?v=35">
-    <script src="app.js?v=37" defer></script>
+    <link rel="stylesheet" href="style.css?v=36">
+    <script src="app.js?v=38" defer></script>
   </head>
-  <body>
-    <main class="app-shell">
+  <body class="app-loading">
+    <div class="app-loader" id="app-loader" role="status" aria-label="Loading Daymaker">
+      <div class="app-loader-brand" aria-hidden="true">
+        <img class="app-loader-mark" src="./icons/daymaker-bold.svg" alt="" width="104" height="104">
+        <div class="app-loader-name">daymaker<span>.</span></div>
+        <p class="app-loader-caption">A little more in control.</p>
+        <div class="app-loader-dots"><span></span><span></span><span></span><span></span><span></span></div>
+      </div>
+    </div>
+    <main class="app-shell" inert aria-busy="true">
       <header class="topbar">
         <a class="wordmark" href="#home" aria-label="Daymaker home"><img class="mark" src="./icons/daymaker-bold.svg" alt=""><span>daymaker</span></a>
         <div class="top-actions"><span class="today-pill" id="today-label">TODAY</span><button class="icon-button" id="settings-open" aria-label="Settings" title="Settings">☷</button></div>

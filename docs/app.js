@@ -892,6 +892,22 @@ $('#saving-form').addEventListener('submit', event => {
 $('#date-stamp').textContent = new Date().toLocaleDateString('en-GB', { month: 'short', year: 'numeric' }).toUpperCase();
 render();
 
+function dismissAppLoader() {
+  const loader = $('#app-loader');
+  const app = $('.app-shell');
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const remaining = Math.max(0, (reduceMotion ? 0 : 700) - performance.now());
+  window.setTimeout(() => {
+    document.body.classList.remove('app-loading');
+    app.inert = false;
+    app.removeAttribute('aria-busy');
+    if (!loader) return;
+    loader.classList.add('is-leaving');
+    window.setTimeout(() => loader.remove(), reduceMotion ? 0 : 300);
+  }, remaining);
+}
+dismissAppLoader();
+
 let currentAppDay = dateKey();
 let midnightTimer;
 function refreshForNewDay() {
