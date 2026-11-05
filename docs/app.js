@@ -500,6 +500,7 @@ function openDialog(id) {
   if (id === 'shift-dialog') {
     shiftEditExactHours = null;
     shiftGrossHours = null;
+    shiftBreakManual = false;
     shiftEarnedManual = false;
     form.elements.earned.disabled = true;
     $('#shift-earned-field').hidden = true;
@@ -545,6 +546,7 @@ function applyBreakToForm(form, grossHours) {
 const shiftForm = $('#shift-form');
 let shiftEditExactHours = null;
 let shiftGrossHours = null;
+let shiftBreakManual = false;
 let shiftEarnedManual = false;
 $('#shift-date-open').addEventListener('click', () => {
   const selected = shiftForm.elements.date.value || dateKey();
@@ -581,6 +583,7 @@ function openEditShift(id) {
   shiftForm.elements.shiftId.value = shift.id;
   for (const name of ['date', 'startTime', 'endTime', 'note']) shiftForm.elements[name].value = shift[name] || '';
   shiftForm.elements.rate.value = shift.rate ?? state.rate;
+  shiftBreakManual = true;
   shiftForm.elements.breakMinutes.value = breakMinutesFor(shift);
   shiftForm.elements.breakPaid.checked = shift.breakPaid === true;
   shiftForm.elements.breakMinutes.setCustomValidity('');
@@ -631,6 +634,9 @@ function updateShiftBreak() {
 function updateShiftDuration() {
   validateShiftTimes();
   shiftGrossHours = hoursBetweenTimes(shiftForm.elements.startTime.value, shiftForm.elements.endTime.value);
+  if (!shiftForm.elements.shiftId.value && !shiftBreakManual) {
+    shiftForm.elements.breakMinutes.value = shiftGrossHours !== null && shiftGrossHours > 6 ? '30' : '';
+  }
   if (shiftGrossHours === null) {
     if (!shiftForm.elements.shiftId.value) shiftForm.elements.hours.value = '';
     shiftForm.elements.breakMinutes.setCustomValidity('');
@@ -643,9 +649,12 @@ for (const name of ['startTime', 'endTime']) {
   shiftForm.elements[name].addEventListener('input', updateShiftDuration);
   shiftForm.elements[name].addEventListener('change', updateShiftDuration);
 }
-for (const name of ['breakMinutes', 'breakPaid']) {
-  shiftForm.elements[name].addEventListener('input', updateShiftBreak);
-  shiftForm.elements[name].addEventListener('change', updateShiftBreak);
+for (const eventName of ['input', 'change']) {
+  shiftForm.elements.breakMinutes.addEventListener(eventName, () => {
+    shiftBreakManual = true;
+    updateShiftBreak();
+  });
+  shiftForm.elements.breakPaid.addEventListener(eventName, updateShiftBreak);
 }
 shiftForm.elements.hours.addEventListener('input', () => {
   shiftEditExactHours = null;
