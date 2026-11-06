@@ -199,3 +199,31 @@ body.app-loading>.app-shell{visibility:hidden}
 .app-loader-dots span:nth-child(5){animation-delay:.4s}
 @keyframes loader-dot{0%,70%,100%{opacity:.25;transform:translateY(0)}35%{opacity:1;transform:translateY(-4px)}}
 @media(prefers-reduced-motion:reduce){.app-loader{transition:none}.app-loader-dots span{animation:none;opacity:.7}}
+
+
+.wishlist-page-title{display:block;margin-bottom:18px}
+.wishlist-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:17px}
+.wishlist-actions .primary-button{min-width:0}
+.primary-button.secondary-button{border:1px solid var(--line);background:transparent;color:var(--ink)}
+.primary-button.secondary-button:hover{background:#ffffff60}
+.wish-folder-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.wish-folder-card{display:flex;flex-direction:column;min-width:0;min-height:176px;padding:17px;border:0;border-radius:19px;background:var(--peach);color:var(--ink);text-align:left}
+.wish-folder-card.wish-mint{background:var(--mint)}
+.wish-folder-card.wish-lilac{background:var(--lilac)}
+.wish-folder-card.wish-yellow{background:var(--yellow)}
+.wish-folder-top{display:flex;align-items:center;justify-content:space-between;gap:6px;color:var(--muted);font-size:10px}
+.wish-folder-icon{display:grid;place-items:center;width:32px;height:32px;border-radius:10px;background:#ffffff80;color:var(--orange)}
+.wish-folder-title{margin-top:17px;font:500 19px/1.2 var(--display);letter-spacing:-.4px;overflow-wrap:anywhere}
+.wish-folder-note{margin:5px 0 14px;color:var(--muted);font-size:10px;line-height:1.4}
+.wish-folder-amount{margin-top:auto;font:500 12px/1.5 var(--display)}
+.wish-folder-amount small{font:400 10px var(--sans);color:var(--muted)}
+.wish-folder-card>.wish-progress{display:block;flex:none;width:100%;margin-top:9px}
+.wish-folder-heading{margin:0 0 15px}
+.wish-folder-heading .text-link{display:inline-flex;align-items:center;gap:4px;min-height:34px;font-size:13px}
+.wish-folder-heading .text-link span{padding:0}
+.wish-folder-heading h2{margin:8px 0 0;font:500 23px/1.2 var(--display);letter-spacing:-.6px;overflow-wrap:anywhere}
+.wishlist-grid>.empty-state{grid-column:1/-1}
+.wish-card-actions{display:flex;align-items:center;gap:3px}
+.wish-move-button{display:grid;place-items:center;flex:none;width:28px;height:28px;padding:5px;border:0;border-radius:50%;background:#ffffff75;color:var(--muted)}
+.wish-move-button svg{width:18px;height:18px}
+.wish-move-button:hover{background:#fff;color:var(--orange)}

@@ -22,7 +22,7 @@ Open the printed local URL in a browser. To run the Electron desktop wrapper, us
 - Home and Work show today’s unfinished shift with its completion slider, then show the next shift after today’s shifts are finished.
 - Estimated pay uses each shift’s hourly rate and does not automatically add an overtime premium.
 - Add expenses with a category and date.
-- Save wishlist items with a target and the amount already saved.
+- Save wishlist items with a target and the amount already saved. Existing wishes belong to General; create named folders for gifts, trips, and other plans. Add wishes directly inside a folder or move existing wishes with the folder icon. Home continues to summarize wishes across every folder.
 - Dashboard totals show current-month pay and expenses, with an estimated take-home figure.
 - Data is stored in local browser storage on the device. It is not synced to an account or backed up.
 

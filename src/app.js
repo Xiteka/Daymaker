@@ -4,12 +4,12 @@ const dateKey = date => {
   const d = date || new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 };
-const fresh = () => ({ rate: 220, paydayDay: 25, shifts: [], expenses: [], monthlyExpenses: [], wishes: [] });
+const fresh = () => ({ rate: 220, paydayDay: 25, shifts: [], expenses: [], monthlyExpenses: [], wishes: [], wishFolders: [] });
 let state;
 try {
   const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
   state = saved && typeof saved === 'object'
-    ? { ...fresh(), ...saved, paydayDay: Number(saved.paydayDay) || 25, shifts: Array.isArray(saved.shifts) ? saved.shifts : [], expenses: Array.isArray(saved.expenses) ? saved.expenses : [], monthlyExpenses: Array.isArray(saved.monthlyExpenses) ? saved.monthlyExpenses : [], wishes: Array.isArray(saved.wishes) ? saved.wishes : [] }
+    ? { ...fresh(), ...saved, paydayDay: Number(saved.paydayDay) || 25, shifts: Array.isArray(saved.shifts) ? saved.shifts : [], expenses: Array.isArray(saved.expenses) ? saved.expenses : [], monthlyExpenses: Array.isArray(saved.monthlyExpenses) ? saved.monthlyExpenses : [], wishes: Array.isArray(saved.wishes) ? saved.wishes : [], wishFolders: Array.isArray(saved.wishFolders) ? saved.wishFolders : [] }
     : fresh();
 } catch { state = fresh(); }
 
@@ -438,20 +438,59 @@ function renderMonthlyExpenses() {
   }).join('') : empty('No monthly expenses yet', 'Add a membership or subscription to keep it on your radar.', '↻');
 }
 
-function wishCard(item, index) {
+const GENERAL_WISH_FOLDER = 'general';
+let activeWishFolder = null;
+const wishFolderIcon = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8V6a2 2 0 0 1 2-2h5l2 3h7a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8Z"/></svg>';
+function getWishFolders() {
+  return [{ id: GENERAL_WISH_FOLDER, name: 'General' }, ...state.wishFolders.filter(folder =>
+    folder && typeof folder.id === 'string' && folder.id !== GENERAL_WISH_FOLDER && typeof folder.name === 'string' && folder.name.trim())];
+}
+function folderForWish(wish) {
+  return getWishFolders().some(folder => folder.id === wish.folderId) ? wish.folderId : GENERAL_WISH_FOLDER;
+}
+function populateWishFolders(select, selected = GENERAL_WISH_FOLDER) {
+  select.innerHTML = getWishFolders().map(folder => `<option value="${esc(folder.id)}">${esc(folder.name)}</option>`).join('');
+  select.value = getWishFolders().some(folder => folder.id === selected) ? selected : GENERAL_WISH_FOLDER;
+}
+function wishCard(item, index, allowMove = false) {
   const ratio = Math.max(0, Math.min(100, Number(item.saved) / Number(item.target) * 100));
   const colors = ['wish-peach', 'wish-mint', 'wish-lilac', 'wish-yellow'];
-  return `<article class="wish-card ${colors[index % colors.length]}"><div class="wish-top"><span class="wish-glyph">${['✳', '♡', '✦', '✿'][index % 4]}</span><button class="delete-button" data-delete="wish" data-id="${esc(item.id)}" aria-label="Delete wish">×</button></div><h3>${esc(item.title)}</h3><div class="wish-amounts"><strong>${money(item.saved)}</strong><span>of ${money(item.target)}</span></div><div class="wish-progress"><span style="width:${ratio}%"></span></div><div class="wish-card-foot"><p>${ratio >= 100 ? 'You made it! ✨' : `${Math.round(ratio)}% saved`}</p><button class="save-more" data-add-saving="${esc(item.id)}" type="button">＋ Add</button></div></article>`;
+  const move = allowMove ? `<button type="button" class="wish-move-button" data-move-wish="${esc(item.id)}" aria-label="${esc(`Move ${item.title} to another folder`)}" title="Move to folder">${wishFolderIcon}</button>` : '';
+  return `<article class="wish-card ${colors[index % colors.length]}"><div class="wish-top"><span class="wish-glyph">${['✳', '♡', '✦', '✿'][index % 4]}</span><div class="wish-card-actions">${move}<button class="delete-button" data-delete="wish" data-id="${esc(item.id)}" aria-label="Delete wish">×</button></div></div><h3>${esc(item.title)}</h3><div class="wish-amounts"><strong>${money(item.saved)}</strong><span>of ${money(item.target)}</span></div><div class="wish-progress"><span style="width:${ratio}%"></span></div><div class="wish-card-foot"><p>${ratio >= 100 ? 'You made it! ✨' : `${Math.round(ratio)}% saved`}</p><button class="save-more" data-add-saving="${esc(item.id)}" type="button">＋ Add</button></div></article>`;
 }
-
+function wishFolderCard(folder, index) {
+  const wishes = state.wishes.filter(wish => folderForWish(wish) === folder.id);
+  const target = wishes.reduce((sum, wish) => sum + Number(wish.target), 0);
+  const saved = wishes.reduce((sum, wish) => sum + Number(wish.saved), 0);
+  const ratio = target ? Math.max(0, Math.min(100, saved / target * 100)) : 0;
+  const colors = ['wish-peach', 'wish-mint', 'wish-lilac', 'wish-yellow'];
+  return `<button type="button" class="wish-folder-card ${colors[index % colors.length]}" data-wish-folder="${esc(folder.id)}"><span class="wish-folder-top"><span class="wish-folder-icon">${wishFolderIcon}</span><span>${wishes.length} ${wishes.length === 1 ? 'wish' : 'wishes'}</span></span><strong class="wish-folder-title">${esc(folder.name)}</strong><span class="wish-folder-note">${folder.id === GENERAL_WISH_FOLDER ? 'Everyday wishes' : 'A little collection of wishes'}</span><span class="wish-folder-amount">${wishes.length ? `${money(saved)} <small>of ${money(target)}</small>` : 'Add your first wish'}</span><span class="wish-progress"><span style="width:${ratio}%"></span></span></button>`;
+}
 function renderWishes() {
   const wishes = state.wishes;
+  const folders = getWishFolders();
+  if (activeWishFolder && !folders.some(folder => folder.id === activeWishFolder)) activeWishFolder = null;
+  const visibleWishes = activeWishFolder ? wishes.filter(wish => folderForWish(wish) === activeWishFolder) : wishes;
   const total = wishes.reduce((sum, item) => sum + Number(item.target), 0);
-  $('#wish-total').textContent = `${wishes.length} ${wishes.length === 1 ? 'thing' : 'things'}`;
-  $('#wishlist-list').innerHTML = wishes.length ? wishes.map(wishCard).join('') : empty('Your next good thing goes here', 'Add something you are looking forward to.', '♡');
+  $('#wish-total').textContent = `${visibleWishes.length} ${visibleWishes.length === 1 ? 'thing' : 'things'}`;
+  $('#wish-folder-grid').hidden = !!activeWishFolder;
+  $('#wish-folder-grid').innerHTML = folders.map(wishFolderCard).join('');
+  $('#wish-folder-heading').hidden = !activeWishFolder;
+  $('#wish-folder-name').textContent = folders.find(folder => folder.id === activeWishFolder)?.name || '';
+  $('#wish-summary-note').textContent = activeWishFolder ? 'Little by little, you’ll get there.' : 'A place for every little wish.';
+  $('#wishlist-list').hidden = !activeWishFolder;
+  $('#wishlist-list').innerHTML = activeWishFolder ? visibleWishes.length
+    ? visibleWishes.map((wish, index) => wishCard(wish, index, true)).join('')
+    : empty('Your next good thing goes here', 'Add a wish to this folder.', '♡') : '';
   const sorted = [...wishes].sort((a, b) => (b.saved / b.target) - (a.saved / a.target));
   $('#home-wishlist').innerHTML = sorted.length ? `<div class="home-wish">${wishCard(sorted[0], 0)}<div class="wish-total-note"><span class="eyebrow">AIMING FOR</span><strong>${money(total)}</strong><span>across ${wishes.length} ${wishes.length === 1 ? 'wish' : 'wishes'}</span></div></div>` : empty('Dream a little', 'Add your first wishlist item.', '♡');
 }
+$('#wish-folder-back').addEventListener('click', () => {
+  const previous = activeWishFolder;
+  activeWishFolder = null;
+  renderWishes();
+  [...$('#wish-folder-grid').querySelectorAll('[data-wish-folder]')].find(button => button.dataset.wishFolder === previous)?.focus();
+});
 
 function renderActivity() {
   const items = [
@@ -491,6 +530,8 @@ function openDialog(id) {
   const dialog = document.getElementById(id);
   const form = dialog.querySelector('form');
   form.reset();
+  if (id === 'wish-dialog') populateWishFolders(form.elements.folderId, activeWishFolder || GENERAL_WISH_FOLDER);
+  if (id === 'wish-folder-dialog') form.elements.name.setCustomValidity('');
   const dateInput = form.querySelector('[name="date"]');
   if (dateInput) dateInput.value = id === 'shift-dialog' && !$('#calendar-page').hidden && calendarDay ? calendarDay : dateKey();
   const rateInput = form.querySelector('[name="rate"]');
@@ -521,6 +562,7 @@ document.querySelectorAll('[data-open]').forEach(button => button.addEventListen
 document.querySelectorAll('[data-close]').forEach(button => button.addEventListener('click', () => document.getElementById(button.dataset.close).close()));
 document.querySelectorAll('[data-page], [data-go]').forEach(button => button.addEventListener('click', () => {
   const page = button.dataset.page || button.dataset.go;
+  if (page === 'wishlist') { activeWishFolder = null; renderWishes(); }
   resetShiftRowGesture(); closeShiftRow();
   $('#calendar-popover').hidden = true;
   document.querySelectorAll('.page').forEach(section => { section.hidden = section.id !== `${page}-page`; section.classList.toggle('active', !section.hidden); });
@@ -833,12 +875,62 @@ $('#monthly-expense-form').addEventListener('submit', event => {
 });
 $('#wish-form').addEventListener('submit', event => {
   event.preventDefault(); const data = new FormData(event.currentTarget);
-  state.wishes.push({ id: crypto.randomUUID(), title: data.get('title').trim(), target: Number(data.get('target')), saved: Number(data.get('saved')) || 0 });
+  state.wishes.push({ id: crypto.randomUUID(), title: data.get('title').trim(), target: Number(data.get('target')), saved: Number(data.get('saved')) || 0, folderId: folderForWish({ folderId: data.get('folderId') }) });
   persist(); event.currentTarget.closest('dialog').close(); toast('A new thing to look forward to.');
+});
+$('#wish-folder-form').elements.name.addEventListener('input', event => event.target.setCustomValidity(''));
+$('#wish-folder-form').addEventListener('submit', event => {
+  event.preventDefault();
+  const form = event.currentTarget;
+  const name = form.elements.name.value.trim();
+  const duplicate = getWishFolders().some(folder => folder.name.toLocaleLowerCase() === name.toLocaleLowerCase());
+  form.elements.name.setCustomValidity(!name ? 'Enter a folder name.' : duplicate ? 'A folder with this name already exists.' : '');
+  if (!form.reportValidity()) return;
+  const folder = { id: crypto.randomUUID(), name };
+  state.wishFolders.push(folder);
+  activeWishFolder = folder.id;
+  persist();
+  form.closest('dialog').close();
+  toast('Folder created.');
+});
+$('#wish-move-form').addEventListener('submit', event => {
+  event.preventDefault();
+  const form = event.currentTarget;
+  const wish = state.wishes.find(item => item.id === form.elements.wishId.value);
+  if (wish) {
+    wish.folderId = folderForWish({ folderId: form.elements.folderId.value });
+    persist();
+    toast('Wish moved.');
+  }
+  form.closest('dialog').close();
 });
 $('#settings-open').addEventListener('click', () => openDialog('settings-dialog'));
 $('#settings-form').addEventListener('submit', event => { event.preventDefault(); const data = new FormData(event.currentTarget); state.rate = Number(data.get('rate')); state.paydayDay = Number(data.get('paydayDay')); persist(); event.currentTarget.closest('dialog').close(); toast('Settings updated.'); });
 document.addEventListener('click', event => {
+  const folderButton = event.target.closest('[data-wish-folder]');
+  if (folderButton) {
+    const id = folderButton.dataset.wishFolder;
+    if (getWishFolders().some(folder => folder.id === id)) {
+      activeWishFolder = id;
+      renderWishes();
+      $('#wish-folder-name').focus({ preventScroll: true });
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+    return;
+  }
+  const moveWish = event.target.closest('[data-move-wish]');
+  if (moveWish) {
+    const wish = state.wishes.find(item => item.id === moveWish.dataset.moveWish);
+    if (wish) {
+      const form = $('#wish-move-form');
+      form.reset();
+      form.elements.wishId.value = wish.id;
+      populateWishFolders(form.elements.folderId, folderForWish(wish));
+      $('#wish-move-name').textContent = wish.title;
+      $('#wish-move-dialog').showModal();
+    }
+    return;
+  }
   const editDetails = event.target.closest('[data-edit-details]');
   if (editDetails) { openEditShift(editDetails.dataset.editDetails); return; }
   if (openShiftRow && !openShiftRow.contains(event.target)) closeShiftRow();
