@@ -909,7 +909,7 @@ $('#expense-form').addEventListener('submit', event => {
 });
 $('#monthly-expense-form').addEventListener('submit', event => {
   event.preventDefault(); const data = new FormData(event.currentTarget);
-  state.monthlyExpenses.push({ id: crypto.randomUUID(), title: data.get('title').trim(), amount: Number(data.get('amount')), category: data.get('category'), dueDay: Number(data.get('dueDay')), paidMonth: '' });
+  state.monthlyExpenses.push({ id: crypto.randomUUID(), title: data.get('title').trim(), amount: Number(data.get('amount')), dueDay: Number(data.get('dueDay')), paidMonth: '' });
   persist(); event.currentTarget.closest('dialog').close(); toast('Monthly expense added.');
 });
 $('#wish-form').addEventListener('submit', event => {
@@ -984,7 +984,7 @@ document.addEventListener('click', event => {
         toast('Monthly expense marked unpaid.');
       } else {
         bill.paidMonth = month;
-        state.expenses.push({ id: crypto.randomUUID(), date: dateKey(), title: bill.title, amount: Number(bill.amount), category: bill.category, monthlyExpenseId: bill.id, monthlyPeriod: month });
+        state.expenses.push({ id: crypto.randomUUID(), date: dateKey(), title: bill.title, amount: Number(bill.amount), category: bill.category || 'Everyday', monthlyExpenseId: bill.id, monthlyPeriod: month });
         toast('Monthly expense marked paid.');
       }
       persist();
