@@ -308,7 +308,7 @@
     window.addEventListener('online', scheduleSync);
     document.addEventListener('visibilitychange', () => { if (!document.hidden) scheduleSync(); });
     window.addEventListener('storage', event => {
-      if (event.key === ACTIVE) { owner = localStorage.getItem(ACTIVE); conflict = null; showDocument(localDocument()); updateUI(); }
+      if (event.key === ACTIVE) { hooks.closeEditors(); owner = localStorage.getItem(ACTIVE); conflict = null; showDocument(localDocument()); updateUI(); }
       else if (owner && event.key === PREFIX + owner) { showDocument(localDocument()); scheduleSync(); }
     });
     setInterval(() => { if (!document.hidden) scheduleSync(); }, 30000);

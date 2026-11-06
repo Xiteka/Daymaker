@@ -20,3 +20,19 @@ Settings are under Log in / Account → Your settings. Device and account backup
 Keep `src/` and `docs/` synchronized, including cloud/config/vendor files. Bump service-worker and changed asset query versions. The Pages workflow publishes only `docs/`.
 
 Do not remove or rename the legacy storage key, clear storage during deployment, disable RLS, or add anonymous table policies. Sharing between friends is not enabled: every account is private.
+
+## Email sender
+
+- Resend sending domain: `auth.mxkabi.no` (Ireland).
+- Sender: `Daymaker <noreply@auth.mxkabi.no>`.
+- SMTP host: `smtp.resend.com`; port: `465`; username: `resend`.
+- The SMTP password is a sending-only Resend key stored in the Supabase dashboard, never in this repository.
+- DNS is managed by PRO ISP. The following additive records were approved and published with TTL 300; existing website and mailbox records were retained:
+
+| Type | Relative name | Value |
+| --- | --- | --- |
+| TXT | `resend._domainkey.auth` | The public DKIM key shown in Resend for this domain |
+| CNAME | `rsend.auth` | `rsend-euw1.forge.rmta.net` |
+| CNAME | `send.auth` | `send.forge.rmta.net` |
+
+Wait for Resend to report Verified before relying on email delivery. Restrict the sending key to this domain when the domain is available in the key's domain selector.
