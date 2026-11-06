@@ -24,9 +24,9 @@ Open the printed local URL in a browser. To run the Electron desktop wrapper, us
 - Add expenses with a category and date.
 - Save wishlist items with a target and the amount already saved. Existing wishes belong to General; create named folders for gifts, trips, and other plans. Add wishes directly inside a folder or move existing wishes with the folder icon. Home continues to summarize wishes across every folder.
 - Dashboard totals show current-month pay and expenses, with an estimated take-home figure.
-- Data is stored in local browser storage on the device. It is not synced to an account or backed up.
+- Guest data stays in local browser storage. Optional Supabase login copies existing device data into a private account, retains device backups, and syncs subsequent edits. Offline edits retry when connected. See [Supabase setup](supabase/README.md).
 
-The default hourly rate is NOK 220 and can be changed from the settings button. No shifts, expenses, or wishlist entries are prefilled.
+The default hourly rate is NOK 220 and can be changed from Log in / Account → Your settings. No shifts, expenses, or wishlist entries are prefilled.
 
 
 ## Install on iPhone as a PWA

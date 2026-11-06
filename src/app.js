@@ -7,7 +7,7 @@ const dateKey = date => {
 const fresh = () => ({ rate: 220, paydayDay: 25, shifts: [], expenses: [], monthlyExpenses: [], wishes: [], wishFolders: [] });
 let state;
 try {
-  const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
+  const saved = window.DaymakerCloud ? window.DaymakerCloud.loadLocal() : JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
   state = saved && typeof saved === 'object'
     ? { ...fresh(), ...saved, paydayDay: Number(saved.paydayDay) || 25, shifts: Array.isArray(saved.shifts) ? saved.shifts : [], expenses: Array.isArray(saved.expenses) ? saved.expenses : [], monthlyExpenses: Array.isArray(saved.monthlyExpenses) ? saved.monthlyExpenses : [], wishes: Array.isArray(saved.wishes) ? saved.wishes : [], wishFolders: Array.isArray(saved.wishFolders) ? saved.wishFolders : [] }
     : fresh();
@@ -67,7 +67,18 @@ const hasEarnedOverride = shift => shift.completed !== false && typeof shift.ear
 const earnedFor = shift => hasEarnedOverride(shift) ? shift.earnedOverride : Number(shift.hours) * Number(shift.rate);
 const shiftIsComplete = shift => shift.completed !== false;
 const esc = value => String(value ?? '').replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
-const persist = () => { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); render(); };
+const persist = () => {
+  try {
+    if (window.DaymakerCloud) window.DaymakerCloud.save(state);
+    else localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  } catch (error) {
+    render();
+    toast(error.message || 'Could not save on this device. Download a backup before closing the app.');
+    return false;
+  }
+  render();
+  return true;
+};
 const empty = (title, hint, symbol = '✳') => `<div class="empty-state"><span>${symbol}</span><strong>${title}</strong><p>${hint}</p></div>`;
 let toastTimer;
 function toast(message) {
@@ -765,7 +776,7 @@ shiftForm.addEventListener('submit', event => {
     if (manualEarned) existing.earnedOverride = earned;
     else delete existing.earnedOverride;
   } else state.shifts.push({ id: crypto.randomUUID(), ...details, completed: false });
-  persist(); form.closest('dialog').close(); toast(existing ? 'Shift updated.' : 'Shift scheduled.');
+  if (!persist()) return; form.closest('dialog').close(); toast(existing ? 'Shift updated.' : 'Shift scheduled.');
 });
 const finishForm = $('#finish-form');
 const finishDialog = $('#finish-dialog');
@@ -842,7 +853,7 @@ finishForm.addEventListener('submit', event => {
     shift.endTime = finishForm.elements.endTime.value;
   }
   shift.completed = true;
-  persist();
+  if (!persist()) return;
   finishDialog.close();
   toast(wasCompleted ? 'Shift updated.' : 'Shift completed.');
 });
@@ -905,17 +916,17 @@ shiftList.addEventListener('contextmenu', event => {
 $('#expense-form').addEventListener('submit', event => {
   event.preventDefault(); const data = new FormData(event.currentTarget);
   state.expenses.push({ id: crypto.randomUUID(), date: data.get('date'), title: data.get('title').trim(), amount: Number(data.get('amount')), category: data.get('category') });
-  persist(); event.currentTarget.closest('dialog').close(); toast('Expense added.');
+  if (!persist()) return; event.currentTarget.closest('dialog').close(); toast('Expense added.');
 });
 $('#monthly-expense-form').addEventListener('submit', event => {
   event.preventDefault(); const data = new FormData(event.currentTarget);
   state.monthlyExpenses.push({ id: crypto.randomUUID(), title: data.get('title').trim(), amount: Number(data.get('amount')), dueDay: Number(data.get('dueDay')), paidMonth: '' });
-  persist(); event.currentTarget.closest('dialog').close(); toast('Monthly expense added.');
+  if (!persist()) return; event.currentTarget.closest('dialog').close(); toast('Monthly expense added.');
 });
 $('#wish-form').addEventListener('submit', event => {
   event.preventDefault(); const data = new FormData(event.currentTarget);
   state.wishes.push({ id: crypto.randomUUID(), title: data.get('title').trim(), target: Number(data.get('target')), saved: Number(data.get('saved')) || 0, folderId: folderForWish({ folderId: data.get('folderId') }) });
-  persist(); event.currentTarget.closest('dialog').close(); toast('A new thing to look forward to.');
+  if (!persist()) return; event.currentTarget.closest('dialog').close(); toast('A new thing to look forward to.');
 });
 $('#wish-folder-form').elements.name.addEventListener('input', event => event.target.setCustomValidity(''));
 $('#wish-folder-form').addEventListener('submit', event => {
@@ -928,7 +939,7 @@ $('#wish-folder-form').addEventListener('submit', event => {
   const folder = { id: crypto.randomUUID(), name };
   state.wishFolders.push(folder);
   activeWishFolder = folder.id;
-  persist();
+  if (!persist()) return;
   form.closest('dialog').close();
   toast('Folder created.');
 });
@@ -938,13 +949,12 @@ $('#wish-move-form').addEventListener('submit', event => {
   const wish = state.wishes.find(item => item.id === form.elements.wishId.value);
   if (wish) {
     wish.folderId = folderForWish({ folderId: form.elements.folderId.value });
-    persist();
+    if (!persist()) return;
     toast('Wish moved.');
   }
   form.closest('dialog').close();
 });
-$('#settings-open').addEventListener('click', () => openDialog('settings-dialog'));
-$('#settings-form').addEventListener('submit', event => { event.preventDefault(); const data = new FormData(event.currentTarget); state.rate = Number(data.get('rate')); state.paydayDay = Number(data.get('paydayDay')); persist(); event.currentTarget.closest('dialog').close(); toast('Settings updated.'); });
+$('#settings-form').addEventListener('submit', event => { event.preventDefault(); const data = new FormData(event.currentTarget); state.rate = Number(data.get('rate')); state.paydayDay = Number(data.get('paydayDay')); if (!persist()) return; event.currentTarget.closest('dialog').close(); toast('Settings updated.'); });
 document.addEventListener('click', event => {
   const folderButton = event.target.closest('[data-wish-folder]');
   if (folderButton) {
@@ -987,7 +997,7 @@ document.addEventListener('click', event => {
         state.expenses.push({ id: crypto.randomUUID(), date: dateKey(), title: bill.title, amount: Number(bill.amount), category: bill.category || 'Everyday', monthlyExpenseId: bill.id, monthlyPeriod: month });
         toast('Monthly expense marked paid.');
       }
-      persist();
+      if (!persist()) return;
     }
     return;
   }
@@ -1039,14 +1049,14 @@ $('#delete-confirm-form').addEventListener('submit', event => {
     state[list] = state[list].filter(item => item.id !== id);
   }
   $('#delete-confirm-dialog').close();
-  if (item) { persist(); toast('Removed.'); }
+  if (item) { if (!persist()) return; toast('Removed.'); }
 });
 $('#saving-form').addEventListener('submit', event => {
   event.preventDefault();
   const data = new FormData(event.currentTarget);
   const wish = state.wishes.find(item => item.id === data.get('wishId'));
   if (wish) wish.saved = Number(wish.saved) + Number(data.get('amount'));
-  persist(); event.currentTarget.closest('dialog').close(); toast('Savings updated. Keep going!');
+  if (!persist()) return; event.currentTarget.closest('dialog').close(); toast('Savings updated. Keep going!');
 });
 
 $('#date-stamp').textContent = new Date().toLocaleDateString('en-GB', { month: 'short', year: 'numeric' }).toUpperCase();
@@ -1067,6 +1077,14 @@ function dismissAppLoader() {
   }, remaining);
 }
 dismissAppLoader();
+
+if (window.DaymakerCloud) void window.DaymakerCloud.start({
+  read: () => state,
+  replace: document => { state = { ...fresh(), ...document }; render(); },
+  closeEditors: () => { document.querySelectorAll('dialog[open]:not(#account-dialog)').forEach(dialog => dialog.close()); },
+  openSettings: () => openDialog('settings-dialog'),
+  notify: toast
+}).catch(() => toast('Cloud login could not start. Your device data is still kept here.'));
 
 let currentAppDay = dateKey();
 let midnightTimer;

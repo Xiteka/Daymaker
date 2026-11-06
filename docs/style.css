@@ -260,3 +260,26 @@ body.app-loading>.app-shell{visibility:hidden}
 .delete-cancel-button:hover{background:#d9dbd3}
 .delete-confirm-button{background:var(--orange)}
 .delete-confirm-button:hover{background:#df492a}
+
+.account-open{min-height:36px;padding:0 13px;font-size:11px}
+.account-dialog>.eyebrow{margin-bottom:12px}
+.account-dialog>h2{margin-bottom:14px}
+.account-status{padding:11px 13px;margin-bottom:20px;border-radius:12px;background:var(--peach);color:#a83b25;font-size:12px;line-height:1.5}
+.account-dialog h3{margin:0 0 8px;font:500 20px var(--display);letter-spacing:-.4px}
+.account-note,.account-conflict p{margin:0 0 16px;color:var(--muted);font-size:12px;line-height:1.6}
+.account-auth-submit{width:100%;min-height:44px;background:var(--orange)}
+.account-auth-submit:hover{background:#df492a}
+.account-text-button{display:block;min-height:40px;font-size:12px}
+.auth-message{margin:0;color:#a83b25;font-size:12px;line-height:1.5;overflow-wrap:anywhere}
+.auth-message:empty{display:none}
+.account-email{font-size:14px;overflow-wrap:anywhere}
+.account-buttons{display:flex;flex-wrap:wrap;gap:8px}
+.account-buttons .primary-button{min-height:44px;white-space:normal;text-align:center}
+.account-secondary{background:var(--paper);color:var(--ink)}
+.account-secondary:hover{background:#d9dbd3}
+.account-tools{display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding-top:18px;margin-top:18px;border-top:1px solid var(--line)}
+.account-tools .primary-button{min-height:44px}
+.account-conflict{margin-top:16px;padding:16px;border-radius:17px;background:var(--peach)}
+.account-conflict h3{font-size:18px}
+button:disabled{cursor:default;opacity:.6}
+@media(max-width:370px){.top-actions{gap:7px}.today-pill{padding:7px 10px}.account-open{padding:0 11px}}
