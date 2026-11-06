@@ -452,6 +452,44 @@ function populateWishFolders(select, selected = GENERAL_WISH_FOLDER) {
   select.innerHTML = getWishFolders().map(folder => `<option value="${esc(folder.id)}">${esc(folder.name)}</option>`).join('');
   select.value = getWishFolders().some(folder => folder.id === selected) ? selected : GENERAL_WISH_FOLDER;
 }
+function setMoveFolderExpanded(expanded, focusChoice = false) {
+  $('#wish-move-folder-trigger').setAttribute('aria-expanded', String(expanded));
+  $('#wish-move-folder-options').hidden = !expanded;
+  if (expanded && focusChoice) $('#wish-move-folder-options').querySelector('input:checked')?.focus();
+}
+function populateMoveWishFolders(selected) {
+  const folders = getWishFolders();
+  const folder = folders.find(item => item.id === selected) || folders[0];
+  $('#wish-move-form').elements.folderId.value = folder.id;
+  $('#wish-move-folder-name').textContent = folder.name;
+  $('#wish-move-trigger-icon').innerHTML = wishFolderIcon;
+  $('#wish-move-folder-options').innerHTML = `<legend class="visually-hidden">Choose a folder</legend>` + folders.map(item =>
+    `<label class="wish-move-option"><input type="radio" name="moveFolderChoice" value="${esc(item.id)}"${item.id === folder.id ? ' checked' : ''}><span class="wish-move-option-content"><span class="wish-folder-icon">${wishFolderIcon}</span><span class="wish-move-option-name">${esc(item.name)}</span><span class="wish-move-option-check" aria-hidden="true"></span></span></label>`).join('');
+  setMoveFolderExpanded(false);
+}
+$('#wish-move-folder-trigger').addEventListener('click', () => {
+  setMoveFolderExpanded($('#wish-move-folder-options').hidden, true);
+});
+$('#wish-move-folder-options').addEventListener('change', event => {
+  const choice = event.target.closest('input[name="moveFolderChoice"]');
+  const folder = choice && getWishFolders().find(item => item.id === choice.value);
+  if (!folder) return;
+  $('#wish-move-form').elements.folderId.value = folder.id;
+  $('#wish-move-folder-name').textContent = folder.name;
+  setMoveFolderExpanded(false);
+  $('#wish-move-folder-trigger').focus({ preventScroll: true });
+});
+$('#wish-move-dialog').addEventListener('keydown', event => {
+  if (event.key === 'Escape' && !$('#wish-move-folder-options').hidden) {
+    event.preventDefault();
+    event.stopPropagation();
+    setMoveFolderExpanded(false);
+    $('#wish-move-folder-trigger').focus({ preventScroll: true });
+  }
+});
+$('#wish-move-dialog').addEventListener('click', event => {
+  if (!event.target.closest('.wish-move-picker')) setMoveFolderExpanded(false);
+});
 function wishCard(item, index, allowMove = false) {
   const ratio = Math.max(0, Math.min(100, Number(item.saved) / Number(item.target) * 100));
   const colors = ['wish-peach', 'wish-mint', 'wish-lilac', 'wish-yellow'];
@@ -464,7 +502,7 @@ function wishFolderCard(folder, index) {
   const saved = wishes.reduce((sum, wish) => sum + Number(wish.saved), 0);
   const ratio = target ? Math.max(0, Math.min(100, saved / target * 100)) : 0;
   const colors = ['wish-peach', 'wish-mint', 'wish-lilac', 'wish-yellow'];
-  return `<button type="button" class="wish-folder-card ${colors[index % colors.length]}" data-wish-folder="${esc(folder.id)}"><span class="wish-folder-top"><span class="wish-folder-icon">${wishFolderIcon}</span><span>${wishes.length} ${wishes.length === 1 ? 'wish' : 'wishes'}</span></span><strong class="wish-folder-title">${esc(folder.name)}</strong><span class="wish-folder-note">${folder.id === GENERAL_WISH_FOLDER ? 'Everyday wishes' : 'A little collection of wishes'}</span><span class="wish-folder-amount">${wishes.length ? `${money(saved)} <small>of ${money(target)}</small>` : 'Add your first wish'}</span><span class="wish-progress"><span style="width:${ratio}%"></span></span></button>`;
+  return `<button type="button" class="wish-folder-card ${colors[index % colors.length]}" data-wish-folder="${esc(folder.id)}"><span class="wish-folder-top"><span class="wish-folder-icon">${wishFolderIcon}</span><span>${wishes.length} ${wishes.length === 1 ? 'wish' : 'wishes'}</span></span><strong class="wish-folder-title">${esc(folder.name)}</strong><span class="wish-folder-amount">${wishes.length ? `${money(saved)} <small>of ${money(target)}</small>` : 'Add your first wish'}</span><span class="wish-progress"><span style="width:${ratio}%"></span></span></button>`;
 }
 function renderWishes() {
   const wishes = state.wishes;
@@ -477,7 +515,7 @@ function renderWishes() {
   $('#wish-folder-grid').innerHTML = folders.map(wishFolderCard).join('');
   $('#wish-folder-heading').hidden = !activeWishFolder;
   $('#wish-folder-name').textContent = folders.find(folder => folder.id === activeWishFolder)?.name || '';
-  $('#wish-summary-note').textContent = activeWishFolder ? 'Little by little, you’ll get there.' : 'A place for every little wish.';
+  $('#wish-summary-note').hidden = !activeWishFolder;
   $('#wishlist-list').hidden = !activeWishFolder;
   $('#wishlist-list').innerHTML = activeWishFolder ? visibleWishes.length
     ? visibleWishes.map((wish, index) => wishCard(wish, index, true)).join('')
@@ -925,7 +963,7 @@ document.addEventListener('click', event => {
       const form = $('#wish-move-form');
       form.reset();
       form.elements.wishId.value = wish.id;
-      populateWishFolders(form.elements.folderId, folderForWish(wish));
+      populateMoveWishFolders(folderForWish(wish));
       $('#wish-move-name').textContent = wish.title;
       $('#wish-move-dialog').showModal();
     }
