@@ -11,11 +11,11 @@
     <link rel="icon" href="./icons/daymaker-bold.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="./icons/daymaker-bold-180.png">
     <title>Daymaker · work & money</title>
-    <link rel="stylesheet" href="style.css?v=42">
+    <link rel="stylesheet" href="style.css?v=43">
     <script src="vendor/supabase-2.119.0.js" defer></script>
     <script src="supabase-config.js?v=1" defer></script>
-    <script src="cloud.js?v=1" defer></script>
-    <script src="app.js?v=44" defer></script>
+    <script src="cloud.js?v=2" defer></script>
+    <script src="app.js?v=45" defer></script>
   </head>
   <body class="app-loading">
     <div class="app-loader" id="app-loader" role="status" aria-label="Loading Daymaker">
@@ -28,8 +28,8 @@
     </div>
     <main class="app-shell" inert aria-busy="true">
       <header class="topbar">
-        <a class="wordmark" href="#home" aria-label="Daymaker home"><img class="mark" src="./icons/daymaker-bold.svg" alt=""><span>daymaker</span></a>
-        <div class="top-actions"><span class="today-pill" id="today-label">TODAY</span><button type="button" class="primary-button account-open" id="account-open" aria-label="Log in">Log in</button></div>
+        <a class="wordmark" href="#home" data-go="home" aria-label="Daymaker home"><img class="mark" src="./icons/daymaker-bold.svg" alt=""><span>daymaker</span></a>
+        <div class="top-actions"><span class="today-pill" id="today-label">TODAY</span><button type="button" class="today-pill account-open" id="account-open" aria-label="Log in">Log in</button></div>
       </header>
 
       <section class="page active" id="home-page" aria-labelledby="home-title">
@@ -100,6 +100,26 @@
         <div id="wishlist-list" class="wishlist-grid" hidden></div>
       </section>
 
+    <section class="page account-page" id="account-page" aria-labelledby="account-title" hidden>
+      <div class="page-title-row"><div><p class="eyebrow">YOUR LITTLE CORNER</p><h1 id="account-title" tabindex="-1">Account<span class="period">.</span></h1></div><button type="button" class="primary-button account-back" data-go="home">‹ Back</button></div>
+      <div class="account-status" id="account-status" role="status">Saved on this device</div>
+      <div id="account-auth-section" class="account-card account-auth-card">
+        <h3 id="auth-title">Welcome back.</h3>
+        <p class="account-note">Log in to save your shifts, expenses and wishes to your account. Existing data on this device is kept and copied when you first log in.</p>
+        <form id="auth-form">
+          <label id="auth-email-field">Email<input id="auth-email" type="email" autocomplete="email" placeholder="you@example.com" required></label>
+          <label>Password<input id="auth-password" type="password" autocomplete="current-password" required></label>
+          <p class="auth-message" id="auth-message" role="status"></p>
+          <button type="submit" class="primary-button account-auth-submit" id="auth-submit">Log in</button>
+        </form>
+        <button type="button" class="text-link account-text-button" id="auth-forgot">Forgot password?</button>
+        <button type="button" class="text-link account-text-button" id="auth-mode-toggle">New here? Create an account</button>
+      </div>
+      <div id="account-signed-in" hidden><section class="account-card account-profile-card" aria-labelledby="account-profile-title"><p class="eyebrow">MAKE IT YOURS</p><h2 id="account-profile-title">Your profile</h2><p class="account-email" id="account-email"></p><form id="account-profile-form"><label for="account-nickname">Name or nickname</label><input id="account-nickname" name="nickname" type="text" maxlength="24" autocomplete="nickname" placeholder="What should we call you?" aria-describedby="account-name-hint" required><p class="account-note" id="account-name-hint">This name appears in the top bar.</p><button type="submit" class="primary-button account-name-save">Save name <span aria-hidden="true">↗</span></button></form></section><section class="account-card account-sync-card" aria-labelledby="account-sync-title"><h2 id="account-sync-title">Your data</h2><div class="account-buttons"><button type="button" class="primary-button" id="account-sync">Sync now</button><button type="button" class="primary-button account-secondary" id="account-cloud-backups">Download account backups</button></div><p class="account-note">Logging out keeps your account data and returns to this device’s original local data.</p><button type="button" class="text-link account-text-button" id="account-signout">Log out</button></section></div>
+      <section class="account-conflict" id="account-conflict" hidden><h3>Two versions, one choice.</h3><p>These records changed in two places: <strong id="account-conflict-items"></strong>.</p><p>Choose which changes to use for these records. Other changes will be combined. Both versions are backed up before saving.</p><div class="account-buttons"><button type="button" class="primary-button" data-resolve-sync="local">Use this device’s changes</button><button type="button" class="primary-button account-secondary" data-resolve-sync="remote">Use account changes</button></div></section>
+      <div class="account-tools"><button type="button" class="primary-button account-secondary" id="account-settings">Your settings</button><button type="button" class="text-link" id="account-backup">Download device backup ↗</button></div>
+    </section>
+
       <nav class="bottom-nav" aria-label="Main navigation">
         <button class="tab active" data-page="home" aria-current="page"><span class="tab-icon">⌂</span><span>Home</span></button>
         <button class="tab" data-page="work"><span class="tab-icon">◷</span><span>Work</span></button>
@@ -116,26 +136,7 @@
     <dialog class="form-dialog" id="wish-dialog"><form id="wish-form" method="dialog"><button class="dialog-close" type="button" data-close="wish-dialog" aria-label="Close">×</button><p class="eyebrow">SOMETHING TO LOOK FORWARD TO</p><h2>Add to your wishlist</h2><label>What are you saving for?<input name="title" maxlength="60" placeholder="A weekend away…" required required></label><label>Folder<select name="folderId" required><option value="general">General</option></select></label><div class="field-row"><label>Price (NOK)<input name="target" type="number" min="1" step="1" placeholder="0" required></label><label>Already saved<input name="saved" type="number" min="0" step="1" value="0"></label></div><button class="primary-button submit-button" type="submit">Save this wish <span>♡</span></button></form></dialog>
     <dialog class="form-dialog" id="wish-folder-dialog" aria-labelledby="wish-folder-dialog-title"><form id="wish-folder-form" method="dialog"><button class="dialog-close" type="button" data-close="wish-folder-dialog" aria-label="Close">×</button><p class="eyebrow">A PLACE FOR YOUR PLANS</p><h2 id="wish-folder-dialog-title">New folder</h2><label>Folder name<input name="name" maxlength="40" placeholder="X-mas, travel…" required></label><button class="primary-button submit-button" type="submit">Create folder <span>↗</span></button></form></dialog>
     <dialog class="form-dialog" id="wish-move-dialog" aria-labelledby="wish-move-title"><form id="wish-move-form" method="dialog"><button class="dialog-close" type="button" data-close="wish-move-dialog" aria-label="Close">×</button><p class="eyebrow">KEEP YOUR WISHES TOGETHER</p><h2 id="wish-move-title">Move wish</h2><p class="finish-date" id="wish-move-name"></p><input type="hidden" name="wishId"><input type="hidden" name="folderId"><div class="wish-move-picker"><span id="wish-move-folder-label" class="wish-move-label">Folder</span><button type="button" class="wish-move-folder-trigger" id="wish-move-folder-trigger" aria-expanded="false" aria-controls="wish-move-folder-options" aria-labelledby="wish-move-folder-label wish-move-folder-name"><span class="wish-folder-icon" id="wish-move-trigger-icon" aria-hidden="true"></span><span id="wish-move-folder-name"></span><svg class="wish-move-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m7 10 5 5 5-5"/></svg></button><fieldset class="wish-move-folder-options" id="wish-move-folder-options" hidden></fieldset></div><button class="primary-button submit-button" type="submit">Move wish <span>↗</span></button></form></dialog>
-    <dialog class="form-dialog account-dialog" id="account-dialog" aria-labelledby="account-title">
-      <button class="dialog-close" type="button" data-close="account-dialog" aria-label="Close">×</button>
-      <p class="eyebrow">YOUR LITTLE CORNER</p><h2 id="account-title">Your account<span class="period">.</span></h2>
-      <div class="account-status" id="account-status" role="status">Saved on this device</div>
-      <div id="account-auth-section">
-        <h3 id="auth-title">Welcome back.</h3>
-        <p class="account-note">Log in to save your shifts, expenses and wishes to your account. Existing data on this device is kept and copied when you first log in.</p>
-        <form id="auth-form">
-          <label id="auth-email-field">Email<input id="auth-email" type="email" autocomplete="email" placeholder="you@example.com" required></label>
-          <label>Password<input id="auth-password" type="password" autocomplete="current-password" required></label>
-          <p class="auth-message" id="auth-message" role="status"></p>
-          <button type="submit" class="primary-button account-auth-submit" id="auth-submit">Log in</button>
-        </form>
-        <button type="button" class="text-link account-text-button" id="auth-forgot">Forgot password?</button>
-        <button type="button" class="text-link account-text-button" id="auth-mode-toggle">New here? Create an account</button>
-      </div>
-      <div id="account-signed-in" hidden><p class="account-email" id="account-email"></p><div class="account-buttons"><button type="button" class="primary-button" id="account-sync">Sync now</button><button type="button" class="primary-button account-secondary" id="account-cloud-backups">Download account backups</button></div><p class="account-note">Logging out keeps your account data and returns to this device’s original local data.</p><button type="button" class="text-link account-text-button" id="account-signout">Log out</button></div>
-      <section class="account-conflict" id="account-conflict" hidden><h3>Two versions, one choice.</h3><p>These records changed in two places: <strong id="account-conflict-items"></strong>.</p><p>Choose which changes to use for these records. Other changes will be combined. Both versions are backed up before saving.</p><div class="account-buttons"><button type="button" class="primary-button" data-resolve-sync="local">Use this device’s changes</button><button type="button" class="primary-button account-secondary" data-resolve-sync="remote">Use account changes</button></div></section>
-      <div class="account-tools"><button type="button" class="primary-button account-secondary" id="account-settings">Your settings</button><button type="button" class="text-link" id="account-backup">Download device backup ↗</button></div>
-    </dialog>
+
     <dialog class="form-dialog settings-dialog" id="settings-dialog"><form id="settings-form" method="dialog"><button class="dialog-close" type="button" data-close="settings-dialog" aria-label="Close">×</button><p class="eyebrow">MAKE IT YOURS</p><h2>Your settings</h2><label>Hourly pay (NOK)<input name="rate" type="number" min="0" step="1" required></label><p class="settings-note">New shifts will use this rate unless you enter a different one.</p><label>Payday each month<input name="paydayDay" type="number" min="1" max="31" step="1" required></label><p class="settings-note">Day of the month you usually get paid.</p><button class="primary-button submit-button" type="submit">Save settings <span>↗</span></button></form></dialog>
     <dialog class="form-dialog" id="monthly-expense-dialog"><form id="monthly-expense-form" method="dialog"><button class="dialog-close" type="button" data-close="monthly-expense-dialog" aria-label="Close">×</button><p class="eyebrow">A LITTLE EVERY MONTH</p><h2>Add a monthly expense</h2><label>What is it?<input name="title" maxlength="60" placeholder="Gym membership, subscription…" required></label><div class="field-row"><label>Amount (NOK)<input name="amount" type="number" min="1" step="0.01" placeholder="0" required></label><label>Due day<input name="dueDay" type="number" min="1" max="31" step="1" required></label></div><p class="settings-note">You can mark it paid each month; it will then appear in your expense totals.</p><button class="primary-button submit-button" type="submit">Save monthly expense <span>↗</span></button></form></dialog>
     <dialog class="form-dialog" id="saving-dialog"><form id="saving-form" method="dialog"><button class="dialog-close" type="button" data-close="saving-dialog" aria-label="Close">×</button><p class="eyebrow">ONE STEP CLOSER</p><h2 id="saving-title">Add to your savings</h2><input name="wishId" type="hidden"><label>Amount to add (NOK)<input name="amount" type="number" min="1" step="1" placeholder="0" required></label><button class="primary-button submit-button" type="submit">Update savings <span>↗</span></button></form></dialog>

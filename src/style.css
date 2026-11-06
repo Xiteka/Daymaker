@@ -261,11 +261,10 @@ body.app-loading>.app-shell{visibility:hidden}
 .delete-confirm-button{background:var(--orange)}
 .delete-confirm-button:hover{background:#df492a}
 
-.account-open{min-height:36px;padding:0 13px;font-size:11px}
-.account-dialog>.eyebrow{margin-bottom:12px}
-.account-dialog>h2{margin-bottom:14px}
+.topbar{gap:12px}.wordmark{flex:none}.top-actions{min-width:0;gap:8px}.today-pill{flex:none}
+.account-open{flex:0 1 auto;max-width:112px;min-width:0;border:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-transform:uppercase;text-align:center}
 .account-status{padding:11px 13px;margin-bottom:20px;border-radius:12px;background:var(--peach);color:#a83b25;font-size:12px;line-height:1.5}
-.account-dialog h3{margin:0 0 8px;font:500 20px var(--display);letter-spacing:-.4px}
+.account-page h3{margin:0 0 8px;font:500 20px var(--display);letter-spacing:-.4px}
 .account-note,.account-conflict p{margin:0 0 16px;color:var(--muted);font-size:12px;line-height:1.6}
 .account-auth-submit{width:100%;min-height:44px;background:var(--orange)}
 .account-auth-submit:hover{background:#df492a}
@@ -282,4 +281,20 @@ body.app-loading>.app-shell{visibility:hidden}
 .account-conflict{margin-top:16px;padding:16px;border-radius:17px;background:var(--peach)}
 .account-conflict h3{font-size:18px}
 button:disabled{cursor:default;opacity:.6}
-@media(max-width:370px){.top-actions{gap:7px}.today-pill{padding:7px 10px}.account-open{padding:0 11px}}
+@media(max-width:370px){.top-actions{gap:7px}.today-pill{padding:7px 10px}}
+
+.account-page .account-card{padding:20px;margin-bottom:14px;border-radius:20px;background:var(--card)}
+.account-card h2{margin:3px 0 12px;font:500 21px var(--display);letter-spacing:-.5px}
+.account-profile-card .eyebrow{margin-bottom:4px}
+.account-profile-card .account-email{margin:0 0 20px;color:var(--muted);font-size:12px}
+.account-page form{display:flex;flex-direction:column;gap:10px}
+.account-page label{display:flex;flex-direction:column;gap:6px;font-size:12px;font-weight:600}
+.account-page input{width:100%;height:46px;min-width:0;padding:0 13px;border:1px solid var(--line);border-radius:12px;background:#fff;font-size:16px}
+.account-profile-card #account-name-hint{margin:0 0 3px;font-size:11px}
+.account-name-save{align-self:flex-start;min-height:44px;background:var(--orange)}
+.account-name-save:hover{background:#df492a}
+.account-name-save span{color:#ffffffb0}
+.account-sync-card .account-note{margin:16px 0 0}
+.account-page .account-status{margin-bottom:14px}
+.account-page .account-tools{padding:18px 0;margin-top:18px}
+.account-back{min-height:40px}

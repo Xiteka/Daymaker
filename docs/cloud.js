@@ -7,13 +7,14 @@
   const BACKUP = 'daymaker-original-device-backup-v1';
   const PREFIX = 'daymaker-account-v1:';
   const COLLECTIONS = ['shifts', 'expenses', 'monthlyExpenses', 'wishes', 'wishFolders'];
-  const defaults = () => ({ rate: 220, paydayDay: 25, shifts: [], expenses: [], monthlyExpenses: [], wishes: [], wishFolders: [] });
+  const defaults = () => ({ rate: 220, paydayDay: 25, profileName: '', shifts: [], expenses: [], monthlyExpenses: [], wishes: [], wishFolders: [] });
   const copy = value => JSON.parse(JSON.stringify(value));
   const canonical = value => JSON.stringify(value, (_, v) => v && typeof v === 'object' && !Array.isArray(v) ? Object.fromEntries(Object.keys(v).sort().map(k => [k, v[k]])) : v);
   const same = (a, b) => canonical(a) === canonical(b);
   const readJSON = key => { const raw = localStorage.getItem(key); return raw ? JSON.parse(raw) : null; };
   const normalize = input => {
     const value = { ...defaults(), ...input };
+    value.profileName = typeof value.profileName === 'string' ? value.profileName : '';
     for (const name of COLLECTIONS) {
       if (!Array.isArray(value[name]) || value[name].some(item => !item || typeof item.id !== 'string')) throw new Error('A saved record needs attention. Download a backup before continuing.');
     }
@@ -30,6 +31,8 @@
   let conflict = null;
   let authMode = 'login';
   let recovery = false;
+  let nameDraft = false;
+  let nameOwner = null;
   const $ = selector => document.querySelector(selector);
   const cacheFor = id => readJSON(PREFIX + id);
   const writeCache = (id, cache) => localStorage.setItem(PREFIX + id, JSON.stringify(cache));
@@ -40,6 +43,7 @@
   };
   // Compare individual records, not whole lists. Deletions only win if the other device did not edit the record.
   function merge(base, local, remote, preference) {
+    base = normalize(base); local = normalize(local); remote = normalize(remote);
     const result = copy(remote);
     const conflicts = [];
     const choose = (before, here, there, label) => {
@@ -48,7 +52,7 @@
       conflicts.push(label);
       return preference === 'local' ? here : there;
     };
-    for (const key of ['rate', 'paydayDay']) result[key] = choose(base[key], local[key], remote[key], key === 'rate' ? 'Hourly rate' : 'Payday');
+    for (const key of ['rate', 'paydayDay', 'profileName']) result[key] = choose(base[key], local[key], remote[key], { rate: 'Hourly rate', paydayDay: 'Payday', profileName: 'Name or nickname' }[key]);
     for (const key of COLLECTIONS) {
       const maps = [base, local, remote].map(doc => new Map(doc[key].map(item => [item.id, item])));
       const ids = new Set([...maps[2].keys(), ...maps[1].keys(), ...maps[0].keys()]);
@@ -69,8 +73,14 @@
   function updateUI(message) {
     if (message) status = message;
     if (!hooks) return;
-    $('#account-open').textContent = session?.user ? 'Account' : 'Log in';
-    $('#account-open').setAttribute('aria-label', session?.user ? 'Your account' : 'Log in');
+    const signedIn = !!session?.user;
+    const nickname = String(hooks.read().profileName || '').trim();
+    const displayName = nickname || session?.user.email?.split('@')[0] || 'Account';
+    $('#account-open').textContent = signedIn ? displayName : 'Log in';
+    $('#account-open').setAttribute('aria-label', signedIn ? `Open account for ${displayName}` : 'Log in');
+    $('#account-open').title = signedIn ? displayName : 'Log in';
+    if (nameOwner !== (session?.user.id || null)) { nameOwner = session?.user.id || null; nameDraft = false; }
+    if (!nameDraft) $('#account-nickname').value = signedIn ? displayName : '';
     $('#account-email').textContent = session?.user.email || '';
     $('#account-signed-in').hidden = !session?.user;
     $('#account-auth-section').hidden = !!session?.user && !recovery;
@@ -244,8 +254,22 @@
   }
   async function start(callbacks) {
     hooks = callbacks;
-    $('#account-open').addEventListener('click', () => { updateUI(); $('#account-dialog').showModal(); });
-    $('#account-settings').addEventListener('click', () => { $('#account-dialog').close(); hooks.openSettings(); });
+    $('#account-open').addEventListener('click', () => { updateUI(); hooks.openAccount(); });
+    $('#account-nickname').addEventListener('input', event => { nameDraft = true; event.target.setCustomValidity(''); });
+    $('#account-profile-form').addEventListener('submit', event => {
+      event.preventDefault();
+      if (!session?.user || owner !== session.user.id) return;
+      const field = $('#account-nickname');
+      const name = field.value.trim().replace(/\s+/g, ' ');
+      field.setCustomValidity(!name ? 'Enter a name or nickname.' : name.length > 24 ? 'Use 24 characters or fewer.' : '');
+      if (!event.currentTarget.reportValidity()) return;
+      if (!hooks.saveName(name)) return;
+      nameDraft = false;
+      updateUI();
+      field.blur();
+      hooks.notify('Name saved.');
+    });
+    $('#account-settings').addEventListener('click', () => hooks.openSettings());
     $('#account-sync').addEventListener('click', () => void sync());
     $('#account-backup').addEventListener('click', () => download({ exportedAt: new Date().toISOString(), current: hooks.read(), originalDevice: readJSON(BACKUP) || readJSON(LEGACY), accountCache: owner ? cacheFor(owner) : null }, 'daymaker-device-backup.json'));
     $('#account-cloud-backups').addEventListener('click', async () => {
@@ -297,7 +321,7 @@
     client.auth.onAuthStateChange((event, nextSession) => {
       if (event === 'PASSWORD_RECOVERY') recovery = true;
       setTimeout(() => {
-        if (event === 'PASSWORD_RECOVERY') { updateUI(); $('#account-dialog').showModal(); }
+        if (event === 'PASSWORD_RECOVERY') { updateUI(); hooks.openAccount(); }
         if (owner !== (nextSession?.user.id || null)) void activate(nextSession).catch(() => updateUI('Could not switch accounts safely. Your saved data is kept here.'));
         else { session = nextSession; updateUI(); if (nextSession) scheduleSync(); }
       }, 0);

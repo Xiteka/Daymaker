@@ -26,7 +26,9 @@ Open the printed local URL in a browser. To run the Electron desktop wrapper, us
 - Dashboard totals show current-month pay and expenses, with an estimated take-home figure.
 - Guest data stays in local browser storage. Optional Supabase login copies existing device data into a private account, retains device backups, and syncs subsequent edits. Offline edits retry when connected. See [Supabase setup](supabase/README.md).
 
-The default hourly rate is NOK 220 and can be changed from Log in / Account → Your settings. No shifts, expenses, or wishlist entries are prefilled.
+Tap the compact name pill in the top bar to open the Account page. Signed-in users can save a name or nickname, which syncs with their private account and appears in the pill. Until a name is saved, the email username is shown.
+
+The default hourly rate is NOK 220 and can be changed from the Account page → Your settings. No shifts, expenses, or wishlist entries are prefilled.
 
 
 ## Install on iPhone as a PWA

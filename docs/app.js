@@ -4,7 +4,7 @@ const dateKey = date => {
   const d = date || new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 };
-const fresh = () => ({ rate: 220, paydayDay: 25, shifts: [], expenses: [], monthlyExpenses: [], wishes: [], wishFolders: [] });
+const fresh = () => ({ rate: 220, paydayDay: 25, profileName: '', shifts: [], expenses: [], monthlyExpenses: [], wishes: [], wishFolders: [] });
 let state;
 try {
   const saved = window.DaymakerCloud ? window.DaymakerCloud.loadLocal() : JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
@@ -610,14 +610,21 @@ function openDialog(id) {
 
 document.querySelectorAll('[data-open]').forEach(button => button.addEventListener('click', () => openDialog(button.dataset.open)));
 document.querySelectorAll('[data-close]').forEach(button => button.addEventListener('click', () => document.getElementById(button.dataset.close).close()));
-document.querySelectorAll('[data-page], [data-go]').forEach(button => button.addEventListener('click', () => {
-  const page = button.dataset.page || button.dataset.go;
+function showPage(page, focusHeading = false) {
+  if (!document.getElementById(`${page}-page`)) return;
   if (page === 'wishlist') { activeWishFolder = null; renderWishes(); }
   resetShiftRowGesture(); closeShiftRow();
   $('#calendar-popover').hidden = true;
   document.querySelectorAll('.page').forEach(section => { section.hidden = section.id !== `${page}-page`; section.classList.toggle('active', !section.hidden); });
   document.querySelectorAll('.tab').forEach(tab => { const active = tab.dataset.page === page; tab.classList.toggle('active', active); if (active) tab.setAttribute('aria-current', 'page'); else tab.removeAttribute('aria-current'); });
+  if (page === 'account') $('#account-open').setAttribute('aria-current', 'page');
+  else $('#account-open').removeAttribute('aria-current');
   window.scrollTo({ top: 0, behavior: 'smooth' });
+  if (focusHeading) document.querySelector(`#${page}-page h1`)?.focus({ preventScroll: true });
+}
+document.querySelectorAll('[data-page], [data-go]').forEach(button => button.addEventListener('click', event => {
+  if (button.tagName === 'A') event.preventDefault();
+  showPage(button.dataset.page || button.dataset.go);
 }));
 
 function hoursBetweenTimes(start, end) {
@@ -1081,7 +1088,9 @@ dismissAppLoader();
 if (window.DaymakerCloud) void window.DaymakerCloud.start({
   read: () => state,
   replace: document => { state = { ...fresh(), ...document }; render(); },
-  closeEditors: () => { document.querySelectorAll('dialog[open]:not(#account-dialog)').forEach(dialog => dialog.close()); },
+  closeEditors: () => { document.querySelectorAll('dialog[open]').forEach(dialog => dialog.close()); },
+  openAccount: () => showPage('account', true),
+  saveName: name => { state.profileName = name; return persist(); },
   openSettings: () => openDialog('settings-dialog'),
   notify: toast
 }).catch(() => toast('Cloud login could not start. Your device data is still kept here.'));
