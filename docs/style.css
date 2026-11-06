@@ -74,7 +74,7 @@
 .monthly-expense-top .record-main span{font-size:10px}
 
 .monthly-paid-button{min-height:34px;padding:0 12px;border:0;border-radius:99px;background:var(--orange);color:#fff;font-size:11px;font-weight:600}
-.monthly-paid-button.is-paid{background:var(--mint);color:var(--ink)}
+.monthly-paid-button.is-paid{background:transparent;color:var(--orange);box-shadow:inset 0 0 0 1px var(--orange)}
 .balance-estimate{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-top:9px;padding-top:8px;border-top:1px solid #ffffff30;color:#ffffffc4;font:500 9px var(--mono);letter-spacing:.7px}
 .balance-estimate b{color:#fff;font:500 12px var(--sans);letter-spacing:0}
 .calendar-detail-times{display:flex;flex-wrap:wrap;align-items:center;gap:7px 10px;margin-top:12px;padding-top:10px;border-top:1px solid #ffffff20}
@@ -251,7 +251,6 @@ body.app-loading>.app-shell{visibility:hidden}
 .shift-row-actions .monthly-delete-button{font-size:25px}
 .monthly-expense-top .record-amount{font-size:11px}
 .monthly-expense-top .monthly-paid-button{flex:none;min-height:44px;padding:0 10px;font-size:10px}
-.monthly-expense-top .monthly-paid-note{color:var(--orange)}
 .delete-confirm-icon{display:grid;place-items:center;width:42px;height:42px;margin-bottom:5px;border-radius:14px;background:var(--peach);color:var(--orange);font:600 24px var(--display)}
 #delete-confirm-name{font-size:15px;overflow-wrap:anywhere}
 #delete-confirm-message{margin:0;color:var(--muted);font-size:13px;line-height:1.6}
