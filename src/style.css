@@ -69,10 +69,10 @@
 .payday-note{margin-top:11px;color:#ffffffc4;font:500 9px var(--mono);letter-spacing:.8px}
 .monthly-expense-list{border-top:1px solid var(--line)}
 .monthly-expense-row{padding:12px 0;border-bottom:1px solid var(--line)}
-.monthly-expense-top,.monthly-expense-bottom{display:flex;align-items:center;gap:10px}
+.monthly-expense-top{display:flex;align-items:center;gap:8px}
 .monthly-expense-top .record-main{min-width:0}
 .monthly-expense-top .record-main span{font-size:10px}
-.monthly-expense-bottom{justify-content:space-between;margin:7px 0 0 46px;color:var(--muted);font-size:11px}
+
 .monthly-paid-button{min-height:34px;padding:0 12px;border:0;border-radius:99px;background:var(--orange);color:#fff;font-size:11px;font-weight:600}
 .monthly-paid-button.is-paid{background:var(--mint);color:var(--ink)}
 .balance-estimate{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-top:9px;padding-top:8px;border-top:1px solid #ffffff30;color:#ffffffc4;font:500 9px var(--mono);letter-spacing:.7px}
@@ -246,3 +246,18 @@ body.app-loading>.app-shell{visibility:hidden}
 .wish-move-option>input:checked+.wish-move-option-content .wish-move-option-check{border-color:var(--orange);background:var(--orange)}
 .wish-move-option>input:checked+.wish-move-option-content .wish-move-option-check::after{content:'✓'}
 .wish-move-option>input:focus-visible+.wish-move-option-content{outline:2px solid var(--ink);outline-offset:1px}
+
+.monthly-swipe-row .shift-row-actions{width:64px}
+.shift-row-actions .monthly-delete-button{font-size:25px}
+.monthly-expense-top .record-amount{font-size:11px}
+.monthly-expense-top .monthly-paid-button{flex:none;min-height:44px;padding:0 10px;font-size:10px}
+.monthly-expense-top .monthly-paid-note{color:var(--orange)}
+.delete-confirm-icon{display:grid;place-items:center;width:42px;height:42px;margin-bottom:5px;border-radius:14px;background:var(--peach);color:var(--orange);font:600 24px var(--display)}
+#delete-confirm-name{font-size:15px;overflow-wrap:anywhere}
+#delete-confirm-message{margin:0;color:var(--muted);font-size:13px;line-height:1.6}
+.delete-confirm-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px}
+.delete-confirm-actions .primary-button{min-height:44px}
+.delete-cancel-button{background:var(--paper);color:var(--ink)}
+.delete-cancel-button:hover{background:#d9dbd3}
+.delete-confirm-button{background:var(--orange)}
+.delete-confirm-button:hover{background:#df492a}

@@ -251,6 +251,7 @@ let shiftRowGesture = null;
 let openShiftRow = null;
 let suppressShiftRowClickUntil = 0;
 const SHIFT_ACTION_WIDTH = 132;
+const rowActionWidth = row => Number(row.dataset.actionWidth) || SHIFT_ACTION_WIDTH;
 
 function shiftSwipeRow(item, content, kind = '') {
   return `<div class="shift-swipe-row${kind ? ` shift-swipe-${kind}` : ''}" data-row-shift="${esc(item.id)}" tabindex="0" role="group" aria-label="${esc(`${item.note || 'Work shift'}, ${longDate(item.date)}. Swipe right for Edit or Delete.`)}"><div class="shift-row-actions" aria-hidden="true" inert><button type="button" class="shift-row-edit" data-edit-details="${esc(item.id)}">Edit</button><button type="button" class="shift-row-delete" data-delete="shift" data-id="${esc(item.id)}">Delete</button></div><div class="shift-swipe-content">${content}</div></div>`;
@@ -260,7 +261,7 @@ function setShiftRowOpen(row, open) {
   if (!row) return;
   if (openShiftRow && openShiftRow !== row) closeShiftRow();
   row.classList.toggle('actions-open', open);
-  row.style.setProperty('--shift-row-offset', `${open ? SHIFT_ACTION_WIDTH : 0}px`);
+  row.style.setProperty('--shift-row-offset', `${open ? rowActionWidth(row) : 0}px`);
   const actions = row.querySelector('.shift-row-actions');
   actions.inert = !open;
   actions.setAttribute('aria-hidden', String(!open));
@@ -278,7 +279,7 @@ function resetShiftRowGesture() {
   setShiftRowOpen(gesture.row, gesture.wasOpen);
   if (gesture.content.hasPointerCapture(gesture.pointerId)) gesture.content.releasePointerCapture(gesture.pointerId);
 }
-for (const shiftPage of [$('#work-page'), $('#home-page')]) {
+for (const shiftPage of [$('#work-page'), $('#home-page'), $('#expenses-page')]) {
 shiftPage.addEventListener('pointerdown', event => {
   if (!event.isPrimary || (event.pointerType === 'mouse' && event.button !== 0)) return;
   if (event.target.closest('button, input, select, a, .swipe-track, .shift-row-actions')) return;
@@ -288,7 +289,7 @@ shiftPage.addEventListener('pointerdown', event => {
   const row = content.closest('.shift-swipe-row');
   if (openShiftRow && openShiftRow !== row) closeShiftRow();
   const wasOpen = row.classList.contains('actions-open');
-  shiftRowGesture = { row, content, pointerId: event.pointerId, startX: event.clientX, startY: event.clientY, wasOpen, offset: wasOpen ? SHIFT_ACTION_WIDTH : 0, horizontal: false };
+  shiftRowGesture = { row, content, pointerId: event.pointerId, startX: event.clientX, startY: event.clientY, wasOpen, offset: wasOpen ? rowActionWidth(row) : 0, actionWidth: rowActionWidth(row), horizontal: false };
 });
 shiftPage.addEventListener('pointermove', event => {
   const gesture = shiftRowGesture;
@@ -303,7 +304,7 @@ shiftPage.addEventListener('pointermove', event => {
     gesture.content.setPointerCapture(event.pointerId);
   }
   event.preventDefault();
-  gesture.offset = Math.max(0, Math.min(SHIFT_ACTION_WIDTH, (gesture.wasOpen ? SHIFT_ACTION_WIDTH : 0) + dx));
+  gesture.offset = Math.max(0, Math.min(gesture.actionWidth, (gesture.wasOpen ? gesture.actionWidth : 0) + dx));
   gesture.row.style.setProperty('--shift-row-offset', `${gesture.offset}px`);
 }, { passive: false });
 shiftPage.addEventListener('pointerup', event => {
@@ -313,7 +314,7 @@ shiftPage.addEventListener('pointerup', event => {
   gesture.row.classList.remove('is-dragging');
   if (gesture.horizontal) {
     suppressShiftRowClickUntil = Date.now() + 350;
-    setShiftRowOpen(gesture.row, gesture.offset >= SHIFT_ACTION_WIDTH / 2);
+    setShiftRowOpen(gesture.row, gesture.offset >= gesture.actionWidth / 2);
   }
   if (gesture.content.hasPointerCapture(event.pointerId)) gesture.content.releasePointerCapture(event.pointerId);
 });
@@ -330,8 +331,8 @@ document.addEventListener('keydown', event => {
   if (event.key === 'ArrowRight' && row && event.target === row) {
     event.preventDefault();
     setShiftRowOpen(row, true);
-    row.querySelector('[data-edit-details]').focus();
-  } else if ((event.key === 'Escape' || event.key === 'ArrowLeft') && openShiftRow) {
+    row.querySelector('.shift-row-actions button').focus();
+  } else if ((event.key === 'Escape' || event.key === 'ArrowLeft') && openShiftRow && !event.target.closest('dialog')) {
     event.preventDefault();
     const activeRow = openShiftRow;
     closeShiftRow();
@@ -434,7 +435,7 @@ function renderMonthlyExpenses() {
     const dueDay = Math.min(Math.max(1, Number(bill.dueDay) || 1), lastDay);
     const dueDate = `${month}-${String(dueDay).padStart(2, '0')}`;
     const paid = bill.paidMonth === month;
-    return `<article class="monthly-expense-row"><div class="monthly-expense-top"><span class="record-icon expense-icon">↻</span><div class="record-main"><strong>${esc(bill.title)}</strong><span>${esc(bill.category)}</span></div><div class="record-amount expense-amount">${money(bill.amount)}</div><button class="delete-button" data-delete="monthly-expense" data-id="${esc(bill.id)}" aria-label="Remove monthly expense">×</button></div><div class="monthly-expense-bottom"><span>${paid ? 'Paid this month' : `Due ${longDate(dueDate)}`}</span><button type="button" class="monthly-paid-button${paid ? ' is-paid' : ''}" data-toggle-monthly-paid="${esc(bill.id)}">${paid ? 'Paid ✓' : 'Mark paid'}</button></div></article>`;
+    return `<div class="shift-swipe-row monthly-swipe-row" data-action-width="64" tabindex="0" role="group" aria-label="${esc(`${bill.title}. Swipe right to reveal Delete.`)}"><div class="shift-row-actions" aria-hidden="true" inert><button type="button" class="shift-row-delete monthly-delete-button" data-delete="monthly-expense" data-id="${esc(bill.id)}" aria-label="${esc(`Delete ${bill.title}`)}">×</button></div><div class="shift-swipe-content"><article class="monthly-expense-row"><div class="monthly-expense-top"><span class="record-icon expense-icon">↻</span><div class="record-main"><strong>${esc(bill.title)}</strong>${paid ? '<span class="monthly-paid-note">Paid this month</span>' : ''}<span>Due ${longDate(dueDate)}</span></div><div class="record-amount expense-amount">${money(bill.amount)}</div><button type="button" class="monthly-paid-button${paid ? ' is-paid' : ''}" data-toggle-monthly-paid="${esc(bill.id)}" aria-label="${esc(`${paid ? 'Mark unpaid' : 'Mark paid'}: ${bill.title}`)}">${paid ? 'Paid ✓' : 'Mark paid'}</button></div></article></div></div>`;
   }).join('') : empty('No monthly expenses yet', 'Add a membership or subscription to keep it on your radar.', '↻');
 }
 
@@ -1002,14 +1003,43 @@ document.addEventListener('click', event => {
     }
     return;
   }
-  const button = event.target.closest('[data-delete]'); if (!button) return;
-  if (button.dataset.delete === 'expense') {
-    const expense = state.expenses.find(item => item.id === button.dataset.id);
-    const bill = expense?.monthlyExpenseId && state.monthlyExpenses.find(item => item.id === expense.monthlyExpenseId);
-    if (bill && bill.paidMonth === expense.monthlyPeriod) bill.paidMonth = '';
+  const button = event.target.closest('[data-delete]');
+  if (button) requestDelete(button);
+});
+let pendingDelete = null;
+function requestDelete(button) {
+  const type = button.dataset.delete;
+  const list = { shift: 'shifts', expense: 'expenses', 'monthly-expense': 'monthlyExpenses', wish: 'wishes' }[type];
+  const item = list && state[list].find(item => item.id === button.dataset.id);
+  if (!item) return;
+  const label = { shift: 'shift', expense: 'expense', 'monthly-expense': 'monthly expense', wish: 'wish' }[type];
+  pendingDelete = { type, list, id: item.id };
+  $('#delete-confirm-title').textContent = `Delete this ${label}?`;
+  $('#delete-confirm-name').textContent = type === 'shift' ? `${item.note || 'Work shift'} · ${longDate(item.date)}` : item.title;
+  $('#delete-confirm-message').textContent = type === 'monthly-expense'
+    ? 'This removes the recurring expense. Payments already logged will stay in your expenses. This cannot be undone.'
+    : type === 'wish'
+      ? 'This removes the wish and its saved progress. This cannot be undone.'
+      : type === 'shift'
+        ? 'This removes the shift and updates your hours and earnings. This cannot be undone.'
+        : 'This removes the expense and updates your spending total. This cannot be undone.';
+  $('#delete-confirm-dialog').showModal();
+}
+$('#delete-confirm-dialog').addEventListener('close', () => { pendingDelete = null; });
+$('#delete-confirm-form').addEventListener('submit', event => {
+  event.preventDefault();
+  if (!pendingDelete) return;
+  const { type, list, id } = pendingDelete;
+  const item = state[list].find(item => item.id === id);
+  if (item) {
+    if (type === 'expense') {
+      const bill = item.monthlyExpenseId && state.monthlyExpenses.find(bill => bill.id === item.monthlyExpenseId);
+      if (bill && bill.paidMonth === item.monthlyPeriod) bill.paidMonth = '';
+    }
+    state[list] = state[list].filter(item => item.id !== id);
   }
-  const list = button.dataset.delete === 'shift' ? 'shifts' : button.dataset.delete === 'expense' ? 'expenses' : button.dataset.delete === 'monthly-expense' ? 'monthlyExpenses' : 'wishes';
-  state[list] = state[list].filter(item => item.id !== button.dataset.id); persist(); toast('Removed.');
+  $('#delete-confirm-dialog').close();
+  if (item) { persist(); toast('Removed.'); }
 });
 $('#saving-form').addEventListener('submit', event => {
   event.preventDefault();
