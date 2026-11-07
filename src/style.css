@@ -223,6 +223,8 @@ body.app-loading>.app-shell{visibility:hidden}
 .wish-folder-heading h2{margin:14px 0 0;font:500 23px/1.2 var(--display);letter-spacing:-.6px;overflow-wrap:anywhere}
 .wishlist-grid>.empty-state{grid-column:1/-1}
 .wish-card-actions{display:flex;align-items:center;gap:3px}
+.wish-favorite-button{display:grid;place-items:center;flex:none;width:28px;height:28px;padding:0;border:0;border-radius:50%;background:#ffffff75;color:var(--muted);font-size:18px;line-height:1}
+.wish-favorite-button:hover,.wish-favorite-button.is-favorite{background:#fff;color:var(--orange)}
 .wish-move-button{display:grid;place-items:center;flex:none;width:28px;height:28px;padding:5px;border:0;border-radius:50%;background:#ffffff75;color:var(--muted)}
 .wish-move-button svg{width:18px;height:18px}
 .wish-move-button:hover{background:#fff;color:var(--orange)}

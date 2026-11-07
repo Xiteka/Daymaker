@@ -506,7 +506,9 @@ function wishCard(item, index, allowMove = false) {
   const ratio = Math.max(0, Math.min(100, Number(item.saved) / Number(item.target) * 100));
   const colors = ['wish-peach', 'wish-mint', 'wish-lilac', 'wish-yellow'];
   const move = allowMove ? `<button type="button" class="wish-move-button" data-move-wish="${esc(item.id)}" aria-label="${esc(`Move ${item.title} to another folder`)}" title="Move to folder">${wishFolderIcon}</button>` : '';
-  return `<article class="wish-card ${colors[index % colors.length]}"><div class="wish-top"><span class="wish-glyph">${['✳', '♡', '✦', '✿'][index % 4]}</span><div class="wish-card-actions">${move}<button class="delete-button" data-delete="wish" data-id="${esc(item.id)}" aria-label="Delete wish">×</button></div></div><h3>${esc(item.title)}</h3><div class="wish-amounts"><strong>${money(item.saved)}</strong><span>of ${money(item.target)}</span></div><div class="wish-progress"><span style="width:${ratio}%"></span></div><div class="wish-card-foot"><p>${ratio >= 100 ? 'You made it! ✨' : `${Math.round(ratio)}% saved`}</p><button class="save-more" data-add-saving="${esc(item.id)}" type="button">＋ Add</button></div></article>`;
+  const favorite = allowMove ? Number(item.favoriteAt) > 0 : false;
+  const favoriteButton = allowMove ? `<button type="button" class="wish-favorite-button${favorite ? ' is-favorite' : ''}" data-toggle-wish-favorite="${esc(item.id)}" aria-label="${esc(favorite ? `Remove ${item.title} from Home wishlist` : `Show ${item.title} on Home`)}" aria-pressed="${favorite}" title="${esc(favorite ? 'Remove from Home wishlist' : 'Show on Home')}">${favorite ? '♥' : '☆'}</button>` : '';
+  return `<article class="wish-card ${colors[index % colors.length]}"><div class="wish-top"><span class="wish-glyph">${['✳', '♡', '✦', '✿'][index % 4]}</span><div class="wish-card-actions">${favoriteButton}${move}<button class="delete-button" data-delete="wish" data-id="${esc(item.id)}" aria-label="Delete wish">×</button></div></div><h3>${esc(item.title)}</h3><div class="wish-amounts"><strong>${money(item.saved)}</strong><span>of ${money(item.target)}</span></div><div class="wish-progress"><span style="width:${ratio}%"></span></div><div class="wish-card-foot"><p>${ratio >= 100 ? 'You made it! ✨' : `${Math.round(ratio)}% saved`}</p><button class="save-more" data-add-saving="${esc(item.id)}" type="button">＋ Add</button></div></article>`;
 }
 function wishFolderCard(folder, index) {
   const wishes = state.wishes.filter(wish => folderForWish(wish) === folder.id);
@@ -533,7 +535,9 @@ function renderWishes() {
     ? visibleWishes.map((wish, index) => wishCard(wish, index, true)).join('')
     : empty('Your next good thing goes here', 'Add a wish to this folder.', '♡') : '';
   const sorted = [...wishes].sort((a, b) => (b.saved / b.target) - (a.saved / a.target));
-  $('#home-wishlist').innerHTML = sorted.length ? `<div class="home-wish">${wishCard(sorted[0], 0)}<div class="wish-total-note"><span class="eyebrow">AIMING FOR</span><strong>${money(total)}</strong><span>across ${wishes.length} ${wishes.length === 1 ? 'wish' : 'wishes'}</span></div></div>` : empty('Dream a little', 'Add your first wishlist item.', '♡');
+  const lastHearted = wishes.filter(wish => Number(wish.favoriteAt) > 0).sort((a, b) => Number(b.favoriteAt) - Number(a.favoriteAt))[0];
+  const homeWish = lastHearted || sorted[0];
+  $('#home-wishlist').innerHTML = homeWish ? `<div class="home-wish">${wishCard(homeWish, 0)}<div class="wish-total-note"><span class="eyebrow">AIMING FOR</span><strong>${money(total)}</strong><span>across ${wishes.length} ${wishes.length === 1 ? 'wish' : 'wishes'}</span></div></div>` : empty('Dream a little', 'Add your first wishlist item.', '♡');
 }
 $('#wish-folder-back').addEventListener('click', () => {
   const previous = activeWishFolder;
@@ -971,6 +975,17 @@ document.addEventListener('click', event => {
       renderWishes();
       $('#wish-folder-name').focus({ preventScroll: true });
       window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+    return;
+  }
+  const favoriteButton = event.target.closest('[data-toggle-wish-favorite]');
+  if (favoriteButton) {
+    const wish = state.wishes.find(item => item.id === favoriteButton.dataset.toggleWishFavorite);
+    if (wish) {
+      const willFavorite = !(Number(wish.favoriteAt) > 0);
+      wish.favoriteAt = willFavorite ? Date.now() : 0;
+      if (!persist()) return;
+      toast(willFavorite ? 'Wish shown on Home.' : 'Wish removed from Home.');
     }
     return;
   }
