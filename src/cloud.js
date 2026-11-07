@@ -83,6 +83,7 @@
     if (!nameDraft) $('#account-nickname').value = signedIn ? displayName.slice(0, 10) : '';
     $('#account-email').textContent = session?.user.email || '';
     $('#account-signed-in').hidden = !session?.user;
+    $('#account-settings-guest').hidden = !!session?.user;
     $('#account-auth-section').hidden = !!session?.user && !recovery;
     $('#account-status').textContent = status;
     $('#account-status').classList.toggle('account-status-saved', status === 'Saved to your account');
@@ -270,7 +271,7 @@
       field.blur();
       hooks.notify('Name saved.');
     });
-    $('#account-settings').addEventListener('click', () => hooks.openSettings());
+    document.querySelectorAll('[data-account-settings]').forEach(button => button.addEventListener('click', () => hooks.openSettings()));
     $('#account-sync').addEventListener('click', () => void sync());
     $('#account-backup').addEventListener('click', () => download({ exportedAt: new Date().toISOString(), current: hooks.read(), originalDevice: readJSON(BACKUP) || readJSON(LEGACY), accountCache: owner ? cacheFor(owner) : null }, 'daymaker-device-backup.json'));
     $('#account-cloud-backups').addEventListener('click', async () => {
