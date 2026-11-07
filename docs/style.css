@@ -264,6 +264,7 @@ body.app-loading>.app-shell{visibility:hidden}
 .topbar{gap:12px}.wordmark{flex:none}.top-actions{min-width:0;gap:8px}.today-pill{flex:none}
 .account-open{flex:0 1 auto;max-width:112px;min-width:0;border:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-transform:uppercase;text-align:center}
 .account-status{padding:11px 13px;margin-bottom:20px;border-radius:12px;background:var(--peach);color:#a83b25;font-size:12px;line-height:1.5}
+.account-status.account-status-saved{background:#e5f2e7;color:#24683a;box-shadow:inset 0 0 0 1px #b8d9bd}
 .account-page h3{margin:0 0 8px;font:500 20px var(--display);letter-spacing:-.4px}
 .account-note,.account-conflict p{margin:0 0 16px;color:var(--muted);font-size:12px;line-height:1.6}
 .account-auth-submit{width:100%;min-height:44px;background:var(--orange)}
@@ -295,6 +296,7 @@ button:disabled{cursor:default;opacity:.6}
 .account-name-save:hover{background:#df492a}
 .account-name-save span{color:#ffffffb0}
 .account-sync-card .account-note{margin:16px 0 0}
+.account-logout{min-height:44px;margin-top:12px}
 .account-page .account-status{margin-bottom:14px}
 .account-page .account-tools{padding:18px 0;margin-top:18px}
 .account-back{min-height:40px}

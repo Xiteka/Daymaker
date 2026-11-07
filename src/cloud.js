@@ -75,16 +75,17 @@
     if (!hooks) return;
     const signedIn = !!session?.user;
     const nickname = String(hooks.read().profileName || '').trim();
-    const displayName = nickname || session?.user.email?.split('@')[0] || 'Account';
+    const displayName = (nickname || session?.user.email?.split('@')[0] || 'Account').slice(0, 10);
     $('#account-open').textContent = signedIn ? displayName : 'Log in';
     $('#account-open').setAttribute('aria-label', signedIn ? `Open account for ${displayName}` : 'Log in');
     $('#account-open').title = signedIn ? displayName : 'Log in';
     if (nameOwner !== (session?.user.id || null)) { nameOwner = session?.user.id || null; nameDraft = false; }
-    if (!nameDraft) $('#account-nickname').value = signedIn ? displayName : '';
+    if (!nameDraft) $('#account-nickname').value = signedIn ? displayName.slice(0, 10) : '';
     $('#account-email').textContent = session?.user.email || '';
     $('#account-signed-in').hidden = !session?.user;
     $('#account-auth-section').hidden = !!session?.user && !recovery;
     $('#account-status').textContent = status;
+    $('#account-status').classList.toggle('account-status-saved', status === 'Saved to your account');
     $('#account-conflict').hidden = !conflict;
     $('#account-conflict-items').textContent = conflict ? conflict.names.join(', ') : '';
     $('#account-sync').disabled = busy || !!conflict;
@@ -261,7 +262,7 @@
       if (!session?.user || owner !== session.user.id) return;
       const field = $('#account-nickname');
       const name = field.value.trim().replace(/\s+/g, ' ');
-      field.setCustomValidity(!name ? 'Enter a name or nickname.' : name.length > 24 ? 'Use 24 characters or fewer.' : '');
+      field.setCustomValidity(!name ? 'Enter a name or nickname.' : name.length > 10 ? 'Use 10 characters or fewer.' : '');
       if (!event.currentTarget.reportValidity()) return;
       if (!hooks.saveName(name)) return;
       nameDraft = false;
