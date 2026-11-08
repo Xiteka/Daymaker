@@ -208,9 +208,9 @@ body.app-loading>.app-shell{visibility:hidden}
 .primary-button.folder-create-button:hover{background:#df492a}
 .wish-folder-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
 .wish-folder-card{position:relative;min-width:0;min-height:152px;border-radius:19px;background:var(--peach);color:var(--ink)}
-.wish-folder-open{display:flex;flex-direction:column;width:100%;min-height:152px;padding:17px 48px 17px 17px;border:0;border-radius:inherit;background:transparent;color:inherit;text-align:left}
+.wish-folder-open{display:flex;flex-direction:column;width:100%;min-height:152px;padding:17px;border:0;border-radius:inherit;background:transparent;color:inherit;text-align:left}
 .wish-folder-open:hover{background:#ffffff12}
-.wish-folder-delete{position:absolute;z-index:2;top:12px;right:12px;display:grid;place-items:center;width:28px;height:28px;padding:0;border:0;border-radius:50%;background:#ffffffa6;color:var(--muted);font-size:19px;line-height:1}
+.wish-folder-delete{position:absolute;z-index:2;top:17px;left:57px;display:grid;place-items:center;width:32px;height:32px;padding:0;border:0;border-radius:10px;background:#ffffff80;color:var(--orange);font-size:21px;line-height:1}
 .wish-folder-delete:hover{background:#fff;color:var(--orange)}
 .wish-folder-card.wish-mint{background:var(--mint)}
 .wish-folder-card.wish-lilac{background:var(--lilac)}
