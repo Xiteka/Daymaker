@@ -275,6 +275,7 @@ body.app-loading>.app-shell{visibility:hidden}
 .account-note,.account-conflict p{margin:0 0 16px;color:var(--muted);font-size:12px;line-height:1.6}
 .account-auth-submit{width:100%;min-height:44px;background:var(--orange)}
 .account-auth-submit:hover{background:#df492a}
+.account-auth-toggle{width:100%;min-height:44px;margin-top:8px}
 .account-text-button{display:block;min-height:40px;font-size:12px}
 .auth-message{margin:0;color:#a83b25;font-size:12px;line-height:1.5;overflow-wrap:anywhere}
 .auth-message:empty{display:none}

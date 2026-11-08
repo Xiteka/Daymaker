@@ -94,9 +94,9 @@
     $('#auth-submit').disabled = !configured();
     $('#auth-password').autocomplete = authMode === 'signup' || recovery ? 'new-password' : 'current-password';
     $('#auth-password').minLength = authMode === 'signup' || recovery ? 8 : 1;
-    $('#auth-title').textContent = recovery ? 'Choose a new password' : authMode === 'signup' ? 'Make yourself at home.' : 'Welcome back.';
+    $('#auth-title').textContent = recovery ? 'Choose a new password' : authMode === 'signup' ? 'Create an account' : 'Welcome back.';
     $('#auth-submit').textContent = recovery ? 'Save password' : authMode === 'signup' ? 'Create account' : 'Log in';
-    $('#auth-mode-toggle').textContent = authMode === 'signup' ? 'Already have an account? Log in' : 'New here? Create an account';
+    $('#auth-mode-toggle').textContent = authMode === 'signup' ? 'Log in' : 'Create an account';
     $('#auth-mode-toggle').hidden = recovery;
     $('#auth-forgot').hidden = recovery || authMode === 'signup';
     $('#auth-email-field').hidden = recovery;
