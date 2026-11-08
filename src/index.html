@@ -11,11 +11,11 @@
     <link rel="icon" href="./icons/daymaker-bold.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="./icons/daymaker-bold-180.png">
     <title>Daymaker · work & money</title>
-    <link rel="stylesheet" href="style.css?v=51">
+    <link rel="stylesheet" href="style.css?v=52">
     <script src="vendor/supabase-2.119.0.js" defer></script>
     <script src="supabase-config.js?v=1" defer></script>
     <script src="cloud.js?v=5" defer></script>
-    <script src="app.js?v=49" defer></script>
+    <script src="app.js?v=50" defer></script>
   </head>
   <body class="app-loading">
     <div class="app-loader" id="app-loader" role="status" aria-label="Loading Daymaker">
@@ -58,10 +58,13 @@
         <div class="page-title-row"><div><p class="eyebrow">EVERY HOUR ADDS UP</p><h1 id="work-title">Work log<span class="period">.</span></h1></div><button class="primary-button" data-open="shift-dialog">＋ <span>Log shift</span></button></div>
         <div class="summary-strip"><div><span class="eyebrow">THIS MONTH</span><strong id="work-month-hours">0 h</strong></div><div><span class="eyebrow">ESTIMATED PAY</span><strong id="work-month-pay">kr 0</strong></div><div><span class="eyebrow">HOURLY RATE</span><strong id="work-rate">kr 220<span class="small-unit">/h</span></strong></div></div>
         <section id="work-today-shifts" class="today-shifts" aria-label="Today’s shifts" hidden><div id="work-shift-list"></div></section>
-        <section class="section-block upcoming-shifts" aria-labelledby="upcoming-shifts-title">
-          <div class="section-heading"><div><p class="eyebrow">WHAT’S NEXT</p><h2 id="upcoming-shifts-title">Upcoming shifts</h2></div></div>
+        <section class="section-block upcoming-shifts" aria-label="Shifts">
           <p class="shift-swipe-hint">Swipe a shift right to edit or delete.</p>
           <div id="work-next-shift" hidden></div>
+          <div class="upcoming-shift-card work-shift-period" role="group" aria-label="Filter shifts by month and year">
+            <select id="work-shift-month" aria-label="Month"></select>
+            <select id="work-shift-year" aria-label="Year"></select>
+          </div>
           <div class="work-shift-tabs" role="tablist" aria-label="Shift lists">
             <button type="button" class="work-shift-tab active" id="work-upcoming-tab" role="tab" data-shift-view="upcoming" aria-controls="work-upcoming-panel" aria-selected="true">Upcoming shifts</button>
             <button type="button" class="work-shift-tab" id="work-history-tab" role="tab" data-shift-view="history" aria-controls="work-history-panel" aria-selected="false" tabindex="-1">Shift history</button>

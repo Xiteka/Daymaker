@@ -398,26 +398,64 @@ workShiftTabs.forEach((tab, index) => {
   });
 });
 
+const workShiftMonth = $('#work-shift-month');
+const workShiftYear = $('#work-shift-year');
+let selectedWorkPeriod = null;
+const workMonthFormat = new Intl.DateTimeFormat('en-GB', { month: 'long' });
+
+workShiftMonth.innerHTML = Array.from({ length: 12 }, (_, index) => {
+  const month = String(index + 1).padStart(2, '0');
+  const label = workMonthFormat.format(new Date(2000, index, 1));
+  return `<option value="${month}">${label}</option>`;
+}).join('');
+
+for (const picker of [workShiftMonth, workShiftYear]) {
+  picker.addEventListener('change', () => {
+    selectedWorkPeriod = `${workShiftYear.value}-${workShiftMonth.value}`;
+    resetShiftRowGesture();
+    closeShiftRow();
+    renderWorkShiftLists(dateKey());
+  });
+}
+
 function renderShifts() {
   const today = dateKey();
-  const upcoming = state.shifts.filter(item => !shiftIsComplete(item) && item.date > today)
-    .sort((a, b) => a.date.localeCompare(b.date) || (a.startTime || '').localeCompare(b.startTime || ''));
-  const homeShift = state.shifts.filter(item => !shiftIsComplete(item) && item.date >= today)
+  const nextShift = state.shifts.filter(item => !shiftIsComplete(item) && item.date >= today)
     .sort((a, b) => a.date.localeCompare(b.date) || (a.startTime || '').localeCompare(b.startTime || ''))[0];
-  const hasTodayShift = homeShift?.date === today;
-  $('#home-upcoming-shift').hidden = !homeShift;
+  const hasTodayShift = nextShift?.date === today;
+  $('#home-upcoming-shift').hidden = !nextShift;
   $('#home-upcoming-shift').setAttribute('aria-label', hasTodayShift ? 'Today’s shift' : 'Next shift');
-  $('#home-next-shift').innerHTML = homeShift ? nextShiftCard(homeShift, homeShift.date === today) : '';
-  $('#work-next-shift').hidden = hasTodayShift || upcoming.length === 0;
-  $('#work-next-shift').innerHTML = !hasTodayShift && upcoming.length ? nextShiftCard(upcoming[0]) : '';
-  const remainingUpcoming = hasTodayShift ? upcoming : upcoming.slice(1);
-  $('#upcoming-shift-list').innerHTML = remainingUpcoming.length ? remainingUpcoming.map(item => {
+  $('#home-next-shift').innerHTML = nextShift ? nextShiftCard(nextShift, hasTodayShift) : '';
+  $('#work-next-shift').hidden = !nextShift || hasTodayShift;
+  $('#work-next-shift').innerHTML = nextShift && !hasTodayShift ? nextShiftCard(nextShift) : '';
+  renderWorkShiftLists(today);
+}
+
+function renderWorkShiftLists(today) {
+  const period = selectedWorkPeriod || today.slice(0, 7);
+  const [year, month] = period.split('-');
+  const currentYear = Number(today.slice(0, 4));
+  const years = new Set(Array.from({ length: 21 }, (_, index) => currentYear - 10 + index));
+  years.add(Number(year));
+  for (const shift of state.shifts) {
+    if (/^\d{4}-/.test(shift.date)) years.add(Number(shift.date.slice(0, 4)));
+  }
+  const yearOptions = [...years].sort((a, b) => a - b)
+    .map(value => `<option value="${value}">${value}</option>`).join('');
+  if (workShiftYear.innerHTML !== yearOptions) workShiftYear.innerHTML = yearOptions;
+  if (workShiftMonth.value !== month) workShiftMonth.value = month;
+  if (workShiftYear.value !== year) workShiftYear.value = year;
+
+  const shifts = state.shifts.filter(item => item.date?.startsWith(`${period}-`));
+  const upcoming = shifts.filter(item => !shiftIsComplete(item) && item.date >= today)
+    .sort((a, b) => a.date.localeCompare(b.date) || (a.startTime || '').localeCompare(b.startTime || ''));
+  $('#upcoming-shift-list').innerHTML = upcoming.length ? upcoming.map(item => {
     const time = item.startTime && item.endTime ? `${esc(item.startTime)}–${esc(item.endTime)}${item.endTime < item.startTime ? ' (+1 day)' : ''}` : '';
     return shiftSwipeRow(item, `<article class="shift-card"><div class="shift-card-top"><div class="record-main"><strong>${esc(item.note || 'Work shift')}</strong><span>${longDate(item.date)}${time ? ` · ${time}` : ''} · ${calendarHours(Number(item.hours))} hours at ${money(item.rate)}/h</span></div><div class="record-amount">${money(earnedFor(item))}<small class="shift-planned-amount">planned</small></div></div></article>`);
-  }).join('') : `<p class="work-shift-empty">${upcoming.length ? 'No other upcoming shifts.' : 'No upcoming shifts. Log a shift to plan your next workday.'}</p>`;
+  }).join('') : '<p class="work-shift-empty">No upcoming shifts for this month.</p>';
   const todayMillis = Date.parse(`${today}T00:00:00Z`);
   const dayDistance = date => Math.abs((Date.parse(`${date}T00:00:00Z`) - todayMillis) / 86400000);
-  const rows = state.shifts.filter(item => shiftIsComplete(item) || item.date < today).sort((a, b) => dayDistance(a.date) - dayDistance(b.date) || b.date.localeCompare(a.date));
+  const rows = shifts.filter(item => shiftIsComplete(item) || item.date < today).sort((a, b) => dayDistance(a.date) - dayDistance(b.date) || b.date.localeCompare(a.date));
   $('#shift-list').innerHTML = rows.length ? rows.map(item => {
     const completed = shiftIsComplete(item);
     const time = item.startTime && item.endTime ? ` · ${esc(item.startTime)}–${esc(item.endTime)}${item.endTime < item.startTime ? ' (+1 day)' : ''}` : '';
@@ -429,7 +467,7 @@ function renderShifts() {
           ? `<div class="shift-locked-row"><span>Scheduled date has passed</span><button type="button" class="shift-late-finish" data-late-finish="${esc(item.id)}">Finish shift</button></div>`
           : ``;
     return shiftSwipeRow(item, `<article class="shift-card"><div class="shift-card-top"><div class="record-main"><div class="shift-title-row"><strong>${esc(item.note || 'Work shift')}</strong>${completed ? '<span class="shift-complete-label">✓ Completed</span>' : ''}</div><span>${longDate(item.date)}${time} · ${calendarHours(Number(item.hours))} hours at ${money(item.rate)}/h</span></div><div class="record-amount">${money(earnedFor(item))}${completed ? '' : '<small class="shift-planned-amount">planned</small>'}</div></div>${status}</article>`);
-  }).join('') : empty('Your shift history starts here', 'Completed and past shifts will appear here.', '◷');
+  }).join('') : empty('No shift history for this month', 'Completed and past shifts will appear here.', '◷');
 }
 
 function renderExpenses() {
