@@ -403,20 +403,56 @@ const workShiftYear = $('#work-shift-year');
 let selectedWorkPeriod = null;
 const workMonthFormat = new Intl.DateTimeFormat('en-GB', { month: 'long' });
 
-workShiftMonth.innerHTML = Array.from({ length: 12 }, (_, index) => {
-  const month = String(index + 1).padStart(2, '0');
-  const label = workMonthFormat.format(new Date(2000, index, 1));
-  return `<option value="${month}">${label}</option>`;
-}).join('');
+const workMonthOptions = Array.from({ length: 12 }, (_, index) => ({
+  value: String(index + 1).padStart(2, '0'),
+  label: workMonthFormat.format(new Date(2000, index, 1)),
+}));
+const workPeriodPickers = [workShiftMonth, workShiftYear];
 
-for (const picker of [workShiftMonth, workShiftYear]) {
-  picker.addEventListener('change', () => {
-    selectedWorkPeriod = `${workShiftYear.value}-${workShiftMonth.value}`;
+function renderWorkPeriodPicker(picker, options, selected) {
+  const value = picker.querySelector('.work-period-value');
+  const list = picker.querySelector('.work-period-options');
+  value.textContent = options.find(option => option.value === selected)?.label || selected;
+  const buttons = options.map(({ value, label }) =>
+    `<button type="button" data-period-value="${esc(value)}" aria-pressed="${value === selected}">${esc(label)}</button>`
+  ).join('');
+  if (list.innerHTML !== buttons) list.innerHTML = buttons;
+}
+
+for (const picker of workPeriodPickers) {
+  const summary = picker.querySelector('summary');
+  const list = picker.querySelector('.work-period-options');
+  picker.addEventListener('toggle', () => {
+    if (!picker.open) return;
+    const selected = list.querySelector('[aria-pressed="true"]');
+    if (selected) list.scrollTop = selected.offsetTop - (list.clientHeight - selected.offsetHeight) / 2;
+  });
+  list.addEventListener('click', event => {
+    const choice = event.target.closest('[data-period-value]');
+    if (!choice) return;
+    const today = dateKey();
+    const [year, month] = (selectedWorkPeriod || today.slice(0, 7)).split('-');
+    const value = choice.dataset.periodValue;
+    selectedWorkPeriod = picker === workShiftMonth ? `${year}-${value}` : `${value}-${month}`;
+    picker.open = false;
+    summary.focus({ preventScroll: true });
     resetShiftRowGesture();
     closeShiftRow();
-    renderWorkShiftLists(dateKey());
+    renderWorkShiftLists(today);
+  });
+  picker.addEventListener('keydown', event => {
+    if (event.key !== 'Escape' || !picker.open) return;
+    event.preventDefault();
+    event.stopPropagation();
+    picker.open = false;
+    summary.focus({ preventScroll: true });
   });
 }
+document.addEventListener('click', event => {
+  for (const picker of workPeriodPickers) {
+    if (!picker.contains(event.target)) picker.open = false;
+  }
+});
 
 function renderShifts() {
   const today = dateKey();
@@ -441,10 +477,9 @@ function renderWorkShiftLists(today) {
     if (/^\d{4}-/.test(shift.date)) years.add(Number(shift.date.slice(0, 4)));
   }
   const yearOptions = [...years].sort((a, b) => a - b)
-    .map(value => `<option value="${value}">${value}</option>`).join('');
-  if (workShiftYear.innerHTML !== yearOptions) workShiftYear.innerHTML = yearOptions;
-  if (workShiftMonth.value !== month) workShiftMonth.value = month;
-  if (workShiftYear.value !== year) workShiftYear.value = year;
+    .map(value => ({ value: String(value), label: String(value) }));
+  renderWorkPeriodPicker(workShiftMonth, workMonthOptions, month);
+  renderWorkPeriodPicker(workShiftYear, yearOptions, year);
 
   const shifts = state.shifts.filter(item => item.date?.startsWith(`${period}-`));
   const upcoming = shifts.filter(item => !shiftIsComplete(item) && item.date >= today)

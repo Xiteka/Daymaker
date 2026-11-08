@@ -11,11 +11,11 @@
     <link rel="icon" href="./icons/daymaker-bold.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="./icons/daymaker-bold-180.png">
     <title>Daymaker · work & money</title>
-    <link rel="stylesheet" href="style.css?v=52">
+    <link rel="stylesheet" href="style.css?v=53">
     <script src="vendor/supabase-2.119.0.js" defer></script>
     <script src="supabase-config.js?v=1" defer></script>
     <script src="cloud.js?v=5" defer></script>
-    <script src="app.js?v=50" defer></script>
+    <script src="app.js?v=51" defer></script>
   </head>
   <body class="app-loading">
     <div class="app-loader" id="app-loader" role="status" aria-label="Loading Daymaker">
@@ -62,8 +62,14 @@
           <p class="shift-swipe-hint">Swipe a shift right to edit or delete.</p>
           <div id="work-next-shift" hidden></div>
           <div class="upcoming-shift-card work-shift-period" role="group" aria-label="Filter shifts by month and year">
-            <select id="work-shift-month" aria-label="Month"></select>
-            <select id="work-shift-year" aria-label="Year"></select>
+            <details class="work-period-picker" id="work-shift-month">
+              <summary><span class="visually-hidden">Month: </span><span class="work-period-value"></span></summary>
+              <div class="work-period-options" role="group" aria-label="Choose month"></div>
+            </details>
+            <details class="work-period-picker" id="work-shift-year">
+              <summary><span class="visually-hidden">Year: </span><span class="work-period-value"></span></summary>
+              <div class="work-period-options" role="group" aria-label="Choose year"></div>
+            </details>
           </div>
           <div class="work-shift-tabs" role="tablist" aria-label="Shift lists">
             <button type="button" class="work-shift-tab active" id="work-upcoming-tab" role="tab" data-shift-view="upcoming" aria-controls="work-upcoming-panel" aria-selected="true">Upcoming shifts</button>
