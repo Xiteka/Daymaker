@@ -516,7 +516,8 @@ function wishFolderCard(folder, index) {
   const saved = wishes.reduce((sum, wish) => sum + Number(wish.saved), 0);
   const ratio = target ? Math.max(0, Math.min(100, saved / target * 100)) : 0;
   const colors = ['wish-peach', 'wish-mint', 'wish-lilac', 'wish-yellow'];
-  return `<button type="button" class="wish-folder-card ${colors[index % colors.length]}" data-wish-folder="${esc(folder.id)}"><span class="wish-folder-top"><span class="wish-folder-icon">${wishFolderIcon}</span><span>${wishes.length} ${wishes.length === 1 ? 'wish' : 'wishes'}</span></span><strong class="wish-folder-title">${esc(folder.name)}</strong><span class="wish-folder-amount">${wishes.length ? `${money(saved)} <small>of ${money(target)}</small>` : 'Add your first wish'}</span><span class="wish-progress"><span style="width:${ratio}%"></span></span></button>`;
+  const remove = folder.id === GENERAL_WISH_FOLDER ? '' : `<button type="button" class="wish-folder-delete" data-delete="wish-folder" data-id="${esc(folder.id)}" aria-label="Delete ${esc(folder.name)} folder" title="Delete folder">×</button>`;
+  return `<article class="wish-folder-card ${colors[index % colors.length]}"><button type="button" class="wish-folder-open" data-wish-folder="${esc(folder.id)}"><span class="wish-folder-top"><span class="wish-folder-icon">${wishFolderIcon}</span><span>${wishes.length} ${wishes.length === 1 ? 'wish' : 'wishes'}</span></span><strong class="wish-folder-title">${esc(folder.name)}</strong><span class="wish-folder-amount">${wishes.length ? `${money(saved)} <small>of ${money(target)}</small>` : 'Add your first wish'}</span><span class="wish-progress"><span style="width:${ratio}%"></span></span></button>${remove}</article>`;
 }
 function renderWishes() {
   const wishes = state.wishes;
@@ -1042,19 +1043,23 @@ let pendingDelete = null;
 function requestDelete(button) {
   const type = button.dataset.delete;
   const list = { shift: 'shifts', expense: 'expenses', 'monthly-expense': 'monthlyExpenses', wish: 'wishes' }[type];
-  const item = list && state[list].find(item => item.id === button.dataset.id);
-  if (!item) return;
-  const label = { shift: 'shift', expense: 'expense', 'monthly-expense': 'monthly expense', wish: 'wish' }[type];
+  const item = type === 'wish-folder'
+    ? state.wishFolders.find(folder => folder.id === button.dataset.id)
+    : list && state[list].find(item => item.id === button.dataset.id);
+  if (!item || (type === 'wish-folder' && item.id === GENERAL_WISH_FOLDER)) return;
+  const label = { shift: 'shift', expense: 'expense', 'monthly-expense': 'monthly expense', wish: 'wish', 'wish-folder': 'wishlist folder' }[type];
   pendingDelete = { type, list, id: item.id };
   $('#delete-confirm-title').textContent = `Delete this ${label}?`;
-  $('#delete-confirm-name').textContent = type === 'shift' ? `${item.note || 'Work shift'} · ${longDate(item.date)}` : item.title;
+  $('#delete-confirm-name').textContent = type === 'shift' ? `${item.note || 'Work shift'} · ${longDate(item.date)}` : type === 'wish-folder' ? item.name : item.title;
   $('#delete-confirm-message').textContent = type === 'monthly-expense'
     ? 'This removes the recurring expense. Payments already logged will stay in your expenses. This cannot be undone.'
     : type === 'wish'
       ? 'This removes the wish and its saved progress. This cannot be undone.'
-      : type === 'shift'
-        ? 'This removes the shift and updates your hours and earnings. This cannot be undone.'
-        : 'This removes the expense and updates your spending total. This cannot be undone.';
+      : type === 'wish-folder'
+        ? 'Wishes in this folder will be moved to General. This cannot be undone.'
+        : type === 'shift'
+          ? 'This removes the shift and updates your hours and earnings. This cannot be undone.'
+          : 'This removes the expense and updates your spending total. This cannot be undone.';
   $('#delete-confirm-dialog').showModal();
 }
 $('#delete-confirm-dialog').addEventListener('close', () => { pendingDelete = null; });
@@ -1062,13 +1067,21 @@ $('#delete-confirm-form').addEventListener('submit', event => {
   event.preventDefault();
   if (!pendingDelete) return;
   const { type, list, id } = pendingDelete;
-  const item = state[list].find(item => item.id === id);
+  const item = type === 'wish-folder'
+    ? state.wishFolders.find(folder => folder.id === id)
+    : state[list].find(item => item.id === id);
   if (item) {
-    if (type === 'expense') {
-      const bill = item.monthlyExpenseId && state.monthlyExpenses.find(bill => bill.id === item.monthlyExpenseId);
-      if (bill && bill.paidMonth === item.monthlyPeriod) bill.paidMonth = '';
+    if (type === 'wish-folder') {
+      state.wishes.forEach(wish => { if (folderForWish(wish) === id) wish.folderId = GENERAL_WISH_FOLDER; });
+      state.wishFolders = state.wishFolders.filter(folder => folder.id !== id);
+      if (activeWishFolder === id) activeWishFolder = null;
+    } else {
+      if (type === 'expense') {
+        const bill = item.monthlyExpenseId && state.monthlyExpenses.find(bill => bill.id === item.monthlyExpenseId);
+        if (bill && bill.paidMonth === item.monthlyPeriod) bill.paidMonth = '';
+      }
+      state[list] = state[list].filter(item => item.id !== id);
     }
-    state[list] = state[list].filter(item => item.id !== id);
   }
   $('#delete-confirm-dialog').close();
   if (item) { if (!persist()) return; toast('Removed.'); }
