@@ -11,10 +11,10 @@
     <link rel="icon" href="./icons/daymaker-bold.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="./icons/daymaker-bold-180.png">
     <title>Daymaker · work & money</title>
-    <link rel="stylesheet" href="style.css?v=54">
+    <link rel="stylesheet" href="style.css?v=55">
     <script src="vendor/supabase-2.119.0.js" defer></script>
     <script src="supabase-config.js?v=1" defer></script>
-    <script src="friends.js?v=1" defer></script>
+    <script src="friends.js?v=2" defer></script>
     <script src="cloud.js?v=6" defer></script>
     <script src="app.js?v=51" defer></script>
   </head>
@@ -30,7 +30,7 @@
     <main class="app-shell" inert aria-busy="true">
       <header class="topbar">
         <a class="wordmark" href="#home" data-go="home" aria-label="Daymaker home"><img class="mark" src="./icons/daymaker-bold.svg" alt=""><span>daymaker</span></a>
-        <div class="top-actions"><span class="today-pill" id="today-label">TODAY</span><button type="button" class="today-pill account-open" id="account-open" aria-label="Log in">Log in</button></div>
+        <div class="top-actions"><span class="today-pill" id="today-label">TODAY</span><button type="button" class="today-pill account-open" id="account-open" aria-label="Log in">Log in</button><span id="friend-request-alert" class="visually-hidden" role="status"></span></div>
       </header>
 
       <section class="page active" id="home-page" aria-labelledby="home-title">

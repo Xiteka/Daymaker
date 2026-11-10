@@ -1,6 +1,8 @@
 /* Daymaker friend requests are separate from the account's tracker data. */
 (() => {
   'use strict';
+  const accountButton = document.querySelector('#account-open');
+  const requestAlert = document.querySelector('#friend-request-alert');
   const card = document.querySelector('#account-friends');
   const form = card.querySelector('form');
   const email = form.elements.email;
@@ -18,11 +20,38 @@
   function setAccount(client, id) {
     if (!id && !account) return;
     if (account?.id === id && account.client === client) return;
-    account = client && id ? { client, id, busy: false } : null;
+    account = client && id ? { client, id, busy: false, checkingRequests: false, requestVersion: 0 } : null;
+    setRequestAlert(false);
     list.replaceChildren();
     status.textContent = '';
     email.value = '';
     setBusy(false);
+    refreshRequestAlert();
+  }
+
+  function setRequestAlert(hasRequests) {
+    accountButton.classList.toggle('has-friend-requests', hasRequests);
+    const message = hasRequests ? 'New friend requests' : '';
+    if (requestAlert.textContent === message) return;
+    requestAlert.textContent = message;
+    if (hasRequests) accountButton.setAttribute('aria-describedby', requestAlert.id);
+    else accountButton.removeAttribute('aria-describedby');
+  }
+
+  async function checkRequests() {
+    const current = account;
+    if (!current || current.busy || current.checkingRequests || document.hidden || !navigator.onLine) return;
+    const version = current.requestVersion;
+    current.checkingRequests = true;
+    try {
+      const { data, error } = await current.client.rpc('daymaker_list_friends')
+        .eq('kind', 'received').limit(1);
+      if (!error && account === current && version === current.requestVersion) {
+        setRequestAlert(!!data?.length);
+      }
+    } finally {
+      current.checkingRequests = false;
+    }
   }
 
   function setBusy(busy) {
@@ -76,6 +105,7 @@
   async function run(action) {
     const current = account;
     if (!current || current.busy) return;
+    current.requestVersion++;
     setBusy(true);
     status.textContent = 'Checking friends…';
     try {
@@ -94,7 +124,9 @@
       status.textContent = message ? `${message} Tap Refresh to update the list.` : 'Friends could not load. Tap Refresh to try again.';
       return;
     }
-    render(data || []);
+    const rows = data || [];
+    setRequestAlert(rows.some(row => row.kind === 'received'));
+    render(rows);
     status.textContent = message;
   }
 
@@ -128,5 +160,9 @@
 
   const refresh = () => run(load);
   refreshButton.addEventListener('click', refresh);
+  const refreshRequestAlert = () => { void checkRequests().catch(() => {}); };
+  document.addEventListener('visibilitychange', refreshRequestAlert);
+  window.addEventListener('online', refreshRequestAlert);
+  setInterval(refreshRequestAlert, 30000);
   window.DaymakerFriends = { setAccount, refresh };
 })();
