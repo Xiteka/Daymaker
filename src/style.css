@@ -249,9 +249,9 @@
 .upcoming-shift-card .swipe-track{margin-top:12px}
 
 .calendar-grid .calendar-day.today{position:relative;border:2px solid var(--orange);font-weight:700}
-.calendar-grid .calendar-day.today::after{content:'';position:absolute;bottom:4px;left:50%;width:4px;height:4px;border-radius:50%;background:var(--orange);transform:translateX(-50%);pointer-events:none}
+
 .calendar-grid .calendar-day.today.worked{border-color:#fff}
-.calendar-grid .calendar-day.today.worked::after{background:#fff}
+
 
 
 /* Launch screen follows the app's warm paper, orange mark, and dotted details. */
@@ -342,7 +342,7 @@ body.app-loading>.app-shell{visibility:hidden}
 
 .topbar{gap:12px}.wordmark{flex:none}.top-actions{min-width:0;gap:8px}.today-pill{flex:none}
 .account-open{flex:0 1 auto;max-width:112px;min-width:0;border:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-transform:uppercase;text-align:center}
-.account-open.has-friend-requests{color:var(--orange)}
+.account-open.has-friend-requests{background:var(--orange);color:#fff}
 .account-status{padding:11px 13px;margin-bottom:20px;border-radius:12px;background:var(--peach);color:#a83b25;font-size:12px;line-height:1.5}
 .account-status.account-status-saved{background:#e5f2e7;color:#24683a;box-shadow:inset 0 0 0 1px #b8d9bd}
 .account-page h3{margin:0 0 8px;font:500 20px var(--display);letter-spacing:-.4px}
@@ -395,3 +395,28 @@ button:disabled{cursor:default;opacity:.6}
 #friends-list ul { display:grid; gap:8px; margin:0; padding:0; list-style:none }
 #friends-list li { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:6px 10px; padding:8px 0; border-top:1px solid var(--line) }
 #friends-list li > span { overflow-wrap:anywhere; min-width:0; font-size:13px }
+
+#friends-list .friend-swipe-row { display:block; padding:0; border:0; border-radius:12px }
+.friend-swipe-row .shift-row-actions { width:64px }
+.friend-row-content { display:flex; align-items:center; gap:12px; padding:12px; border-radius:12px; background:var(--paper) }
+.friend-row-name { flex:1; min-width:0 }
+.friend-row-name strong { display:block; overflow-wrap:anywhere; font-size:13px; font-weight:500 }
+.friend-row-name small { display:block; margin-top:3px; color:var(--muted); font-size:10px }
+.friends-sharing-note { margin:18px 0 0 }
+.friend-calendar-toggle { flex:none; width:52px; height:30px; padding:3px; border:1px solid #0005; border-radius:99px; background:#202323; box-shadow:inset 0 2px 5px #0008 }
+.friend-calendar-toggle span { display:block; width:22px; height:22px; border:1px solid #ffffff24; border-radius:50%; background:linear-gradient(145deg,#454848,#151818); box-shadow:0 1px 3px #0008; transition:transform .18s }
+.friend-calendar-toggle[aria-checked="true"] { background:var(--orange); border-color:var(--orange) }
+.friend-calendar-toggle[aria-checked="true"] span { transform:translateX(22px) }
+.calendar-day { position:relative }
+.calendar-day-dots { position:absolute; bottom:4px; left:50%; display:flex; align-items:center; gap:2px; transform:translateX(-50%); pointer-events:none }
+.calendar-day-dots i { display:block; width:4px; height:4px; flex:none; border-radius:50% }
+.calendar-day-dots .calendar-today-dot { background:#fff }
+.calendar-day-dots small { font-size:7px; line-height:1; color:#fff }
+.calendar-friends-legend { display:flex; flex-wrap:wrap; gap:6px 12px; margin:0 0 12px; color:#fff; font-size:11px }
+.calendar-friends-legend:empty,#calendar-friends-status:empty { display:none }
+.calendar-friends-legend span { display:inline-flex; align-items:center; gap:5px }
+.calendar-friends-legend i { width:6px; height:6px; border-radius:50% }
+.calendar-detail-person { display:flex; align-items:baseline; justify-content:space-between; gap:8px; width:100%; font-size:12px }
+.calendar-detail-person .calendar-detail-times-label { flex-basis:auto }
+.calendar-detail-person strong { min-width:0; overflow-wrap:anywhere }
+@media(prefers-reduced-motion:reduce) { .friend-calendar-toggle span { transition:none } }

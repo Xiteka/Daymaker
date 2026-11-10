@@ -143,6 +143,29 @@ const calendarStart = new Date();
 let calendarMonth = new Date(calendarStart.getFullYear(), calendarStart.getMonth(), 1);
 let calendarDay = null;
 let calendarTotals = new Map();
+let calendarFriendDays = new Map();
+const friendCalendarColors = ['#80c7ff', '#c7a0ff', '#71ddbc', '#ffd078', '#ff9dcc', '#9fc96b'];
+function friendCalendarColor(id) {
+  let hash = 0;
+  for (const character of id) hash = (hash * 31 + character.charCodeAt(0)) >>> 0;
+  return friendCalendarColors[hash % friendCalendarColors.length];
+}
+function friendCalendarDetails(date) {
+  const people = new Map();
+  for (const shift of calendarFriendDays.get(date) || []) {
+    if (!people.has(shift.friend_id)) people.set(shift.friend_id, { name: shift.nickname, shifts: [] });
+    people.get(shift.friend_id).shifts.push(shift);
+  }
+  return [...people].map(([id, person]) => {
+    const times = person.shifts.map(shift => {
+      const label = shift.start_time && shift.end_time
+        ? `${shift.start_time}–${shift.end_time}${shift.end_time < shift.start_time ? ' (+1 day)' : ''}`
+        : 'Times not set';
+      return `<div class="calendar-detail-time"><strong>${esc(label)}</strong></div>`;
+    }).join('');
+    return `<div class="calendar-detail-times calendar-friend-times"><div class="calendar-detail-person"><span class="calendar-detail-times-label">SHIFT TIMES</span><strong style="color:${friendCalendarColor(id)}">${esc(person.name)}</strong></div>${times}</div>`;
+  }).join('');
+}
 let calendarHoldTimer;
 const calendarHoverMedia = window.matchMedia('(hover: hover) and (pointer: fine)');
 const calendarHours = hours => new Intl.NumberFormat('en-GB', { maximumFractionDigits: 2, useGrouping: false }).format(hours);
@@ -153,8 +176,10 @@ function showCalendarDay(date, showPopover = false) {
   const total = calendarTotals.get(date) || { hours: 0, pay: 0, plannedCount: 0, times: [] };
   const detail = $('#calendar-detail');
   const times = (total.times || []).map(item => `<div class="calendar-detail-time"><strong>${esc(item.startTime)}–${esc(item.endTime)}${item.endTime < item.startTime ? ' (+1 day)' : ''}</strong>${item.scheduled ? '<small>Scheduled</small>' : ''}</div>`).join('');
-  const timeDetails = times ? `<div class="calendar-detail-times"><span class="calendar-detail-times-label">SHIFT TIMES</span>${times}</div>` : '';
-  detail.innerHTML = `<div class="calendar-detail-date">${calendarDateLabel(date)}</div><div class="calendar-detail-stats"><div><span>WORKED</span><strong>${calendarHours(total.hours)} h</strong></div><div><span>ESTIMATED PAY</span><strong>${money(total.pay)}</strong></div></div>${timeDetails}`;
+  const friendDetails = friendCalendarDetails(date);
+  const ownName = friendDetails ? `<strong>${esc(state.profileName || 'You')}</strong>` : '';
+  const timeDetails = times ? `<div class="calendar-detail-times"><div class="calendar-detail-person"><span class="calendar-detail-times-label">SHIFT TIMES</span>${ownName}</div>${times}</div>` : '';
+  detail.innerHTML = `<div class="calendar-detail-date">${calendarDateLabel(date)}</div><div class="calendar-detail-stats"><div><span>WORKED</span><strong>${calendarHours(total.hours)} h</strong></div><div><span>ESTIMATED PAY</span><strong>${money(total.pay)}</strong></div></div>${timeDetails}${friendDetails}`;
   $('#calendar-grid').querySelectorAll('.calendar-day').forEach(button => {
     const selected = button.dataset.date === date;
     button.classList.toggle('selected', selected);
@@ -195,6 +220,18 @@ function renderCalendar() {
   const month = calendarMonth.getMonth();
   const monthLabel = calendarMonth.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
   const monthPrefix = `${year}-${String(month + 1).padStart(2, '0')}`;
+  const friendShifts = window.DaymakerFriends?.calendarForMonth(monthPrefix) || [];
+  calendarFriendDays = new Map();
+  const friends = new Map();
+  for (const shift of friendShifts) {
+    if (!shift.shift_date?.startsWith(monthPrefix + '-')) continue;
+    if (!calendarFriendDays.has(shift.shift_date)) calendarFriendDays.set(shift.shift_date, []);
+    calendarFriendDays.get(shift.shift_date).push(shift);
+    friends.set(shift.friend_id, shift.nickname);
+  }
+  $('#calendar-friends-legend').innerHTML = [...friends].map(([id, name]) =>
+    `<span><i style="background:${friendCalendarColor(id)}" aria-hidden="true"></i>${esc(name)}</span>`
+  ).join('');
   const monthTotals = [...calendarTotals.entries()].filter(([date]) => date.startsWith(monthPrefix + '-'));
   const workedDays = monthTotals.filter(([, total]) => total.completedCount > 0).length;
   const plannedShifts = monthTotals.reduce((sum, [, total]) => sum + total.plannedCount, 0);
@@ -211,7 +248,15 @@ function renderCalendar() {
     const worked = total.completedCount > 0;
     const today = date === dateKey();
     const label = `${today ? 'Today, ' : ''}${calendarDateLabel(date)}, ${calendarHours(total.hours)} hours worked, ${money(total.pay)} estimated pay${total.plannedCount ? `, ${total.plannedCount} ${total.plannedCount === 1 ? 'shift' : 'shifts'} scheduled` : ''}`;
-    tiles.push(`<button type="button" class="calendar-day${worked ? ' worked' : ''}${total.plannedCount ? ' planned' : ''}${today ? ' today' : ''}" data-date="${date}" aria-label="${esc(label)}"${today ? ' aria-current="date"' : ''} aria-pressed="false">${day}</button>`);
+    const friendDays = calendarFriendDays.get(date) || [];
+    const dayFriends = new Map(friendDays.map(shift => [shift.friend_id, shift.nickname]));
+    const friendLabel = dayFriends.size ? `, friends working: ${[...dayFriends.values()].join(', ')}` : '';
+    const dots = [...dayFriends.keys()].slice(0, 3).map(id =>
+      `<i style="background:${friendCalendarColor(id)}"></i>`
+    ).join('');
+    const more = dayFriends.size > 3 ? `<small>+${dayFriends.size - 3}</small>` : '';
+    const markers = today || dayFriends.size ? `<span class="calendar-day-dots" aria-hidden="true">${today ? '<i class="calendar-today-dot"></i>' : ''}${dots}${more}</span>` : '';
+    tiles.push(`<button type="button" class="calendar-day${worked ? ' worked' : ''}${total.plannedCount ? ' planned' : ''}${today ? ' today' : ''}" data-date="${date}" aria-label="${esc(label + friendLabel)}"${today ? ' aria-current="date"' : ''} aria-pressed="false">${day}${markers}</button>`);
   }
   $('#calendar-grid').innerHTML = tiles.join('');
   if (calendarDay && calendarDay.startsWith(monthPrefix + '-')) showCalendarDay(calendarDay);
@@ -226,6 +271,7 @@ function changeCalendarMonth(amount) {
   calendarDay = null;
   renderCalendar();
 }
+window.addEventListener('daymaker-friend-calendar', renderCalendar);
 $('#calendar-prev').addEventListener('click', () => changeCalendarMonth(-1));
 $('#calendar-next').addEventListener('click', () => changeCalendarMonth(1));
 const calendarGrid = $('#calendar-grid');
@@ -290,7 +336,7 @@ function resetShiftRowGesture() {
   setShiftRowOpen(gesture.row, gesture.wasOpen);
   if (gesture.content.hasPointerCapture(gesture.pointerId)) gesture.content.releasePointerCapture(gesture.pointerId);
 }
-for (const shiftPage of [$('#work-page'), $('#home-page'), $('#expenses-page')]) {
+for (const shiftPage of [$('#work-page'), $('#home-page'), $('#expenses-page'), $('#account-page')]) {
 shiftPage.addEventListener('pointerdown', event => {
   if (!event.isPrimary || (event.pointerType === 'mouse' && event.button !== 0)) return;
   if (event.target.closest('button, input, select, a, .swipe-track, .shift-row-actions')) return;
@@ -694,6 +740,10 @@ function showPage(page, focusHeading = false) {
   resetShiftRowGesture(); closeShiftRow();
   $('#calendar-popover').hidden = true;
   document.querySelectorAll('.page').forEach(section => { section.hidden = section.id !== `${page}-page`; section.classList.toggle('active', !section.hidden); });
+  if (page === 'calendar') {
+    renderCalendar();
+    void window.DaymakerFriends?.refreshCalendar();
+  }
   document.querySelectorAll('.tab').forEach(tab => { const active = tab.dataset.page === page; tab.classList.toggle('active', active); if (active) tab.setAttribute('aria-current', 'page'); else tab.removeAttribute('aria-current'); });
   if (page === 'account') $('#account-open').setAttribute('aria-current', 'page');
   else $('#account-open').removeAttribute('aria-current');
