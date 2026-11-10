@@ -74,6 +74,7 @@
     if (message) status = message;
     if (!hooks) return;
     const signedIn = !!session?.user;
+    window.DaymakerFriends?.setAccount(client, session?.user.id || null);
     const nickname = String(hooks.read().profileName || '').trim();
     const displayName = (nickname || session?.user.email?.split('@')[0] || 'Account').slice(0, 10);
     $('#account-open').textContent = signedIn ? displayName : 'Log in';
@@ -160,6 +161,7 @@
       if (!mayImport) hooks.notify('Existing device data belongs to another account and has been kept separate.');
     }
     updateUI('Signed in · syncing your data…');
+    if (!$('#account-page').hidden) void window.DaymakerFriends?.refresh();
     await sync();
   }
   async function uploadBackups(id) {
@@ -256,7 +258,11 @@
   }
   async function start(callbacks) {
     hooks = callbacks;
-    $('#account-open').addEventListener('click', () => { updateUI(); hooks.openAccount(); });
+    $('#account-open').addEventListener('click', () => {
+      updateUI();
+      hooks.openAccount();
+      void window.DaymakerFriends?.refresh();
+    });
     $('#account-nickname').addEventListener('input', event => { nameDraft = true; event.target.setCustomValidity(''); });
     $('#account-profile-form').addEventListener('submit', event => {
       event.preventDefault();

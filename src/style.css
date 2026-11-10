@@ -383,3 +383,14 @@ button:disabled{cursor:default;opacity:.6}
 .account-page .account-status{margin-bottom:14px}
 .account-page .account-tools{padding:18px 0;margin-top:18px}
 .account-back{min-height:40px}
+
+.friends-heading { display:flex; align-items:baseline; justify-content:space-between; gap:12px }
+#friends-refresh { min-height:44px; padding:0 8px }
+.friends-send { align-self:flex-start; min-height:44px }
+#friends-status { margin:10px 0 0 }
+#friends-status:empty { display:none }
+#friends-list section { margin-top:18px }
+#friends-list h3 { font-size:16px }
+#friends-list ul { display:grid; gap:8px; margin:0; padding:0; list-style:none }
+#friends-list li { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:6px 10px; padding:8px 0; border-top:1px solid var(--line) }
+#friends-list li > span { overflow-wrap:anywhere; min-width:0; font-size:13px }
