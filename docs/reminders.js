@@ -31,7 +31,7 @@
   }
   async function unsubscribe() {
     const registration = await navigator.serviceWorker.getRegistration();
-    const subscription = await registration?.pushManager.getSubscription();
+    const subscription = await registration?.pushManager?.getSubscription();
     if (subscription) await subscription.unsubscribe();
   }
   async function turnOff(current, local) {
@@ -172,5 +172,13 @@
     if (account && supportsReminders() && !account.busy) return prepare(account);
   };
   document.addEventListener('visibilitychange', () => { if (!document.hidden) void refresh(); });
-  window.DaymakerReminders = { setAccount, refresh };
+  async function disableForSignOut() {
+    try {
+      const local = await device.read();
+      if (local?.enabled) await turnOff(account, local);
+    } catch {
+      await unsubscribe().catch(() => {});
+    }
+  }
+  window.DaymakerReminders = { setAccount, refresh, disableForSignOut };
 })();

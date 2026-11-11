@@ -294,6 +294,7 @@
     for (const button of document.querySelectorAll('[data-resolve-sync]')) button.addEventListener('click', () => void resolveConflict(button.dataset.resolveSync));
     $('#auth-mode-toggle').addEventListener('click', () => { authMode = authMode === 'login' ? 'signup' : 'login'; $('#auth-message').textContent = ''; updateUI(); });
     $('#account-signout').addEventListener('click', async () => {
+      await window.DaymakerReminders?.disableForSignOut();
       const { error } = await client.auth.signOut({ scope: 'local' });
       if (error) { hooks.notify('Could not log out. Please try again.'); return; }
       recovery = false;
