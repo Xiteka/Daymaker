@@ -838,6 +838,7 @@ function showPage(page, focusHeading = false) {
   }
   document.querySelectorAll('.tab').forEach(tab => { const active = tab.dataset.page === page; tab.classList.toggle('active', active); if (active) tab.setAttribute('aria-current', 'page'); else tab.removeAttribute('aria-current'); });
   if (page === 'friends') void window.DaymakerFriends?.refresh();
+  if (page === 'account') void window.DaymakerReminders?.refresh();
   if (page === 'account' || page === 'friends') $('#account-open').setAttribute('aria-current', 'page');
   else $('#account-open').removeAttribute('aria-current');
   window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -1337,6 +1338,24 @@ $('#saving-form').addEventListener('submit', event => {
 
 $('#date-stamp').textContent = new Date().toLocaleDateString('en-GB', { month: 'short', year: 'numeric' }).toUpperCase();
 render();
+function openWorkReminder(date) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date || '')) return;
+  const parsed = new Date(`${date}T12:00:00`);
+  if (Number.isNaN(parsed.getTime()) || dateKey(parsed) !== date) return;
+  calendarMonth = new Date(parsed.getFullYear(), parsed.getMonth(), 1);
+  calendarDay = date;
+  showPage('calendar', true);
+  renderCalendar();
+  showCalendarDay(date);
+}
+const reminderDate = location.hash.match(/^#work-reminder=(\d{4}-\d{2}-\d{2})$/)?.[1];
+if (reminderDate) openWorkReminder(reminderDate);
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.addEventListener('message', event => {
+    if (event.data?.type === 'daymaker-work-reminder') openWorkReminder(event.data.date);
+  });
+}
+
 
 function dismissAppLoader() {
   const loader = $('#app-loader');

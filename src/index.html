@@ -11,12 +11,14 @@
     <link rel="icon" href="./icons/daymaker-bold.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="./icons/daymaker-bold-180.png">
     <title>Daymaker · work & money</title>
-    <link rel="stylesheet" href="style.css?v=58">
+    <link rel="stylesheet" href="style.css?v=59">
     <script src="vendor/supabase-2.119.0.js" defer></script>
     <script src="supabase-config.js?v=1" defer></script>
     <script src="friends.js?v=4" defer></script>
-    <script src="cloud.js?v=7" defer></script>
-    <script src="app.js?v=54" defer></script>
+    <script src="reminder-device.js?v=1" defer></script>
+    <script src="reminders.js?v=1" defer></script>
+    <script src="cloud.js?v=8" defer></script>
+    <script src="app.js?v=55" defer></script>
   </head>
   <body class="app-loading">
     <div class="app-loader" id="app-loader" role="status" aria-label="Loading Daymaker">
@@ -142,6 +144,15 @@
         <button type="button" class="primary-button account-auth-toggle" id="auth-mode-toggle">Create an account</button>
       </div>
       <div id="account-signed-in" hidden><section class="account-card account-profile-card" aria-labelledby="account-profile-title"><p class="eyebrow">MAKE IT YOURS</p><h2 id="account-profile-title">Your profile</h2><p class="account-email" id="account-email"></p><form id="account-profile-form"><div class="account-name-row"><label for="account-nickname">Name or nickname<input id="account-nickname" name="nickname" type="text" maxlength="10" autocomplete="nickname" placeholder="What should we call you?" aria-describedby="account-name-hint" required></label><button type="submit" class="primary-button account-name-save" aria-label="Save name" title="Save name">✓</button></div><p class="account-note" id="account-name-hint">This name appears in the top bar.</p></form><button type="button" class="primary-button account-settings-profile" data-account-settings>Your settings <span aria-hidden="true">↗</span></button></section>
+      <section class="account-card" id="work-reminders-card" aria-labelledby="work-reminders-title">
+        <h2 id="work-reminders-title">Work reminders</h2>
+        <p class="account-note">Get a notification on this iPhone 60 minutes before your unfinished shift starts.</p>
+        <p class="account-note" id="work-reminder-status" role="status">Open Daymaker from your iPhone Home Screen to enable work reminders.</p>
+        <div class="account-buttons">
+          <button type="button" class="primary-button" id="work-reminder-enable" disabled>Enable on this phone</button>
+          <button type="button" class="primary-button account-secondary" id="work-reminder-test" hidden>Send test notification</button>
+        </div>
+      </section>
       <section class="account-card account-sync-card" aria-labelledby="account-sync-title"><h2 id="account-sync-title">Your data</h2><div class="account-buttons"><button type="button" class="primary-button" id="account-sync">Sync now</button><button type="button" class="primary-button account-secondary" id="account-cloud-backups">Download account backups</button></div><p class="account-note">Logging out keeps your account data and returns to this device’s original local data.</p><button type="button" class="primary-button account-secondary account-logout" id="account-signout">Log out</button></section></div>
       <section class="account-conflict" id="account-conflict" hidden><h3>Two versions, one choice.</h3><p>These records changed in two places: <strong id="account-conflict-items"></strong>.</p><p>Choose which changes to use for these records. Other changes will be combined. Both versions are backed up before saving.</p><div class="account-buttons"><button type="button" class="primary-button" data-resolve-sync="local">Use this device’s changes</button><button type="button" class="primary-button account-secondary" data-resolve-sync="remote">Use account changes</button></div></section>
       <div class="account-tools"><button type="button" class="primary-button" id="account-settings-guest" data-account-settings>Your settings</button><button type="button" class="text-link" id="account-backup">Download device backup ↗</button></div>

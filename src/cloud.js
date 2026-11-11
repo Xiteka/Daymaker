@@ -75,6 +75,7 @@
     if (!hooks) return;
     const signedIn = !!session?.user;
     window.DaymakerFriends?.setAccount(client, session?.user.id || null);
+    window.DaymakerReminders?.setAccount(client, session?.user.id || null);
     const nickname = String(hooks.read().profileName || '').trim();
     const displayName = (nickname || session?.user.email?.split('@')[0] || 'Account').slice(0, 10);
     $('#account-open').textContent = signedIn ? displayName : 'Log in';

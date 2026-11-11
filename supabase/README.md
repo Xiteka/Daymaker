@@ -36,3 +36,11 @@ Do not remove or rename the legacy storage key, clear storage during deployment,
 | CNAME | `send.auth` | `send.forge.rmta.net` |
 
 Wait for Resend to report Verified before relying on email delivery. Restrict the sending key to this domain when the domain is available in the key's domain selector.
+
+## iPhone work reminders
+
+Run `work-reminders.sql`, deploy `functions/daymaker-work-reminders/index.ts` with the function's `verify_jwt = false` configuration, then run `work-reminders-schedule.sql`. The function authenticates user operations with Supabase Auth and scheduled calls with a private database token. Signing keys are generated on the server once and kept in the restricted configuration table.
+
+Users enable reminders on each iPhone from Account. The browser stores its opt-in state in IndexedDB and unsubscribes when reminders are disabled or the account signs out. The sender uses the timezone captured at opt-in and current, synced, unfinished shifts. It checks each minute for starts 60 minutes away, retries at most three times inside a five-minute delivery window, and uses delivery claims and notification tags to suppress duplicates. Completed shifts and friends' calendars are excluded.
+
+A real iPhone must grant notification permission and receive the optional test notification to verify device delivery.

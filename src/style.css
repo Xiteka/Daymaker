@@ -462,3 +462,6 @@ button:disabled{cursor:default;opacity:.6}
 .purchase-description { margin:0; color:var(--muted); font-size:13px; line-height:1.6 }
 .wish-purchase-confirm { background:var(--orange) }
 #wishlist-purchased .record-main strong { overflow-wrap:anywhere }
+
+#work-reminders-card .account-buttons .primary-button { white-space:normal }
+#work-reminder-status { font-size:12px }

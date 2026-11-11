@@ -1,0 +1,4 @@
+project_id = "daymaker"
+
+[functions.daymaker-work-reminders]
+verify_jwt = false
