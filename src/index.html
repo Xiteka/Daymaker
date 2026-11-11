@@ -11,12 +11,12 @@
     <link rel="icon" href="./icons/daymaker-bold.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="./icons/daymaker-bold-180.png">
     <title>Daymaker · work & money</title>
-    <link rel="stylesheet" href="style.css?v=56">
+    <link rel="stylesheet" href="style.css?v=57">
     <script src="vendor/supabase-2.119.0.js" defer></script>
     <script src="supabase-config.js?v=1" defer></script>
-    <script src="friends.js?v=3" defer></script>
-    <script src="cloud.js?v=6" defer></script>
-    <script src="app.js?v=52" defer></script>
+    <script src="friends.js?v=4" defer></script>
+    <script src="cloud.js?v=7" defer></script>
+    <script src="app.js?v=53" defer></script>
   </head>
   <body class="app-loading">
     <div class="app-loader" id="app-loader" role="status" aria-label="Loading Daymaker">
@@ -30,7 +30,17 @@
     <main class="app-shell" inert aria-busy="true">
       <header class="topbar">
         <a class="wordmark" href="#home" data-go="home" aria-label="Daymaker home"><img class="mark" src="./icons/daymaker-bold.svg" alt=""><span>daymaker</span></a>
-        <div class="top-actions"><span class="today-pill" id="today-label">TODAY</span><button type="button" class="today-pill account-open" id="account-open" aria-label="Log in">Log in</button><span id="friend-request-alert" class="visually-hidden" role="status"></span></div>
+        <div class="top-actions">
+          <span class="today-pill" id="today-label">TODAY</span>
+          <div class="account-menu" id="account-menu">
+            <button type="button" class="today-pill account-open" id="account-open" aria-label="Log in" aria-expanded="false" aria-controls="account-dropdown">Log in</button>
+            <nav class="account-dropdown" id="account-dropdown" aria-label="Profile pages" hidden>
+              <button type="button" data-go="account"><span>Account</span><span aria-hidden="true">↗</span></button>
+              <button type="button" data-go="friends"><span>Friends</span><span id="account-friends-indicator" class="account-menu-new" hidden>New</span><span aria-hidden="true">↗</span></button>
+            </nav>
+          </div>
+          <span id="friend-request-alert" class="visually-hidden" role="status"></span>
+        </div>
       </header>
 
       <section class="page active" id="home-page" aria-labelledby="home-title">
@@ -128,6 +138,21 @@
         <button type="button" class="primary-button account-auth-toggle" id="auth-mode-toggle">Create an account</button>
       </div>
       <div id="account-signed-in" hidden><section class="account-card account-profile-card" aria-labelledby="account-profile-title"><p class="eyebrow">MAKE IT YOURS</p><h2 id="account-profile-title">Your profile</h2><p class="account-email" id="account-email"></p><form id="account-profile-form"><div class="account-name-row"><label for="account-nickname">Name or nickname<input id="account-nickname" name="nickname" type="text" maxlength="10" autocomplete="nickname" placeholder="What should we call you?" aria-describedby="account-name-hint" required></label><button type="submit" class="primary-button account-name-save" aria-label="Save name" title="Save name">✓</button></div><p class="account-note" id="account-name-hint">This name appears in the top bar.</p></form><button type="button" class="primary-button account-settings-profile" data-account-settings>Your settings <span aria-hidden="true">↗</span></button></section>
+      <section class="account-card account-sync-card" aria-labelledby="account-sync-title"><h2 id="account-sync-title">Your data</h2><div class="account-buttons"><button type="button" class="primary-button" id="account-sync">Sync now</button><button type="button" class="primary-button account-secondary" id="account-cloud-backups">Download account backups</button></div><p class="account-note">Logging out keeps your account data and returns to this device’s original local data.</p><button type="button" class="primary-button account-secondary account-logout" id="account-signout">Log out</button></section></div>
+      <section class="account-conflict" id="account-conflict" hidden><h3>Two versions, one choice.</h3><p>These records changed in two places: <strong id="account-conflict-items"></strong>.</p><p>Choose which changes to use for these records. Other changes will be combined. Both versions are backed up before saving.</p><div class="account-buttons"><button type="button" class="primary-button" data-resolve-sync="local">Use this device’s changes</button><button type="button" class="primary-button account-secondary" data-resolve-sync="remote">Use account changes</button></div></section>
+      <div class="account-tools"><button type="button" class="primary-button" id="account-settings-guest" data-account-settings>Your settings</button><button type="button" class="text-link" id="account-backup">Download device backup ↗</button></div>
+    </section>
+
+      <section class="page account-page friends-page" id="friends-page" aria-labelledby="friends-title" hidden>
+        <div class="page-title-row">
+          <div><p class="eyebrow">YOUR PEOPLE</p><h1 id="friends-title" tabindex="-1">Friends<span class="period">.</span></h1></div>
+          <button type="button" class="primary-button account-back" data-go="home">‹ Back</button>
+        </div>
+        <div id="friends-login" class="account-card">
+          <p class="account-note">Log in to add friends and share calendars.</p>
+          <button type="button" class="primary-button" data-go="account">Log in</button>
+        </div>
+        <div id="friends-signed-in" hidden>
       <section class="account-card account-friends-card" id="account-friends" aria-labelledby="account-friends-title">
         <div class="friends-heading">
           <h2 id="account-friends-title">Friends</h2>
@@ -143,10 +168,8 @@
         <p class="account-note friends-sharing-note">Turn on calendars to share your shift dates and times with that friend. Their calendar appears when they turn it on too. Swipe a friend right to delete.</p>
         <div id="friends-list"></div>
       </section>
-      <section class="account-card account-sync-card" aria-labelledby="account-sync-title"><h2 id="account-sync-title">Your data</h2><div class="account-buttons"><button type="button" class="primary-button" id="account-sync">Sync now</button><button type="button" class="primary-button account-secondary" id="account-cloud-backups">Download account backups</button></div><p class="account-note">Logging out keeps your account data and returns to this device’s original local data.</p><button type="button" class="primary-button account-secondary account-logout" id="account-signout">Log out</button></section></div>
-      <section class="account-conflict" id="account-conflict" hidden><h3>Two versions, one choice.</h3><p>These records changed in two places: <strong id="account-conflict-items"></strong>.</p><p>Choose which changes to use for these records. Other changes will be combined. Both versions are backed up before saving.</p><div class="account-buttons"><button type="button" class="primary-button" data-resolve-sync="local">Use this device’s changes</button><button type="button" class="primary-button account-secondary" data-resolve-sync="remote">Use account changes</button></div></section>
-      <div class="account-tools"><button type="button" class="primary-button" id="account-settings-guest" data-account-settings>Your settings</button><button type="button" class="text-link" id="account-backup">Download device backup ↗</button></div>
-    </section>
+        </div>
+      </section>
 
       <nav class="bottom-nav" aria-label="Main navigation">
         <button class="tab active" data-page="home" aria-current="page"><span class="tab-icon">⌂</span><span>Home</span></button>

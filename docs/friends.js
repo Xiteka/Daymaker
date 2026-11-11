@@ -84,6 +84,7 @@
 
   function setRequestAlert(hasRequests) {
     accountButton.classList.toggle('has-friend-requests', hasRequests);
+    document.querySelector('#account-friends-indicator').hidden = !hasRequests;
     const message = hasRequests ? 'New friend requests' : '';
     if (requestAlert.textContent === message) return;
     requestAlert.textContent = message;

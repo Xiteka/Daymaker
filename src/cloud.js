@@ -78,12 +78,15 @@
     const nickname = String(hooks.read().profileName || '').trim();
     const displayName = (nickname || session?.user.email?.split('@')[0] || 'Account').slice(0, 10);
     $('#account-open').textContent = signedIn ? displayName : 'Log in';
-    $('#account-open').setAttribute('aria-label', signedIn ? `Open account for ${displayName}` : 'Log in');
+    $('#account-open').setAttribute('aria-label', signedIn ? `Open profile menu for ${displayName}` : 'Log in');
     $('#account-open').title = signedIn ? displayName : 'Log in';
     if (nameOwner !== (session?.user.id || null)) { nameOwner = session?.user.id || null; nameDraft = false; }
     if (!nameDraft) $('#account-nickname').value = signedIn ? displayName.slice(0, 10) : '';
     $('#account-email').textContent = session?.user.email || '';
-    $('#account-signed-in').hidden = !session?.user;
+    $('#account-signed-in').hidden = !signedIn;
+    $('#friends-signed-in').hidden = !signedIn;
+    $('#friends-login').hidden = signedIn;
+    if (!signedIn) hooks.closeAccountMenu();
     $('#account-settings-guest').hidden = !!session?.user;
     $('#account-auth-section').hidden = !!session?.user && !recovery;
     $('#account-status').textContent = status;
@@ -161,7 +164,7 @@
       if (!mayImport) hooks.notify('Existing device data belongs to another account and has been kept separate.');
     }
     updateUI('Signed in · syncing your data…');
-    if (!$('#account-page').hidden) void window.DaymakerFriends?.refresh();
+    if (!$('#friends-page').hidden) void window.DaymakerFriends?.refresh();
     await sync();
   }
   async function uploadBackups(id) {
@@ -260,8 +263,8 @@
     hooks = callbacks;
     $('#account-open').addEventListener('click', () => {
       updateUI();
-      hooks.openAccount();
-      void window.DaymakerFriends?.refresh();
+      if (session?.user) hooks.openAccountMenu();
+      else hooks.openAccount();
     });
     $('#account-nickname').addEventListener('input', event => { nameDraft = true; event.target.setCustomValidity(''); });
     $('#account-profile-form').addEventListener('submit', event => {

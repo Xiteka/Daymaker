@@ -336,7 +336,7 @@ function resetShiftRowGesture() {
   setShiftRowOpen(gesture.row, gesture.wasOpen);
   if (gesture.content.hasPointerCapture(gesture.pointerId)) gesture.content.releasePointerCapture(gesture.pointerId);
 }
-for (const shiftPage of [$('#work-page'), $('#home-page'), $('#expenses-page'), $('#account-page')]) {
+for (const shiftPage of [$('#work-page'), $('#home-page'), $('#expenses-page'), $('#friends-page')]) {
 shiftPage.addEventListener('pointerdown', event => {
   if (!event.isPrimary || (event.pointerType === 'mouse' && event.button !== 0)) return;
   if (event.target.closest('button, input, select, a, .swipe-track, .shift-row-actions')) return;
@@ -734,8 +734,37 @@ function openDialog(id) {
 
 document.querySelectorAll('[data-open]').forEach(button => button.addEventListener('click', () => openDialog(button.dataset.open)));
 document.querySelectorAll('[data-close]').forEach(button => button.addEventListener('click', () => document.getElementById(button.dataset.close).close()));
+function setAccountMenuOpen(open) {
+  if (open && $('#account-signed-in').hidden) {
+    showPage('account', true);
+    return;
+  }
+  $('#account-dropdown').hidden = !open;
+  $('#account-open').setAttribute('aria-expanded', String(open));
+}
+const accountMenu = $('#account-menu');
+document.addEventListener('click', event => {
+  if (!accountMenu.contains(event.target)) setAccountMenuOpen(false);
+});
+accountMenu.addEventListener('focusout', event => {
+  if (!accountMenu.contains(event.relatedTarget)) setAccountMenuOpen(false);
+});
+accountMenu.addEventListener('keydown', event => {
+  if (event.key === 'Escape' && !$('#account-dropdown').hidden) {
+    event.preventDefault();
+    setAccountMenuOpen(false);
+    $('#account-open').focus();
+  } else if (event.target === $('#account-open') && ['ArrowDown', 'ArrowUp'].includes(event.key)) {
+    event.preventDefault();
+    setAccountMenuOpen(true);
+    const buttons = $('#account-dropdown').querySelectorAll('button');
+    if (!$('#account-dropdown').hidden) buttons[event.key === 'ArrowUp' ? buttons.length - 1 : 0].focus();
+  }
+});
+
 function showPage(page, focusHeading = false) {
   if (!document.getElementById(`${page}-page`)) return;
+  setAccountMenuOpen(false);
   if (page === 'wishlist') { activeWishFolder = null; renderWishes(); }
   resetShiftRowGesture(); closeShiftRow();
   $('#calendar-popover').hidden = true;
@@ -745,14 +774,15 @@ function showPage(page, focusHeading = false) {
     void window.DaymakerFriends?.refreshCalendar();
   }
   document.querySelectorAll('.tab').forEach(tab => { const active = tab.dataset.page === page; tab.classList.toggle('active', active); if (active) tab.setAttribute('aria-current', 'page'); else tab.removeAttribute('aria-current'); });
-  if (page === 'account') $('#account-open').setAttribute('aria-current', 'page');
+  if (page === 'friends') void window.DaymakerFriends?.refresh();
+  if (page === 'account' || page === 'friends') $('#account-open').setAttribute('aria-current', 'page');
   else $('#account-open').removeAttribute('aria-current');
   window.scrollTo({ top: 0, behavior: 'smooth' });
   if (focusHeading) document.querySelector(`#${page}-page h1`)?.focus({ preventScroll: true });
 }
 document.querySelectorAll('[data-page], [data-go]').forEach(button => button.addEventListener('click', event => {
   if (button.tagName === 'A') event.preventDefault();
-  showPage(button.dataset.page || button.dataset.go);
+  showPage(button.dataset.page || button.dataset.go, !!button.closest('#account-dropdown'));
 }));
 
 function hoursBetweenTimes(start, end) {
@@ -1241,6 +1271,8 @@ if (window.DaymakerCloud) void window.DaymakerCloud.start({
   replace: document => { state = { ...fresh(), ...document }; render(); },
   closeEditors: () => { document.querySelectorAll('dialog[open]').forEach(dialog => dialog.close()); },
   openAccount: () => showPage('account', true),
+  openAccountMenu: () => setAccountMenuOpen($('#account-dropdown').hidden),
+  closeAccountMenu: () => setAccountMenuOpen(false),
   saveName: name => { state.profileName = name; return persist(); },
   openSettings: () => openDialog('settings-dialog'),
   notify: toast
