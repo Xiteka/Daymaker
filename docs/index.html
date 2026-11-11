@@ -11,12 +11,12 @@
     <link rel="icon" href="./icons/daymaker-bold.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="./icons/daymaker-bold-180.png">
     <title>Daymaker · work & money</title>
-    <link rel="stylesheet" href="style.css?v=57">
+    <link rel="stylesheet" href="style.css?v=58">
     <script src="vendor/supabase-2.119.0.js" defer></script>
     <script src="supabase-config.js?v=1" defer></script>
     <script src="friends.js?v=4" defer></script>
     <script src="cloud.js?v=7" defer></script>
-    <script src="app.js?v=53" defer></script>
+    <script src="app.js?v=54" defer></script>
   </head>
   <body class="app-loading">
     <div class="app-loader" id="app-loader" role="status" aria-label="Loading Daymaker">
@@ -120,6 +120,10 @@
         <div id="wish-folder-grid" class="wish-folder-grid" aria-label="Wishlist folders"></div>
         <div id="wish-folder-heading" class="wish-folder-heading" hidden><button type="button" class="primary-button wish-folder-back" id="wish-folder-back"><span class="wish-folder-back-icon" aria-hidden="true">‹</span><span>Back to folders</span></button><h2 id="wish-folder-name" tabindex="-1"></h2></div>
         <div id="wishlist-list" class="wishlist-grid" hidden></div>
+        <section id="wishlist-purchased" class="section-block" aria-labelledby="wishlist-purchased-title" hidden>
+          <div class="section-heading"><h2 id="wishlist-purchased-title">Purchased</h2></div>
+          <div id="wishlist-purchased-list" class="record-list"></div>
+        </section>
       </section>
 
     <section class="page account-page" id="account-page" aria-labelledby="account-title" hidden>
@@ -185,6 +189,17 @@
     <dialog class="form-dialog" id="finish-dialog"><form id="finish-form" method="dialog"><button class="dialog-close" type="button" data-close="finish-dialog" aria-label="Close">×</button><p class="eyebrow">A GOOD DAY’S WORK</p><h2 id="finish-title">Finish shift</h2><p id="finish-date" class="finish-date"></p><p class="finish-hint">Adjust the times, break or paid hours to match your day.</p><input name="shiftId" type="hidden"><div id="finish-times" class="field-row shift-time-fields"><label>Start time<input name="startTime" type="time"></label><label>End time<input name="endTime" type="time"></label></div><div class="field-row break-fields"><label>Break (min)<input name="breakMinutes" type="number" min="0" max="1439" step="1" value="0" inputmode="numeric" required></label><label class="break-paid-field"><input name="breakPaid" type="checkbox">Paid</label></div><label>Paid hours<input name="hours" type="number" min="0.01" max="24" step="any" required></label><button class="primary-button submit-button" type="submit" id="finish-submit">Finish shift <span>↗</span></button></form></dialog>
     <dialog class="form-dialog" id="expense-dialog"><form id="expense-form" method="dialog"><button class="dialog-close" type="button" data-close="expense-dialog" aria-label="Close">×</button><p class="eyebrow">KEEP AN EYE ON IT</p><h2>Add an expense</h2><label>What was it?<input name="title" maxlength="60" placeholder="Coffee, groceries…" required></label><div class="field-row"><label>Amount (NOK)<input name="amount" type="number" min="1" step="0.01" placeholder="0" required></label><label>Category<select name="category"><option>Everyday</option><option>Food</option><option>Transport</option><option>Home</option><option>Fun</option><option>Other</option></select></label></div><label>Date<input name="date" type="date" required></label><button class="primary-button submit-button" type="submit">Save expense <span>↗</span></button></form></dialog>
     <dialog class="form-dialog" id="wish-dialog"><form id="wish-form" method="dialog"><button class="dialog-close" type="button" data-close="wish-dialog" aria-label="Close">×</button><p class="eyebrow">SOMETHING TO LOOK FORWARD TO</p><h2>Add to your wishlist</h2><label>What are you saving for?<input name="title" maxlength="60" placeholder="A weekend away…" required required></label><label>Folder<select name="folderId" required><option value="general">General</option></select></label><div class="field-row"><label>Price (NOK)<input name="target" type="number" min="1" step="1" placeholder="0" required></label><label>Already saved<input name="saved" type="number" min="0" step="1" value="0"></label></div><button class="primary-button submit-button" type="submit">Save this wish <span>♡</span></button></form></dialog>
+    <dialog class="form-dialog" id="wish-purchase-dialog" aria-labelledby="wish-purchase-title">
+      <form id="wish-purchase-form">
+        <button class="dialog-close" type="button" data-close="wish-purchase-dialog" aria-label="Close">×</button>
+        <p class="eyebrow">YOUR NEXT LITTLE WIN</p>
+        <h2 id="wish-purchase-title">Got this wish?</h2>
+        <p id="wish-purchase-description" class="purchase-description"></p>
+        <input type="hidden" name="wishId">
+        <input type="hidden" name="amount">
+        <button type="submit" class="primary-button submit-button wish-purchase-confirm">✓ Mark as purchased</button>
+      </form>
+    </dialog>
     <dialog class="form-dialog" id="wish-folder-dialog" aria-labelledby="wish-folder-dialog-title"><form id="wish-folder-form" method="dialog"><button class="dialog-close" type="button" data-close="wish-folder-dialog" aria-label="Close">×</button><p class="eyebrow">A PLACE FOR YOUR PLANS</p><h2 id="wish-folder-dialog-title">New folder</h2><label>Folder name<input name="name" maxlength="40" placeholder="X-mas, travel…" required></label><button class="primary-button submit-button" type="submit">Create folder <span>↗</span></button></form></dialog>
     <dialog class="form-dialog" id="wish-move-dialog" aria-labelledby="wish-move-title"><form id="wish-move-form" method="dialog"><button class="dialog-close" type="button" data-close="wish-move-dialog" aria-label="Close">×</button><p class="eyebrow">KEEP YOUR WISHES TOGETHER</p><h2 id="wish-move-title">Move wish</h2><p class="finish-date" id="wish-move-name"></p><input type="hidden" name="wishId"><input type="hidden" name="folderId"><div class="wish-move-picker"><span id="wish-move-folder-label" class="wish-move-label">Folder</span><button type="button" class="wish-move-folder-trigger" id="wish-move-folder-trigger" aria-expanded="false" aria-controls="wish-move-folder-options" aria-labelledby="wish-move-folder-label wish-move-folder-name"><span class="wish-folder-icon" id="wish-move-trigger-icon" aria-hidden="true"></span><span id="wish-move-folder-name"></span><svg class="wish-move-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m7 10 5 5 5-5"/></svg></button><fieldset class="wish-move-folder-options" id="wish-move-folder-options" hidden></fieldset></div><button class="primary-button submit-button" type="submit">Move wish <span>↗</span></button></form></dialog>
 

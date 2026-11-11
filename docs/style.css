@@ -456,3 +456,9 @@ button:disabled{cursor:default;opacity:.6}
 .account-dropdown button > span:last-child { color:var(--orange) }
 .account-menu-new { padding:3px 7px; border-radius:99px; background:var(--orange); color:#fff; font-size:10px }
 @media(prefers-reduced-motion:reduce) { .account-dropdown { animation:none } }
+
+.save-more.wish-purchase-button { min-height:44px; padding:5px 10px; background:var(--orange); color:#fff; font-weight:600 }
+.wish-purchase-button:hover,.wish-purchase-confirm:hover { background:#df492a }
+.purchase-description { margin:0; color:var(--muted); font-size:13px; line-height:1.6 }
+.wish-purchase-confirm { background:var(--orange) }
+#wishlist-purchased .record-main strong { overflow-wrap:anywhere }
