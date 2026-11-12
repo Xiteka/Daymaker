@@ -421,30 +421,46 @@ button:disabled{cursor:default;opacity:.6}
 .calendar-detail-person strong { min-width:0; overflow-wrap:anywhere }
 @media(prefers-reduced-motion:reduce) { .friend-calendar-toggle span { transition:none } }
 
-.account-menu { position:relative; display:flex; min-width:0 }
+.account-menu { position:relative; z-index:20; display:flex; min-width:0; isolation:isolate }
+.account-menu.is-open { filter:drop-shadow(0 9px 12px #0002) }
+.account-bubble-bridge { display:none }
+.account-menu.is-open .account-bubble-bridge {
+  display:block;
+  position:absolute;
+  z-index:0;
+  top:16px;
+  right:0;
+  width:94px;
+  height:70px;
+  fill:var(--deep);
+  pointer-events:none;
+  transform-origin:90% 0;
+  animation:account-bubble-neck .22s ease-out;
+}
+.account-menu .account-open { position:relative; z-index:2 }
 .account-dropdown {
   position:absolute;
-  z-index:20;
-  top:calc(100% + 12px);
-  right:0;
-  width:230px;
-  max-width:calc(100vw - 38px);
-  padding:10px;
-  border:1px solid #ffffff16;
-  border-radius:24px;
+  z-index:1;
+  top:calc(100% + 20px);
+  right:26px;
+  width:214px;
+  max-width:calc(100vw - 72px);
+  padding:12px;
+  border:0;
+  border-radius:32px;
   background:var(--deep);
-  box-shadow:0 12px 30px #0003;
-  animation:appear .18s ease-out;
+  transform-origin:top right;
+  animation:account-bubble-in .22s cubic-bezier(.2,.8,.2,1);
 }
 .account-dropdown button {
   display:flex;
   align-items:center;
   gap:10px;
   width:100%;
-  min-height:52px;
-  padding:12px 14px;
+  min-height:48px;
+  padding:11px 14px;
   border:0;
-  border-radius:15px;
+  border-radius:22px;
   background:transparent;
   color:#fff;
   text-align:left;
@@ -455,7 +471,9 @@ button:disabled{cursor:default;opacity:.6}
 .account-dropdown button > span:first-child { flex:1 }
 .account-dropdown button > span:last-child { color:var(--orange) }
 .account-menu-new { padding:3px 7px; border-radius:99px; background:var(--orange); color:#fff; font-size:10px }
-@media(prefers-reduced-motion:reduce) { .account-dropdown { animation:none } }
+@keyframes account-bubble-in { from { opacity:0; transform:translate(6px,-9px) scale(.88) } to { opacity:1; transform:translate(0,0) scale(1) } }
+@keyframes account-bubble-neck { from { opacity:0; transform:scaleY(.65) } to { opacity:1; transform:scaleY(1) } }
+@media(prefers-reduced-motion:reduce) { .account-dropdown,.account-bubble-bridge { animation:none } }
 
 .save-more.wish-purchase-button { min-height:44px; padding:5px 10px; background:var(--orange); color:#fff; font-weight:600 }
 .wish-purchase-button:hover,.wish-purchase-confirm:hover { background:#df492a }
