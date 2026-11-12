@@ -283,12 +283,12 @@ body.app-loading>.app-shell{visibility:hidden}
 .wish-folder-card{position:relative;min-width:0;min-height:152px;border-radius:19px;background:var(--peach);color:var(--ink)}
 .wish-folder-open{display:flex;flex-direction:column;width:100%;min-height:152px;padding:17px;border:0;border-radius:inherit;background:transparent;color:inherit;text-align:left}
 .wish-folder-open:hover{background:#ffffff12}
-.wish-folder-delete{position:absolute;z-index:2;top:17px;left:57px;display:grid;place-items:center;width:32px;height:32px;padding:0;border:0;border-radius:10px;background:#ffffff80;color:var(--orange);font-size:21px;line-height:1}
+.wish-folder-delete{position:absolute;z-index:2;top:17px;left:53px;display:grid;place-items:center;width:32px;height:32px;padding:0;border:0;border-radius:10px;background:#ffffff80;color:var(--orange);font-size:21px;line-height:1}
 .wish-folder-delete:hover{background:#fff;color:var(--orange)}
 .wish-folder-card.wish-mint{background:var(--mint)}
 .wish-folder-card.wish-lilac{background:var(--lilac)}
 .wish-folder-card.wish-yellow{background:var(--yellow)}
-.wish-folder-top{display:flex;align-items:center;justify-content:space-between;gap:6px;color:var(--muted);font-size:10px}
+.wish-folder-top{display:flex;align-items:center;min-height:32px}
 .wish-folder-icon{display:grid;place-items:center;width:32px;height:32px;border-radius:10px;background:#ffffff80;color:var(--orange)}
 .wish-folder-title{margin-top:17px;font:500 19px/1.2 var(--display);letter-spacing:-.4px;overflow-wrap:anywhere}
 .wish-folder-amount{margin-top:auto;font:500 12px/1.5 var(--display)}
@@ -484,7 +484,23 @@ button:disabled{cursor:default;opacity:.6}
 }
 .gambling-balance-card .balance-foot { flex-wrap:wrap; gap:8px 20px }
 .gambling-balance-actions { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:14px }
-.gambling-balance-actions .primary-button { min-height:48px; font-size:25px; line-height:1 }
+.gambling-balance-actions .primary-button {
+  position:relative;
+  isolation:isolate;
+  min-height:54px;
+  padding:0 18px;
+  border:1px solid transparent;
+  border-radius:999px;
+  background:linear-gradient(155deg,#7d898b 0%,#505d61 54%,#849093 100%) padding-box,linear-gradient(150deg,#f2fbfcdc 0%,#34434799 46%,#e4f1f3dc 100%) border-box;
+  color:#f3f7f7;
+  box-shadow:inset 0 1px 1px #ffffff80,inset 0 -2px 3px #d8e6e875,inset 2px 2px 5px #ffffff16,inset -2px -3px 6px #1e2c3080,0 2px 4px #26333635,0 0 0 1px #4c5b5f6b;
+  transition:filter .15s,transform .15s,box-shadow .15s;
+}
+.gambling-balance-actions .primary-button::before { content:''; position:absolute; inset:2px; border-radius:inherit; background:linear-gradient(115deg,#ffffff18,transparent 45%,#ffffff0b); pointer-events:none }
+.gambling-balance-actions .primary-button:hover { filter:brightness(1.06) }
+.gambling-balance-actions .primary-button:active { transform:translateY(1px); box-shadow:inset 0 2px 5px #20303465,inset 0 -1px 2px #f1fbfc80,0 0 0 1px #4c5b5f6b }
+.xcoin-money-icon { position:relative; width:27px; height:27px; fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; filter:drop-shadow(0 1px 0 #ffffff65) drop-shadow(0 -1px 1px #21303470) }
+@media(prefers-reduced-motion:reduce) { .gambling-balance-actions .primary-button { transition:none } }
 #gambling-transactions .record-main strong { overflow-wrap:anywhere }
 
 .xcoin-chart-card { margin-top:18px; padding:14px 18px 12px; border-radius:22px; background:var(--deep); color:#fff }

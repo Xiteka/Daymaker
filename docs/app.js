@@ -844,16 +844,13 @@ function wishCard(item, index, allowMove = false) {
 function wishFolderCard(folder, index) {
   const folderWishes = state.wishes.filter(wish => folderForWish(wish) === folder.id);
   const wishes = folderWishes.filter(wish => !wishIsPurchased(wish));
-  const purchasedCount = folderWishes.length - wishes.length;
   const target = wishes.reduce((sum, wish) => sum + Number(wish.target), 0);
   const saved = wishes.reduce((sum, wish) => sum + Number(wish.saved), 0);
   const ratio = target ? Math.max(0, Math.min(100, saved / target * 100)) : 0;
   const colors = ['wish-peach', 'wish-mint', 'wish-lilac', 'wish-yellow'];
-  const countLabel = wishes.length ? `${wishes.length} ${wishes.length === 1 ? 'wish' : 'wishes'}`
-    : purchasedCount ? `${purchasedCount} purchased` : '0 wishes';
-  const emptyLabel = purchasedCount ? 'All wishes purchased' : 'Add your first wish';
+  const emptyLabel = folderWishes.length ? '' : 'Add your first wish';
   const remove = folder.id === GENERAL_WISH_FOLDER ? '' : `<button type="button" class="wish-folder-delete" data-delete="wish-folder" data-id="${esc(folder.id)}" aria-label="Delete ${esc(folder.name)} folder" title="Delete folder">×</button>`;
-  return `<article class="wish-folder-card ${colors[index % colors.length]}"><button type="button" class="wish-folder-open" data-wish-folder="${esc(folder.id)}"><span class="wish-folder-top"><span class="wish-folder-icon">${wishFolderIcon}</span><span>${countLabel}</span></span><strong class="wish-folder-title">${esc(folder.name)}</strong><span class="wish-folder-amount">${wishes.length ? `${money(saved)} <small>of ${money(target)}</small>` : emptyLabel}</span><span class="wish-progress"><span style="width:${ratio}%"></span></span></button>${remove}</article>`;
+  return `<article class="wish-folder-card ${colors[index % colors.length]}"><button type="button" class="wish-folder-open" data-wish-folder="${esc(folder.id)}"><span class="wish-folder-top"><span class="wish-folder-icon">${wishFolderIcon}</span></span><strong class="wish-folder-title">${esc(folder.name)}</strong><span class="wish-folder-amount">${wishes.length ? `${money(saved)} <small>of ${money(target)}</small>` : emptyLabel}</span><span class="wish-progress"><span style="width:${ratio}%"></span></span></button>${remove}</article>`;
 }
 function renderWishes() {
   const wishes = state.wishes.filter(wish => !wishIsPurchased(wish));
