@@ -4,12 +4,12 @@ const dateKey = date => {
   const d = date || new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 };
-const fresh = () => ({ rate: 220, paydayDay: 25, profileName: '', shifts: [], expenses: [], monthlyExpenses: [], wishes: [], wishFolders: [] });
+const fresh = () => ({ rate: 220, paydayDay: 25, profileName: '', shifts: [], expenses: [], monthlyExpenses: [], wishes: [], wishFolders: [], gamblingEntries: [] });
 let state;
 try {
   const saved = window.DaymakerCloud ? window.DaymakerCloud.loadLocal() : JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
   state = saved && typeof saved === 'object'
-    ? { ...fresh(), ...saved, paydayDay: Number(saved.paydayDay) || 25, shifts: Array.isArray(saved.shifts) ? saved.shifts : [], expenses: Array.isArray(saved.expenses) ? saved.expenses : [], monthlyExpenses: Array.isArray(saved.monthlyExpenses) ? saved.monthlyExpenses : [], wishes: Array.isArray(saved.wishes) ? saved.wishes : [], wishFolders: Array.isArray(saved.wishFolders) ? saved.wishFolders : [] }
+    ? { ...fresh(), ...saved, paydayDay: Number(saved.paydayDay) || 25, shifts: Array.isArray(saved.shifts) ? saved.shifts : [], expenses: Array.isArray(saved.expenses) ? saved.expenses : [], monthlyExpenses: Array.isArray(saved.monthlyExpenses) ? saved.monthlyExpenses : [], wishes: Array.isArray(saved.wishes) ? saved.wishes : [], wishFolders: Array.isArray(saved.wishFolders) ? saved.wishFolders : [], gamblingEntries: Array.isArray(saved.gamblingEntries) ? saved.gamblingEntries : [] }
     : fresh();
 } catch { state = fresh(); }
 
@@ -119,7 +119,7 @@ function render() {
   $('#work-rate').innerHTML = `${money(state.rate)}<span class="small-unit">/h</span>`;
   $('#expenses-month-total').textContent = money(spent);
   $('#expenses-month-note').textContent = expenses.length ? `${expenses.length} purchases recorded this month` : 'Your spending, all in one place.';
-  renderCalendar(); renderShifts(); renderTodayShifts(); renderExpenses(); renderMonthlyExpenses(); renderWishes(); renderActivity();
+  renderCalendar(); renderShifts(); renderTodayShifts(); renderExpenses(); renderMonthlyExpenses(); renderWishes(); renderActivity(); renderGambling();
 }
 
 function nextPaydayDate(from = new Date()) {
@@ -551,6 +551,81 @@ function renderWorkShiftLists(today) {
   }).join('') : empty('No shift history for this month', 'Completed and past shifts will appear here.', '◷');
 }
 
+const gamblingMoney = cents => new Intl.NumberFormat('nb-NO', {
+  style: 'currency', currency: 'NOK', minimumFractionDigits: 2, maximumFractionDigits: 2
+}).format(cents / 100).replace(/\s/g, ' ');
+function gamblingTotals(entries) {
+  return entries.reduce((totals, entry) => {
+    if (!Number.isSafeInteger(entry.amountCents)) return totals;
+    totals.balance += entry.amountCents;
+    if (entry.amountCents > 0) totals.incoming += entry.amountCents;
+    else totals.outgoing -= entry.amountCents;
+    return totals;
+  }, { balance: 0, incoming: 0, outgoing: 0 });
+}
+function addGamblingEntry(direction, amount, note) {
+  const cents = Math.round(amount * 100);
+  const current = gamblingTotals(state.gamblingEntries);
+  if (![1, -1].includes(direction) || !Number.isFinite(amount) || amount <= 0
+    || amount > 1000000000 || !Number.isSafeInteger(cents)
+    || Math.abs(amount * 100 - cents) > 0.000001
+    || !Number.isSafeInteger(current.balance + direction * cents)) return false;
+  const previous = state;
+  state = {
+    ...state,
+    gamblingEntries: [...state.gamblingEntries, {
+      id: crypto.randomUUID(), date: dateKey(), amountCents: direction * cents,
+      note: String(note || '').trim().slice(0, 60)
+    }]
+  };
+  if (persist()) return true;
+  state = previous;
+  render();
+  return false;
+}
+function renderGambling() {
+  const totals = gamblingTotals(state.gamblingEntries);
+  const dots = new Intl.NumberFormat('en-GB', {
+    minimumFractionDigits: 2, maximumFractionDigits: 2
+  }).format(totals.balance / 100).replace(/,/g, ' ');
+  renderDotValue($('#gambling-balance'), dots, gamblingMoney(totals.balance), 'kr', 'balance');
+  $('#gambling-money-in').textContent = gamblingMoney(totals.incoming);
+  $('#gambling-money-out').textContent = gamblingMoney(totals.outgoing);
+  const entries = [...state.gamblingEntries].reverse().sort((a, b) => b.date.localeCompare(a.date));
+  $('#gambling-transactions').innerHTML = entries.length ? entries.map(entry => {
+    const incoming = entry.amountCents > 0;
+    const label = entry.note || (incoming ? 'Money in' : 'Money out');
+    return `<article class="record-row">
+      <span class="record-icon${incoming ? '' : ' expense-icon'}" aria-hidden="true">${incoming ? '＋' : '−'}</span>
+      <div class="record-main"><strong>${esc(label)}</strong><span>${longDate(entry.date)}</span></div>
+      <div class="record-amount${incoming ? '' : ' expense-amount'}">${incoming ? '+' : '−'}${gamblingMoney(Math.abs(entry.amountCents))}</div>
+      <button type="button" class="delete-button" data-delete="gambling" data-id="${esc(entry.id)}" aria-label="${esc(`Delete ${label}`)}">×</button>
+    </article>`;
+  }).join('') : empty('No entries yet', 'Use + or − to update your balance.', '↕');
+}
+document.querySelectorAll('[data-gambling-direction]').forEach(button => {
+  button.addEventListener('click', () => {
+    const form = $('#gambling-entry-form');
+    form.reset();
+    form.elements.amount.setCustomValidity('');
+    form.elements.direction.value = button.dataset.gamblingDirection;
+    $('#gambling-entry-title').textContent = Number(button.dataset.gamblingDirection) > 0 ? 'Add money' : 'Subtract money';
+    $('#gambling-entry-dialog').showModal();
+  });
+});
+$('#gambling-entry-form').elements.amount.addEventListener('input', event => event.target.setCustomValidity(''));
+$('#gambling-entry-form').addEventListener('submit', event => {
+  event.preventDefault();
+  const form = event.currentTarget;
+  if (!form.reportValidity()) return;
+  if (!addGamblingEntry(Number(form.elements.direction.value), Number(form.elements.amount.value), form.elements.note.value)) {
+    toast('Could not save the entry. Check the amount and try again.');
+    return;
+  }
+  form.closest('dialog').close();
+  toast('Balance updated.');
+});
+
 function renderExpenses() {
   const rows = [...state.expenses].sort((a, b) => b.date.localeCompare(a.date));
   $('#expense-list').innerHTML = rows.length ? rows.map(item => `<article class="record-row"><span class="record-icon expense-icon">${item.category === 'Food' ? '⌁' : item.category === 'Transport' ? '↗' : '↘'}</span><div class="record-main"><strong>${esc(item.title)}</strong><span>${longDate(item.date)} · ${esc(item.category)}</span></div><div class="record-amount expense-amount">−${money(item.amount)}</div><button class="delete-button" data-delete="expense" data-id="${esc(item.id)}" aria-label="Delete expense">×</button></article>`).join('') : empty('A clear picture starts here', 'Add an expense when you want to keep track.', '↘');
@@ -836,7 +911,7 @@ function showPage(page, focusHeading = false) {
     renderCalendar();
     void window.DaymakerFriends?.refreshCalendar();
   }
-  document.querySelectorAll('.tab').forEach(tab => { const active = tab.dataset.page === page; tab.classList.toggle('active', active); if (active) tab.setAttribute('aria-current', 'page'); else tab.removeAttribute('aria-current'); });
+  document.querySelectorAll('.tab').forEach(tab => { const active = tab.dataset.page === page || (page === 'gambling' && tab.dataset.page === 'expenses'); tab.classList.toggle('active', active); if (active) tab.setAttribute('aria-current', 'page'); else tab.removeAttribute('aria-current'); });
   if (page === 'friends') void window.DaymakerFriends?.refresh();
   if (page === 'account') void window.DaymakerReminders?.refresh();
   if (page === 'account' || page === 'friends') $('#account-open').setAttribute('aria-current', 'page');
@@ -846,7 +921,7 @@ function showPage(page, focusHeading = false) {
 }
 document.querySelectorAll('[data-page], [data-go]').forEach(button => button.addEventListener('click', event => {
   if (button.tagName === 'A') event.preventDefault();
-  showPage(button.dataset.page || button.dataset.go, !!button.closest('#account-dropdown'));
+  showPage(button.dataset.page || button.dataset.go, !!button.closest('#account-dropdown') || button.id === 'gambling-open');
 }));
 
 function hoursBetweenTimes(start, end) {
@@ -1271,16 +1346,18 @@ document.addEventListener('click', event => {
 let pendingDelete = null;
 function requestDelete(button) {
   const type = button.dataset.delete;
-  const list = { shift: 'shifts', expense: 'expenses', 'monthly-expense': 'monthlyExpenses', wish: 'wishes' }[type];
+  const list = { shift: 'shifts', expense: 'expenses', 'monthly-expense': 'monthlyExpenses', wish: 'wishes', gambling: 'gamblingEntries' }[type];
   const item = type === 'wish-folder'
     ? state.wishFolders.find(folder => folder.id === button.dataset.id)
     : list && state[list].find(item => item.id === button.dataset.id);
   if (!item || (type === 'wish-folder' && item.id === GENERAL_WISH_FOLDER)) return;
-  const label = { shift: 'shift', expense: 'expense', 'monthly-expense': 'monthly expense', wish: 'wish', 'wish-folder': 'wishlist folder' }[type];
+  const label = { shift: 'shift', expense: 'expense', 'monthly-expense': 'monthly expense', wish: 'wish', 'wish-folder': 'wishlist folder', gambling: 'entry' }[type];
   pendingDelete = { type, list, id: item.id };
   $('#delete-confirm-title').textContent = `Delete this ${label}?`;
-  $('#delete-confirm-name').textContent = type === 'shift' ? `${item.note || 'Work shift'} · ${longDate(item.date)}` : type === 'wish-folder' ? item.name : item.title;
-  $('#delete-confirm-message').textContent = type === 'monthly-expense'
+  $('#delete-confirm-name').textContent = type === 'shift' ? `${item.note || 'Work shift'} · ${longDate(item.date)}` : type === 'wish-folder' ? item.name : type === 'gambling' ? (item.note || (item.amountCents > 0 ? 'Money in' : 'Money out')) : item.title;
+  $('#delete-confirm-message').textContent = type === 'gambling'
+    ? 'This removes the entry and updates your gambling balance. This cannot be undone.'
+    : type === 'monthly-expense'
     ? 'This removes the recurring expense. Payments already logged will stay in your expenses. This cannot be undone.'
     : type === 'wish'
       ? wishIsPurchased(item)
@@ -1298,6 +1375,18 @@ $('#delete-confirm-form').addEventListener('submit', event => {
   event.preventDefault();
   if (!pendingDelete) return;
   const { type, list, id } = pendingDelete;
+  if (type === 'gambling') {
+    const previous = state;
+    state = { ...state, gamblingEntries: state.gamblingEntries.filter(entry => entry.id !== id) };
+    if (!persist()) {
+      state = previous;
+      render();
+      return;
+    }
+    $('#delete-confirm-dialog').close();
+    toast('Removed.');
+    return;
+  }
   const item = type === 'wish-folder'
     ? state.wishFolders.find(folder => folder.id === id)
     : state[list].find(item => item.id === id);

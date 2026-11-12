@@ -11,14 +11,14 @@
     <link rel="icon" href="./icons/daymaker-bold.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="./icons/daymaker-bold-180.png">
     <title>Daymaker · work & money</title>
-    <link rel="stylesheet" href="style.css?v=60">
+    <link rel="stylesheet" href="style.css?v=61">
     <script src="vendor/supabase-2.119.0.js" defer></script>
     <script src="supabase-config.js?v=1" defer></script>
     <script src="friends.js?v=4" defer></script>
     <script src="reminder-device.js?v=1" defer></script>
     <script src="reminders.js?v=2" defer></script>
-    <script src="cloud.js?v=9" defer></script>
-    <script src="app.js?v=55" defer></script>
+    <script src="cloud.js?v=10" defer></script>
+    <script src="app.js?v=56" defer></script>
   </head>
   <body class="app-loading">
     <div class="app-loader" id="app-loader" role="status" aria-label="Loading Daymaker">
@@ -110,10 +110,37 @@
       </section>
 
       <section class="page" id="expenses-page" aria-labelledby="expenses-title" hidden>
-        <div class="page-title-row"><div><p class="eyebrow">SPEND WITH INTENTION</p><h1 id="expenses-title">Expenses<span class="period">.</span></h1></div><button class="primary-button" data-open="expense-dialog">＋ <span>Add expense</span></button></div>
+        <div class="page-title-row expenses-title-row">
+          <div><p class="eyebrow">SPEND WITH INTENTION</p><h1 id="expenses-title">Expenses<span class="period">.</span></h1></div>
+          <button type="button" id="gambling-open" class="gambling-open" data-go="gambling" aria-label="Open gambling balance"></button>
+          <button class="primary-button" data-open="expense-dialog">＋ <span>Add expense</span></button>
+        </div>
         <div class="expense-total-card"><span class="eyebrow light">SPENT THIS MONTH</span><strong id="expenses-month-total">kr 0</strong><span id="expenses-month-note">Your spending, all in one place.</span></div>
         <div class="section-heading list-heading"><div><p class="eyebrow">REPEATS EACH MONTH</p><h2>Monthly expenses</h2></div><button class="primary-button" data-open="monthly-expense-dialog">＋ <span>Add monthly</span></button></div><div id="monthly-expense-list" class="monthly-expense-list"></div>
         <div class="section-heading list-heading"><div><p class="eyebrow">RECENTLY</p><h2>Transactions</h2></div></div><div id="expense-list" class="record-list"></div>
+      </section>
+
+      <section class="page" id="gambling-page" aria-labelledby="gambling-title" hidden>
+        <div class="page-title-row">
+          <div><p class="eyebrow">YOUR BALANCE</p><h1 id="gambling-title" tabindex="-1">Gambling<span class="period">.</span></h1></div>
+          <button type="button" class="primary-button" data-go="expenses">‹ Back</button>
+        </div>
+        <section class="balance-card gambling-balance-card" aria-label="Gambling balance">
+          <p class="eyebrow light">BALANCE</p>
+          <div class="balance" id="gambling-balance">0 kr</div>
+          <div class="balance-foot">
+            <span>money in <b id="gambling-money-in">0 kr</b></span>
+            <span>money out <b id="gambling-money-out">0 kr</b></span>
+          </div>
+        </section>
+        <div class="gambling-balance-actions">
+          <button type="button" class="primary-button" data-gambling-direction="1" aria-label="Add money">＋</button>
+          <button type="button" class="primary-button" data-gambling-direction="-1" aria-label="Subtract money">−</button>
+        </div>
+        <section class="section-block" aria-labelledby="gambling-transactions-title">
+          <div class="section-heading"><h2 id="gambling-transactions-title">Transactions</h2></div>
+          <div id="gambling-transactions" class="record-list"></div>
+        </section>
       </section>
 
       <section class="page" id="wishlist-page" aria-labelledby="wishlist-title" hidden>
@@ -199,6 +226,17 @@
     <dialog class="form-dialog shift-date-dialog" id="shift-date-dialog" aria-labelledby="shift-date-title"><button class="dialog-close" type="button" data-close="shift-date-dialog" aria-label="Close">×</button><p class="eyebrow">PICK YOUR DAY</p><h2 id="shift-date-title">Shift date</h2><div class="shift-date-calendar"><div class="shift-date-month"><button type="button" id="shift-date-prev" aria-label="Previous month">‹</button><strong id="shift-date-month-label"></strong><button type="button" id="shift-date-next" aria-label="Next month">›</button></div><div class="shift-date-weekdays" aria-hidden="true"><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span><span>S</span></div><div id="shift-date-grid" class="shift-date-grid"></div></div><button type="button" class="shift-date-today" id="shift-date-today">Today <span>↗</span></button></dialog>
     <dialog class="form-dialog" id="finish-dialog"><form id="finish-form" method="dialog"><button class="dialog-close" type="button" data-close="finish-dialog" aria-label="Close">×</button><p class="eyebrow">A GOOD DAY’S WORK</p><h2 id="finish-title">Finish shift</h2><p id="finish-date" class="finish-date"></p><p class="finish-hint">Adjust the times, break or paid hours to match your day.</p><input name="shiftId" type="hidden"><div id="finish-times" class="field-row shift-time-fields"><label>Start time<input name="startTime" type="time"></label><label>End time<input name="endTime" type="time"></label></div><div class="field-row break-fields"><label>Break (min)<input name="breakMinutes" type="number" min="0" max="1439" step="1" value="0" inputmode="numeric" required></label><label class="break-paid-field"><input name="breakPaid" type="checkbox">Paid</label></div><label>Paid hours<input name="hours" type="number" min="0.01" max="24" step="any" required></label><button class="primary-button submit-button" type="submit" id="finish-submit">Finish shift <span>↗</span></button></form></dialog>
     <dialog class="form-dialog" id="expense-dialog"><form id="expense-form" method="dialog"><button class="dialog-close" type="button" data-close="expense-dialog" aria-label="Close">×</button><p class="eyebrow">KEEP AN EYE ON IT</p><h2>Add an expense</h2><label>What was it?<input name="title" maxlength="60" placeholder="Coffee, groceries…" required></label><div class="field-row"><label>Amount (NOK)<input name="amount" type="number" min="1" step="0.01" placeholder="0" required></label><label>Category<select name="category"><option>Everyday</option><option>Food</option><option>Transport</option><option>Home</option><option>Fun</option><option>Other</option></select></label></div><label>Date<input name="date" type="date" required></label><button class="primary-button submit-button" type="submit">Save expense <span>↗</span></button></form></dialog>
+    <dialog class="form-dialog" id="gambling-entry-dialog" aria-labelledby="gambling-entry-title">
+      <form id="gambling-entry-form">
+        <button class="dialog-close" type="button" data-close="gambling-entry-dialog" aria-label="Close">×</button>
+        <p class="eyebrow">UPDATE YOUR BALANCE</p>
+        <h2 id="gambling-entry-title">Add money</h2>
+        <input name="direction" type="hidden">
+        <label>Amount (NOK)<input name="amount" type="number" min="0.01" max="1000000000" step="0.01" inputmode="decimal" placeholder="0" required></label>
+        <label>Note<input name="note" maxlength="60" placeholder="..."></label>
+        <button type="submit" class="primary-button submit-button">Save entry <span>↗</span></button>
+      </form>
+    </dialog>
     <dialog class="form-dialog" id="wish-dialog"><form id="wish-form" method="dialog"><button class="dialog-close" type="button" data-close="wish-dialog" aria-label="Close">×</button><p class="eyebrow">SOMETHING TO LOOK FORWARD TO</p><h2>Add to your wishlist</h2><label>What are you saving for?<input name="title" maxlength="60" placeholder="A weekend away…" required required></label><label>Folder<select name="folderId" required><option value="general">General</option></select></label><div class="field-row"><label>Price (NOK)<input name="target" type="number" min="1" step="1" placeholder="0" required></label><label>Already saved<input name="saved" type="number" min="0" step="1" value="0"></label></div><button class="primary-button submit-button" type="submit">Save this wish <span>♡</span></button></form></dialog>
     <dialog class="form-dialog" id="wish-purchase-dialog" aria-labelledby="wish-purchase-title">
       <form id="wish-purchase-form">

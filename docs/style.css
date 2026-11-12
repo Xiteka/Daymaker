@@ -465,3 +465,24 @@ button:disabled{cursor:default;opacity:.6}
 
 #work-reminders-card .account-buttons .primary-button { white-space:normal }
 #work-reminder-status { font-size:12px }
+
+.expenses-title-row { gap:0; align-items:stretch }
+.expenses-title-row > div,.expenses-title-row > .primary-button { flex:none; align-self:center }
+.gambling-open,.gambling-open:hover,.gambling-open:focus-visible {
+  flex:1;
+  align-self:stretch;
+  min-width:12px;
+  min-height:56px;
+  padding:0;
+  border:0;
+  border-radius:0;
+  outline:none;
+  background:transparent;
+  box-shadow:none;
+  appearance:none;
+  -webkit-appearance:none;
+}
+.gambling-balance-card .balance-foot { flex-wrap:wrap; gap:8px 20px }
+.gambling-balance-actions { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:14px }
+.gambling-balance-actions .primary-button { min-height:48px; font-size:25px; line-height:1 }
+#gambling-transactions .record-main strong { overflow-wrap:anywhere }

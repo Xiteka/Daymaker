@@ -6,8 +6,8 @@
   const CLAIM = 'daymaker-device-data-owner-v1';
   const BACKUP = 'daymaker-original-device-backup-v1';
   const PREFIX = 'daymaker-account-v1:';
-  const COLLECTIONS = ['shifts', 'expenses', 'monthlyExpenses', 'wishes', 'wishFolders'];
-  const defaults = () => ({ rate: 220, paydayDay: 25, profileName: '', shifts: [], expenses: [], monthlyExpenses: [], wishes: [], wishFolders: [] });
+  const COLLECTIONS = ['shifts', 'expenses', 'monthlyExpenses', 'wishes', 'wishFolders', 'gamblingEntries'];
+  const defaults = () => ({ rate: 220, paydayDay: 25, profileName: '', shifts: [], expenses: [], monthlyExpenses: [], wishes: [], wishFolders: [], gamblingEntries: [] });
   const copy = value => JSON.parse(JSON.stringify(value));
   const canonical = value => JSON.stringify(value, (_, v) => v && typeof v === 'object' && !Array.isArray(v) ? Object.fromEntries(Object.keys(v).sort().map(k => [k, v[k]])) : v);
   const same = (a, b) => canonical(a) === canonical(b);
