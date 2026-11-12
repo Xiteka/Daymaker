@@ -11,14 +11,14 @@
     <link rel="icon" href="./icons/daymaker-bold.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="./icons/daymaker-bold-180.png">
     <title>Daymaker · work & money</title>
-    <link rel="stylesheet" href="style.css?v=61">
+    <link rel="stylesheet" href="style.css?v=62">
     <script src="vendor/supabase-2.119.0.js" defer></script>
     <script src="supabase-config.js?v=1" defer></script>
     <script src="friends.js?v=4" defer></script>
     <script src="reminder-device.js?v=1" defer></script>
     <script src="reminders.js?v=2" defer></script>
     <script src="cloud.js?v=10" defer></script>
-    <script src="app.js?v=56" defer></script>
+    <script src="app.js?v=57" defer></script>
   </head>
   <body class="app-loading">
     <div class="app-loader" id="app-loader" role="status" aria-label="Loading Daymaker">
@@ -112,7 +112,7 @@
       <section class="page" id="expenses-page" aria-labelledby="expenses-title" hidden>
         <div class="page-title-row expenses-title-row">
           <div><p class="eyebrow">SPEND WITH INTENTION</p><h1 id="expenses-title">Expenses<span class="period">.</span></h1></div>
-          <button type="button" id="gambling-open" class="gambling-open" data-go="gambling" aria-label="Open gambling balance"></button>
+          <button type="button" id="gambling-open" class="gambling-open" data-go="gambling" aria-label="Open X-Coin"></button>
           <button class="primary-button" data-open="expense-dialog">＋ <span>Add expense</span></button>
         </div>
         <div class="expense-total-card"><span class="eyebrow light">SPENT THIS MONTH</span><strong id="expenses-month-total">kr 0</strong><span id="expenses-month-note">Your spending, all in one place.</span></div>
@@ -122,21 +122,28 @@
 
       <section class="page" id="gambling-page" aria-labelledby="gambling-title" hidden>
         <div class="page-title-row">
-          <div><p class="eyebrow">YOUR BALANCE</p><h1 id="gambling-title" tabindex="-1">Gambling<span class="period">.</span></h1></div>
+          <div><p class="eyebrow">YOUR BALANCE</p><h1 id="gambling-title" tabindex="-1">X-Coin<span class="period">.</span></h1></div>
           <button type="button" class="primary-button" data-go="expenses">‹ Back</button>
         </div>
-        <section class="balance-card gambling-balance-card" aria-label="Gambling balance">
+        <section class="balance-card gambling-balance-card" aria-label="X-Coin balance">
           <p class="eyebrow light">BALANCE</p>
           <div class="balance" id="gambling-balance">0 kr</div>
           <div class="balance-foot">
-            <span>money in <b id="gambling-money-in">0 kr</b></span>
-            <span>money out <b id="gambling-money-out">0 kr</b></span>
+            <span>in <b id="gambling-money-in">0 kr</b></span>
+            <span>out <b id="gambling-money-out">0 kr</b></span>
           </div>
         </section>
         <div class="gambling-balance-actions">
           <button type="button" class="primary-button" data-gambling-direction="1" aria-label="Add money">＋</button>
           <button type="button" class="primary-button" data-gambling-direction="-1" aria-label="Subtract money">−</button>
         </div>
+        <section class="xcoin-chart-card" aria-labelledby="xcoin-chart-title">
+          <div class="xcoin-chart-heading">
+            <div><p class="eyebrow">LAST 6 MONTHS</p><h2 id="xcoin-chart-title">Monthly result</h2></div>
+            <div class="xcoin-month-result"><span id="xcoin-current-month"></span><strong id="xcoin-month-net">0 kr</strong></div>
+          </div>
+          <div id="xcoin-monthly-chart" class="xcoin-monthly-chart"></div>
+        </section>
         <section class="section-block" aria-labelledby="gambling-transactions-title">
           <div class="section-heading"><h2 id="gambling-transactions-title">Transactions</h2></div>
           <div id="gambling-transactions" class="record-list"></div>
@@ -232,9 +239,15 @@
         <p class="eyebrow">UPDATE YOUR BALANCE</p>
         <h2 id="gambling-entry-title">Add money</h2>
         <input name="direction" type="hidden">
+        <input name="kind" type="hidden" value="entry">
+        <fieldset id="xcoin-opening-direction" class="xcoin-opening-direction" hidden>
+          <legend>Previous result</legend>
+          <label><input name="openingDirection" type="radio" value="1" checked><span>＋ Gain</span></label>
+          <label><input name="openingDirection" type="radio" value="-1"><span>− Loss</span></label>
+        </fieldset>
         <label>Amount (NOK)<input name="amount" type="number" min="0.01" max="1000000000" step="0.01" inputmode="decimal" placeholder="0" required></label>
-        <label>Note<input name="note" maxlength="60" placeholder="..."></label>
-        <button type="submit" class="primary-button submit-button">Save entry <span>↗</span></button>
+        <label id="gambling-entry-note">Note<input name="note" maxlength="60" placeholder="..."></label>
+        <button type="submit" id="gambling-entry-submit" class="primary-button submit-button">Save entry <span>↗</span></button>
       </form>
     </dialog>
     <dialog class="form-dialog" id="wish-dialog"><form id="wish-form" method="dialog"><button class="dialog-close" type="button" data-close="wish-dialog" aria-label="Close">×</button><p class="eyebrow">SOMETHING TO LOOK FORWARD TO</p><h2>Add to your wishlist</h2><label>What are you saving for?<input name="title" maxlength="60" placeholder="A weekend away…" required required></label><label>Folder<select name="folderId" required><option value="general">General</option></select></label><div class="field-row"><label>Price (NOK)<input name="target" type="number" min="1" step="1" placeholder="0" required></label><label>Already saved<input name="saved" type="number" min="0" step="1" value="0"></label></div><button class="primary-button submit-button" type="submit">Save this wish <span>♡</span></button></form></dialog>

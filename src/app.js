@@ -563,10 +563,52 @@ function gamblingTotals(entries) {
     return totals;
   }, { balance: 0, incoming: 0, outgoing: 0 });
 }
-function addGamblingEntry(direction, amount, note) {
+function gamblingMonthlyResults(entries, through = new Date()) {
+  const months = Array.from({ length: 6 }, (_, index) => {
+    const month = new Date(through.getFullYear(), through.getMonth() - 5 + index, 1);
+    return {
+      key: dateKey(month).slice(0, 7),
+      label: month.toLocaleDateString('en-GB', { month: 'short' }),
+      fullLabel: month.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' }),
+      year: month.getFullYear(), cents: 0
+    };
+  });
+  const byMonth = new Map(months.map(month => [month.key, month]));
+  for (const entry of entries) {
+    const month = byMonth.get(String(entry.date || '').slice(0, 7));
+    if (month && entry.kind !== 'opening' && Number.isSafeInteger(entry.amountCents)) month.cents += entry.amountCents;
+  }
+  return months;
+}
+const gamblingResultClass = cents => cents > 0 ? 'xcoin-gain' : cents < 0 ? 'xcoin-loss' : 'xcoin-even';
+const gamblingSignedMoney = cents => `${cents > 0 ? '+' : cents < 0 ? '−' : ''}${gamblingMoney(Math.abs(cents))}`;
+function renderGamblingChart() {
+  const months = gamblingMonthlyResults(state.gamblingEntries);
+  const current = months[months.length - 1];
+  $('#xcoin-current-month').textContent = current.label;
+  const net = $('#xcoin-month-net');
+  net.textContent = gamblingSignedMoney(current.cents);
+  net.className = gamblingResultClass(current.cents);
+  const max = Math.max(1, ...months.map(month => Math.abs(month.cents)));
+  const description = months.map(month => `${month.fullLabel}: ${gamblingSignedMoney(month.cents)}`).join('; ');
+  const bars = months.map((month, index) => {
+    const x = index * 50 + 25;
+    const height = month.cents ? Math.max(3, Math.abs(month.cents) / max * 49) : 0;
+    const y = month.cents >= 0 ? 67 - height : 67;
+    const signY = month.cents > 0 ? y - 6 : 67 + height + 14;
+    return `<g class="${gamblingResultClass(month.cents)}">
+      <title>${esc(`${month.fullLabel}: ${gamblingSignedMoney(month.cents)}`)}</title>
+      ${height ? `<rect x="${x - 13}" y="${y}" width="26" height="${height}" rx="6" fill="currentColor"/><text x="${x}" y="${signY}" text-anchor="middle" fill="currentColor" class="xcoin-chart-sign">${month.cents > 0 ? '+' : '−'}</text>` : `<line x1="${x - 8}" x2="${x + 8}" y1="67" y2="67" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>`}
+    </g>`;
+  }).join('');
+  $('#xcoin-monthly-chart').innerHTML = `<svg viewBox="0 0 300 136" role="img" aria-label="${esc(`Monthly net results. ${description}`)}"><line x1="0" x2="300" y1="67" y2="67" stroke="#ffffff24"/>${bars}</svg>
+    <div class="xcoin-chart-labels" aria-hidden="true">${months.map(month => `<div><span>${month.label}</span><small>${month.year}</small></div>`).join('')}</div>`;
+}
+function addGamblingEntry(direction, amount, note, opening = false) {
   const cents = Math.round(amount * 100);
   const current = gamblingTotals(state.gamblingEntries);
-  if (![1, -1].includes(direction) || !Number.isFinite(amount) || amount <= 0
+  if ((opening && state.gamblingEntries.some(entry => entry.kind === 'opening'))
+    || ![1, -1].includes(direction) || !Number.isFinite(amount) || amount < 0 || (!opening && amount === 0)
     || amount > 1000000000 || !Number.isSafeInteger(cents)
     || Math.abs(amount * 100 - cents) > 0.000001
     || !Number.isSafeInteger(current.balance + direction * cents)) return false;
@@ -574,8 +616,10 @@ function addGamblingEntry(direction, amount, note) {
   state = {
     ...state,
     gamblingEntries: [...state.gamblingEntries, {
-      id: crypto.randomUUID(), date: dateKey(), amountCents: direction * cents,
-      note: String(note || '').trim().slice(0, 60)
+      id: opening ? 'xcoin-opening-balance-v1' : crypto.randomUUID(),
+      date: dateKey(), amountCents: direction * cents,
+      note: opening ? 'Previous total' : String(note || '').trim().slice(0, 60),
+      ...(opening ? { kind: 'opening' } : {})
     }]
   };
   if (persist()) return true;
@@ -591,10 +635,22 @@ function renderGambling() {
   renderDotValue($('#gambling-balance'), dots, gamblingMoney(totals.balance), 'kr', 'balance');
   $('#gambling-money-in').textContent = gamblingMoney(totals.incoming);
   $('#gambling-money-out').textContent = gamblingMoney(totals.outgoing);
-  const entries = [...state.gamblingEntries].reverse().sort((a, b) => b.date.localeCompare(a.date));
-  $('#gambling-transactions').innerHTML = entries.length ? entries.map(entry => {
+  renderGamblingChart();
+  const opening = state.gamblingEntries.find(entry => entry.kind === 'opening');
+  const entries = [...state.gamblingEntries].filter(entry => entry.kind !== 'opening').reverse().sort((a, b) => b.date.localeCompare(a.date));
+  const openingRow = opening ? `<article class="record-row xcoin-total-row">
+    <span class="record-icon ${gamblingResultClass(opening.amountCents)}" aria-hidden="true">${opening.amountCents < 0 ? '−' : '+'}</span>
+    <div class="record-main"><strong>Previous total${opening.amountCents > 0 ? ' gain' : opening.amountCents < 0 ? ' loss' : ''}</strong><span>Before you started tracking</span></div>
+    <div class="record-amount ${gamblingResultClass(opening.amountCents)}">${gamblingSignedMoney(opening.amountCents)}</div>
+    <button type="button" class="delete-button" data-delete="gambling" data-id="${esc(opening.id)}" aria-label="Delete previous total">×</button>
+  </article>` : `<button type="button" class="record-row xcoin-opening-trigger" data-gambling-opening aria-label="Set previous gain or loss">
+    <span class="record-icon" aria-hidden="true">±</span>
+    <span class="record-main"><strong>Previous total</strong><span>Set your gain or loss so far</span></span>
+    <span class="xcoin-opening-label">Set total ↗</span>
+  </button>`;
+  const transactions = entries.length ? entries.map(entry => {
     const incoming = entry.amountCents > 0;
-    const label = entry.note || (incoming ? 'Money in' : 'Money out');
+    const label = entry.note || (incoming ? 'In' : 'Out');
     return `<article class="record-row">
       <span class="record-icon${incoming ? '' : ' expense-icon'}" aria-hidden="true">${incoming ? '＋' : '−'}</span>
       <div class="record-main"><strong>${esc(label)}</strong><span>${longDate(entry.date)}</span></div>
@@ -602,23 +658,36 @@ function renderGambling() {
       <button type="button" class="delete-button" data-delete="gambling" data-id="${esc(entry.id)}" aria-label="${esc(`Delete ${label}`)}">×</button>
     </article>`;
   }).join('') : empty('No entries yet', 'Use + or − to update your balance.', '↕');
+  $('#gambling-transactions').innerHTML = openingRow + transactions;
+}
+function openGamblingEntry(direction, opening = false) {
+  if (opening && state.gamblingEntries.some(entry => entry.kind === 'opening')) return;
+  const form = $('#gambling-entry-form');
+  form.reset();
+  form.elements.amount.setCustomValidity('');
+  form.elements.amount.min = opening ? '0' : '0.01';
+  form.elements.direction.value = direction;
+  form.elements.kind.value = opening ? 'opening' : 'entry';
+  $('#xcoin-opening-direction').hidden = !opening;
+  $('#gambling-entry-note').hidden = opening;
+  $('#gambling-entry-title').textContent = opening ? 'Previous total' : direction > 0 ? 'Add money' : 'Subtract money';
+  $('#gambling-entry-submit').innerHTML = `${opening ? 'Save previous total' : 'Save entry'} <span>↗</span>`;
+  $('#gambling-entry-dialog').showModal();
 }
 document.querySelectorAll('[data-gambling-direction]').forEach(button => {
-  button.addEventListener('click', () => {
-    const form = $('#gambling-entry-form');
-    form.reset();
-    form.elements.amount.setCustomValidity('');
-    form.elements.direction.value = button.dataset.gamblingDirection;
-    $('#gambling-entry-title').textContent = Number(button.dataset.gamblingDirection) > 0 ? 'Add money' : 'Subtract money';
-    $('#gambling-entry-dialog').showModal();
-  });
+  button.addEventListener('click', () => openGamblingEntry(Number(button.dataset.gamblingDirection)));
+});
+document.addEventListener('click', event => {
+  if (event.target.closest('[data-gambling-opening]')) openGamblingEntry(1, true);
 });
 $('#gambling-entry-form').elements.amount.addEventListener('input', event => event.target.setCustomValidity(''));
 $('#gambling-entry-form').addEventListener('submit', event => {
   event.preventDefault();
   const form = event.currentTarget;
   if (!form.reportValidity()) return;
-  if (!addGamblingEntry(Number(form.elements.direction.value), Number(form.elements.amount.value), form.elements.note.value)) {
+  const opening = form.elements.kind.value === 'opening';
+  const direction = Number(opening ? form.elements.openingDirection.value : form.elements.direction.value);
+  if (!addGamblingEntry(direction, Number(form.elements.amount.value), form.elements.note.value, opening)) {
     toast('Could not save the entry. Check the amount and try again.');
     return;
   }
@@ -1354,9 +1423,9 @@ function requestDelete(button) {
   const label = { shift: 'shift', expense: 'expense', 'monthly-expense': 'monthly expense', wish: 'wish', 'wish-folder': 'wishlist folder', gambling: 'entry' }[type];
   pendingDelete = { type, list, id: item.id };
   $('#delete-confirm-title').textContent = `Delete this ${label}?`;
-  $('#delete-confirm-name').textContent = type === 'shift' ? `${item.note || 'Work shift'} · ${longDate(item.date)}` : type === 'wish-folder' ? item.name : type === 'gambling' ? (item.note || (item.amountCents > 0 ? 'Money in' : 'Money out')) : item.title;
+  $('#delete-confirm-name').textContent = type === 'shift' ? `${item.note || 'Work shift'} · ${longDate(item.date)}` : type === 'wish-folder' ? item.name : type === 'gambling' ? (item.note || (item.amountCents > 0 ? 'In' : 'Out')) : item.title;
   $('#delete-confirm-message').textContent = type === 'gambling'
-    ? 'This removes the entry and updates your gambling balance. This cannot be undone.'
+    ? 'This removes the entry and updates your X-Coin balance. This cannot be undone.'
     : type === 'monthly-expense'
     ? 'This removes the recurring expense. Payments already logged will stay in your expenses. This cannot be undone.'
     : type === 'wish'
