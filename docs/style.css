@@ -17,8 +17,8 @@
 .calendar-weekdays,.calendar-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px}
 .calendar-weekdays{margin-bottom:7px;color:#a3a8a3;text-align:center;font:500 9px var(--mono)}
 .calendar-grid{align-items:stretch}
-.calendar-day,.calendar-blank{aspect-ratio:1;min-width:0}
-.calendar-day{display:grid;place-items:center;padding:0;border:1px solid transparent;border-radius:9px;background:#181c1c;color:#d9dcd8;font:500 12px var(--sans);-webkit-touch-callout:none;user-select:none;touch-action:manipulation}
+.calendar-day,.calendar-blank{width:100%;aspect-ratio:1;min-width:0}
+.calendar-day{appearance:none;-webkit-appearance:none;display:flex;align-items:center;justify-content:center;height:auto;min-height:0;padding:0;border:1px solid transparent;border-radius:9px;background:#181c1c;color:#d9dcd8;font:500 12px var(--sans);-webkit-touch-callout:none;user-select:none;touch-action:manipulation}
 .calendar-day.worked{background:var(--orange);color:#fff}
 .calendar-day.selected{outline:2px solid #fff;outline-offset:-3px}
 .calendar-day:focus-visible{outline:2px solid #fff;outline-offset:2px}
