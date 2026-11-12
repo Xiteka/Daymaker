@@ -591,17 +591,18 @@ function renderGamblingChart() {
   net.className = gamblingResultClass(current.cents);
   const max = Math.max(1, ...months.map(month => Math.abs(month.cents)));
   const description = months.map(month => `${month.fullLabel}: ${gamblingSignedMoney(month.cents)}`).join('; ');
+  const baseline = 124;
   const bars = months.map((month, index) => {
     const x = index * 50 + 25;
-    const height = month.cents ? Math.max(3, Math.abs(month.cents) / max * 49) : 0;
-    const y = month.cents >= 0 ? 67 - height : 67;
-    const signY = month.cents > 0 ? y - 6 : 67 + height + 14;
+    const height = month.cents ? Math.max(3, Math.abs(month.cents) / max * 104) : 0;
+    const y = baseline - height;
+    const signY = y - 6;
     return `<g class="${gamblingResultClass(month.cents)}">
       <title>${esc(`${month.fullLabel}: ${gamblingSignedMoney(month.cents)}`)}</title>
-      ${height ? `<rect x="${x - 13}" y="${y}" width="26" height="${height}" rx="6" fill="currentColor"/><text x="${x}" y="${signY}" text-anchor="middle" fill="currentColor" class="xcoin-chart-sign">${month.cents > 0 ? '+' : '−'}</text>` : `<line x1="${x - 8}" x2="${x + 8}" y1="67" y2="67" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>`}
+      ${height ? `<rect x="${x - 13}" y="${y}" width="26" height="${height}" rx="6" fill="currentColor"/><text x="${x}" y="${signY}" text-anchor="middle" fill="currentColor" class="xcoin-chart-sign">${month.cents > 0 ? '+' : '−'}</text>` : `<line x1="${x - 8}" x2="${x + 8}" y1="${baseline}" y2="${baseline}" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>`}
     </g>`;
   }).join('');
-  $('#xcoin-monthly-chart').innerHTML = `<svg viewBox="0 0 300 136" role="img" aria-label="${esc(`Monthly net results. ${description}`)}"><line x1="0" x2="300" y1="67" y2="67" stroke="#ffffff24"/>${bars}</svg>
+  $('#xcoin-monthly-chart').innerHTML = `<svg viewBox="0 0 300 136" role="img" aria-label="${esc(`Monthly net results. ${description}`)}"><line x1="0" x2="300" y1="${baseline}" y2="${baseline}" stroke="#ffffff24"/>${bars}</svg>
     <div class="xcoin-chart-labels" aria-hidden="true">${months.map(month => `<div><span>${month.label}</span><small>${month.year}</small></div>`).join('')}</div>`;
 }
 function addGamblingEntry(direction, amount, note, opening = false) {
