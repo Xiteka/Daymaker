@@ -309,6 +309,7 @@ let openShiftRow = null;
 let suppressShiftRowClickUntil = 0;
 const SHIFT_ACTION_WIDTH = 132;
 const rowActionWidth = row => Number(row.dataset.actionWidth) || SHIFT_ACTION_WIDTH;
+const rowSwipeDirection = row => row.dataset.swipeDirection === 'left' ? -1 : 1;
 
 function shiftSwipeRow(item, content, kind = '') {
   return `<div class="shift-swipe-row${kind ? ` shift-swipe-${kind}` : ''}" data-row-shift="${esc(item.id)}" tabindex="0" role="group" aria-label="${esc(`${item.note || 'Work shift'}, ${longDate(item.date)}. Swipe right for Edit or Delete.`)}"><div class="shift-row-actions" aria-hidden="true" inert><button type="button" class="shift-row-edit" data-edit-details="${esc(item.id)}">Edit</button><button type="button" class="shift-row-delete" data-delete="shift" data-id="${esc(item.id)}">Delete</button></div><div class="shift-swipe-content">${content}</div></div>`;
@@ -318,7 +319,7 @@ function setShiftRowOpen(row, open) {
   if (!row) return;
   if (openShiftRow && openShiftRow !== row) closeShiftRow();
   row.classList.toggle('actions-open', open);
-  row.style.setProperty('--shift-row-offset', `${open ? rowActionWidth(row) : 0}px`);
+  row.style.setProperty('--shift-row-offset', `${open ? rowActionWidth(row) * rowSwipeDirection(row) : 0}px`);
   const actions = row.querySelector('.shift-row-actions');
   actions.inert = !open;
   actions.setAttribute('aria-hidden', String(!open));
@@ -336,7 +337,7 @@ function resetShiftRowGesture() {
   setShiftRowOpen(gesture.row, gesture.wasOpen);
   if (gesture.content.hasPointerCapture(gesture.pointerId)) gesture.content.releasePointerCapture(gesture.pointerId);
 }
-for (const shiftPage of [$('#work-page'), $('#home-page'), $('#expenses-page'), $('#friends-page')]) {
+for (const shiftPage of [$('#work-page'), $('#home-page'), $('#expenses-page'), $('#friends-page'), $('#gambling-page')]) {
 shiftPage.addEventListener('pointerdown', event => {
   if (!event.isPrimary || (event.pointerType === 'mouse' && event.button !== 0)) return;
   if (event.target.closest('button, input, select, a, .swipe-track, .shift-row-actions')) return;
@@ -361,8 +362,8 @@ shiftPage.addEventListener('pointermove', event => {
     gesture.content.setPointerCapture(event.pointerId);
   }
   event.preventDefault();
-  gesture.offset = Math.max(0, Math.min(gesture.actionWidth, (gesture.wasOpen ? gesture.actionWidth : 0) + dx));
-  gesture.row.style.setProperty('--shift-row-offset', `${gesture.offset}px`);
+  gesture.offset = Math.max(0, Math.min(gesture.actionWidth, (gesture.wasOpen ? gesture.actionWidth : 0) + dx * rowSwipeDirection(gesture.row)));
+  gesture.row.style.setProperty('--shift-row-offset', `${gesture.offset * rowSwipeDirection(gesture.row)}px`);
 }, { passive: false });
 shiftPage.addEventListener('pointerup', event => {
   const gesture = shiftRowGesture;
@@ -385,11 +386,11 @@ shiftPage.addEventListener('click', event => {
 }
 document.addEventListener('keydown', event => {
   const row = event.target.closest('.shift-swipe-row');
-  if (event.key === 'ArrowRight' && row && event.target === row) {
+  if (row && event.target === row && event.key === (rowSwipeDirection(row) === -1 ? 'ArrowLeft' : 'ArrowRight')) {
     event.preventDefault();
     setShiftRowOpen(row, true);
     row.querySelector('.shift-row-actions button').focus();
-  } else if ((event.key === 'Escape' || event.key === 'ArrowLeft') && openShiftRow && !event.target.closest('dialog')) {
+  } else if (openShiftRow && (event.key === 'Escape' || event.key === (rowSwipeDirection(openShiftRow) === -1 ? 'ArrowRight' : 'ArrowLeft')) && !event.target.closest('dialog')) {
     event.preventDefault();
     const activeRow = openShiftRow;
     closeShiftRow();
@@ -447,13 +448,16 @@ workShiftTabs.forEach((tab, index) => {
 const workShiftMonth = $('#work-shift-month');
 const workShiftYear = $('#work-shift-year');
 let selectedWorkPeriod = null;
+let selectedGamblingPeriod = null;
+const gamblingMonth = $('#xcoin-month');
+const gamblingYear = $('#xcoin-year');
 const workMonthFormat = new Intl.DateTimeFormat('en-GB', { month: 'long' });
 
 const workMonthOptions = Array.from({ length: 12 }, (_, index) => ({
   value: String(index + 1).padStart(2, '0'),
   label: workMonthFormat.format(new Date(2000, index, 1)),
 }));
-const workPeriodPickers = [workShiftMonth, workShiftYear];
+const workPeriodPickers = [workShiftMonth, workShiftYear, gamblingMonth, gamblingYear];
 
 function renderWorkPeriodPicker(picker, options, selected) {
   const value = picker.querySelector('.work-period-value');
@@ -477,14 +481,18 @@ for (const picker of workPeriodPickers) {
     const choice = event.target.closest('[data-period-value]');
     if (!choice) return;
     const today = dateKey();
-    const [year, month] = (selectedWorkPeriod || today.slice(0, 7)).split('-');
+    const isWork = picker === workShiftMonth || picker === workShiftYear;
+    const [year, month] = ((isWork ? selectedWorkPeriod : selectedGamblingPeriod) || today.slice(0, 7)).split('-');
     const value = choice.dataset.periodValue;
-    selectedWorkPeriod = picker === workShiftMonth ? `${year}-${value}` : `${value}-${month}`;
+    const period = picker === workShiftMonth || picker === gamblingMonth ? `${year}-${value}` : `${value}-${month}`;
+    if (isWork) selectedWorkPeriod = period;
+    else selectedGamblingPeriod = period;
     picker.open = false;
     summary.focus({ preventScroll: true });
     resetShiftRowGesture();
     closeShiftRow();
-    renderWorkShiftLists(today);
+    if (isWork) renderWorkShiftLists(today);
+    else renderGambling();
   });
   picker.addEventListener('keydown', event => {
     if (event.key !== 'Escape' || !picker.open) return;
@@ -582,10 +590,11 @@ function gamblingMonthlyResults(entries, through = new Date()) {
 }
 const gamblingResultClass = cents => cents > 0 ? 'xcoin-gain' : cents < 0 ? 'xcoin-loss' : 'xcoin-even';
 const gamblingSignedMoney = cents => `${cents > 0 ? '+' : cents < 0 ? '−' : ''}${gamblingMoney(Math.abs(cents))}`;
-function renderGamblingChart() {
-  const months = gamblingMonthlyResults(state.gamblingEntries);
+function renderGamblingChart(period) {
+  const months = gamblingMonthlyResults(state.gamblingEntries, new Date(`${period}-01T12:00:00`));
   const current = months[months.length - 1];
   $('#xcoin-current-month').textContent = current.label;
+  $('#xcoin-chart-period').textContent = `6 MONTHS TO ${current.label.toUpperCase()} ${current.year}`;
   const net = $('#xcoin-month-net');
   net.textContent = gamblingSignedMoney(current.cents);
   net.className = gamblingResultClass(current.cents);
@@ -628,7 +637,20 @@ function addGamblingEntry(direction, amount, note, opening = false) {
   render();
   return false;
 }
+function gamblingSwipeRow(entry, content, label) {
+  return `<div class="shift-swipe-row xcoin-swipe-row" data-swipe-direction="left" data-action-width="64" tabindex="0" role="group" aria-label="${esc(`${label}. Swipe left to reveal Delete.`)}"><div class="shift-row-actions" aria-hidden="true" inert><button type="button" class="shift-row-delete" data-delete="gambling" data-id="${esc(entry.id)}" aria-label="${esc(`Delete ${label}`)}">Delete</button></div><div class="shift-swipe-content">${content}</div></div>`;
+}
 function renderGambling() {
+  const period = selectedGamblingPeriod || dateKey().slice(0, 7);
+  const [year, month] = period.split('-');
+  const currentYear = new Date().getFullYear();
+  const years = new Set(Array.from({ length: 21 }, (_, index) => currentYear - 10 + index));
+  years.add(Number(year));
+  for (const entry of state.gamblingEntries) {
+    if (/^\d{4}-/.test(entry.date)) years.add(Number(entry.date.slice(0, 4)));
+  }
+  renderWorkPeriodPicker(gamblingMonth, workMonthOptions, month);
+  renderWorkPeriodPicker(gamblingYear, [...years].sort((a, b) => a - b).map(value => ({ value: String(value), label: String(value) })), year);
   const totals = gamblingTotals(state.gamblingEntries);
   const dots = new Intl.NumberFormat('en-GB', {
     minimumFractionDigits: 2, maximumFractionDigits: 2
@@ -636,15 +658,14 @@ function renderGambling() {
   renderDotValue($('#gambling-balance'), dots, gamblingMoney(totals.balance), 'kr', 'balance');
   $('#gambling-money-in').textContent = gamblingMoney(totals.incoming);
   $('#gambling-money-out').textContent = gamblingMoney(totals.outgoing);
-  renderGamblingChart();
+  renderGamblingChart(period);
   const opening = state.gamblingEntries.find(entry => entry.kind === 'opening');
-  const entries = [...state.gamblingEntries].filter(entry => entry.kind !== 'opening').reverse().sort((a, b) => b.date.localeCompare(a.date));
-  const openingRow = opening ? `<article class="record-row xcoin-total-row">
+  const entries = [...state.gamblingEntries].filter(entry => entry.kind !== 'opening' && entry.date?.startsWith(`${period}-`)).reverse().sort((a, b) => b.date.localeCompare(a.date));
+  const openingRow = opening ? gamblingSwipeRow(opening, `<article class="record-row xcoin-total-row">
     <span class="record-icon ${gamblingResultClass(opening.amountCents)}" aria-hidden="true">${opening.amountCents < 0 ? '−' : '+'}</span>
     <div class="record-main"><strong>Previous total${opening.amountCents > 0 ? ' gain' : opening.amountCents < 0 ? ' loss' : ''}</strong><span>Before you started tracking</span></div>
     <div class="record-amount ${gamblingResultClass(opening.amountCents)}">${gamblingSignedMoney(opening.amountCents)}</div>
-    <button type="button" class="delete-button" data-delete="gambling" data-id="${esc(opening.id)}" aria-label="Delete previous total">×</button>
-  </article>` : `<button type="button" class="record-row xcoin-opening-trigger" data-gambling-opening aria-label="Set previous gain or loss">
+  </article>`, 'previous total') : `<button type="button" class="record-row xcoin-opening-trigger" data-gambling-opening aria-label="Set previous gain or loss">
     <span class="record-icon" aria-hidden="true">±</span>
     <span class="record-main"><strong>Previous total</strong><span>Set your gain or loss so far</span></span>
     <span class="xcoin-opening-label">Set total ↗</span>
@@ -652,13 +673,12 @@ function renderGambling() {
   const transactions = entries.length ? entries.map(entry => {
     const incoming = entry.amountCents > 0;
     const label = entry.note || (incoming ? 'In' : 'Out');
-    return `<article class="record-row">
+    return gamblingSwipeRow(entry, `<article class="record-row">
       <span class="record-icon${incoming ? '' : ' expense-icon'}" aria-hidden="true">${incoming ? '＋' : '−'}</span>
       <div class="record-main"><strong>${esc(label)}</strong><span>${longDate(entry.date)}</span></div>
       <div class="record-amount${incoming ? '' : ' expense-amount'}">${incoming ? '+' : '−'}${gamblingMoney(Math.abs(entry.amountCents))}</div>
-      <button type="button" class="delete-button" data-delete="gambling" data-id="${esc(entry.id)}" aria-label="${esc(`Delete ${label}`)}">×</button>
-    </article>`;
-  }).join('') : empty('No entries yet', 'Use + or − to update your balance.', '↕');
+    </article>`, label);
+  }).join('') : empty('No entries for this month', 'Choose another month or use + or − to log an entry for today.', '↕');
   $('#gambling-transactions').innerHTML = openingRow + transactions;
 }
 function openGamblingEntry(direction, opening = false) {
