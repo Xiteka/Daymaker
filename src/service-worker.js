@@ -1,7 +1,7 @@
 importScripts('./reminder-device.js?v=1');
-const CACHE_NAME = 'daymaker-shell-v76';
+const CACHE_NAME = 'daymaker-shell-v77';
 const SHELL = [
-  './', './index.html', './style.css?v=63', './app.js?v=59', './cloud.js?v=10', './friends.js?v=4', './supabase-config.js?v=1', './reminder-device.js?v=1', './reminders.js?v=2', './vendor/supabase-2.119.0.js', './manifest.webmanifest?v=2',
+  './', './index.html', './style.css?v=64', './app.js?v=60', './cloud.js?v=10', './friends.js?v=4', './supabase-config.js?v=1', './reminder-device.js?v=1', './reminders.js?v=2', './vendor/supabase-2.119.0.js', './manifest.webmanifest?v=2',
   './icons/daymaker-bold.svg', './icons/daymaker-bold-180.png', './icons/daymaker-bold-192.png', './icons/daymaker-bold-512.png'
 ];
 

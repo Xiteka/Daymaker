@@ -590,20 +590,19 @@ function gamblingMonthlyResults(entries, through = new Date()) {
 }
 const gamblingResultClass = cents => cents > 0 ? 'xcoin-gain' : cents < 0 ? 'xcoin-loss' : 'xcoin-even';
 const gamblingSignedMoney = cents => `${cents > 0 ? '+' : cents < 0 ? '−' : ''}${gamblingMoney(Math.abs(cents))}`;
-function renderGamblingChart(period) {
-  const months = gamblingMonthlyResults(state.gamblingEntries, new Date(`${period}-01T12:00:00`));
+function renderGamblingChart() {
+  const months = gamblingMonthlyResults(state.gamblingEntries);
   const current = months[months.length - 1];
   $('#xcoin-current-month').textContent = current.label;
-  $('#xcoin-chart-period').textContent = `6 MONTHS TO ${current.label.toUpperCase()} ${current.year}`;
   const net = $('#xcoin-month-net');
   net.textContent = gamblingSignedMoney(current.cents);
   net.className = gamblingResultClass(current.cents);
   const max = Math.max(1, ...months.map(month => Math.abs(month.cents)));
   const description = months.map(month => `${month.fullLabel}: ${gamblingSignedMoney(month.cents)}`).join('; ');
-  const baseline = 124;
+  const baseline = 88;
   const bars = months.map((month, index) => {
     const x = index * 50 + 25;
-    const height = month.cents ? Math.max(3, Math.abs(month.cents) / max * 104) : 0;
+    const height = month.cents ? Math.max(3, Math.abs(month.cents) / max * 68) : 0;
     const y = baseline - height;
     const signY = y - 6;
     return `<g class="${gamblingResultClass(month.cents)}">
@@ -611,7 +610,7 @@ function renderGamblingChart(period) {
       ${height ? `<rect x="${x - 13}" y="${y}" width="26" height="${height}" rx="6" fill="currentColor"/><text x="${x}" y="${signY}" text-anchor="middle" fill="currentColor" class="xcoin-chart-sign">${month.cents > 0 ? '+' : '−'}</text>` : `<line x1="${x - 8}" x2="${x + 8}" y1="${baseline}" y2="${baseline}" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>`}
     </g>`;
   }).join('');
-  $('#xcoin-monthly-chart').innerHTML = `<svg viewBox="0 0 300 136" role="img" aria-label="${esc(`Monthly net results. ${description}`)}"><line x1="0" x2="300" y1="${baseline}" y2="${baseline}" stroke="#ffffff24"/>${bars}</svg>
+  $('#xcoin-monthly-chart').innerHTML = `<svg viewBox="0 0 300 100" role="img" aria-label="${esc(`Monthly net results. ${description}`)}"><line x1="0" x2="300" y1="${baseline}" y2="${baseline}" stroke="#ffffff24"/>${bars}</svg>
     <div class="xcoin-chart-labels" aria-hidden="true">${months.map(month => `<div><span>${month.label}</span><small>${month.year}</small></div>`).join('')}</div>`;
 }
 function addGamblingEntry(direction, amount, note, opening = false) {
@@ -658,7 +657,7 @@ function renderGambling() {
   renderDotValue($('#gambling-balance'), dots, gamblingMoney(totals.balance), 'kr', 'balance');
   $('#gambling-money-in').textContent = gamblingMoney(totals.incoming);
   $('#gambling-money-out').textContent = gamblingMoney(totals.outgoing);
-  renderGamblingChart(period);
+  renderGamblingChart();
   const opening = state.gamblingEntries.find(entry => entry.kind === 'opening');
   const entries = [...state.gamblingEntries].filter(entry => entry.kind !== 'opening' && entry.date?.startsWith(`${period}-`)).reverse().sort((a, b) => b.date.localeCompare(a.date));
   const openingRow = opening ? gamblingSwipeRow(opening, `<article class="record-row xcoin-total-row">
