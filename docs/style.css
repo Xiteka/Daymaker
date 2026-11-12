@@ -506,13 +506,6 @@ button:disabled{cursor:default;opacity:.6}
 .xcoin-chart-labels span { font:11px var(--mono) }
 .xcoin-chart-labels small { color:#ffffff66; font:8px var(--mono) }
 
-.xcoin-total-row { min-height:74px; gap:10px }
-.xcoin-total-row .record-icon { background:var(--mint) }
-.xcoin-total-row .record-icon.xcoin-loss { background:var(--peach) }
-.xcoin-total-row .record-amount { white-space:normal; text-align:right; overflow-wrap:anywhere; max-width:48% }
-
-.xcoin-opening-trigger { width:100%; border:0; border-bottom:1px solid var(--line); border-radius:0; background:transparent; text-align:left }
-.xcoin-opening-label { color:var(--orange); font-size:11px; font-weight:600; white-space:nowrap }
 .xcoin-opening-direction { margin:0; padding:0; border:0; display:grid; grid-template-columns:1fr 1fr; gap:10px; min-width:0 }
 .xcoin-opening-direction legend { margin-bottom:7px; font-size:11px; font-weight:600 }
 .xcoin-opening-direction label { position:relative; display:block; cursor:pointer }
@@ -525,3 +518,9 @@ button:disabled{cursor:default;opacity:.6}
 #xcoin-year .work-period-options { right:0; left:auto; min-width:max(100%,90px) }
 .xcoin-period { margin-top:14px }
 .xcoin-swipe-row .shift-row-actions { inset:0 0 0 auto; width:64px; padding:4px 0 4px 6px }
+
+.xcoin-balance-swipe { border-radius:22px }
+.xcoin-balance-swipe .shift-row-actions { inset:0 0 0 auto; width:72px; padding:4px 0 4px 6px }
+.xcoin-balance-swipe .balance-foot { justify-content:space-between; gap:8px }
+.xcoin-balance-month { align-self:center; font:9px var(--mono); letter-spacing:.7px }
+.xcoin-balance-swipe .gambling-balance-card { background:var(--orange) }

@@ -615,18 +615,20 @@ function renderGamblingChart() {
 }
 function addGamblingEntry(direction, amount, note, opening = false) {
   const cents = Math.round(amount * 100);
-  const current = gamblingTotals(state.gamblingEntries);
-  if ((opening && state.gamblingEntries.some(entry => entry.kind === 'opening'))
-    || ![1, -1].includes(direction) || !Number.isFinite(amount) || amount < 0 || (!opening && amount === 0)
+  const previousOpening = opening ? state.gamblingEntries.find(entry => entry.kind === 'opening') : null;
+  const entries = opening ? state.gamblingEntries.filter(entry => entry.kind !== 'opening') : state.gamblingEntries;
+  const current = gamblingTotals(entries);
+  if (![1, -1].includes(direction) || !Number.isFinite(amount) || amount < 0 || (!opening && amount === 0)
     || amount > 1000000000 || !Number.isSafeInteger(cents)
     || Math.abs(amount * 100 - cents) > 0.000001
     || !Number.isSafeInteger(current.balance + direction * cents)) return false;
   const previous = state;
   state = {
     ...state,
-    gamblingEntries: [...state.gamblingEntries, {
-      id: opening ? 'xcoin-opening-balance-v1' : crypto.randomUUID(),
-      date: dateKey(), amountCents: direction * cents,
+    gamblingEntries: [...entries, {
+      ...(previousOpening || {}),
+      id: opening ? previousOpening?.id || 'xcoin-opening-balance-v1' : crypto.randomUUID(),
+      date: previousOpening?.date || dateKey(), amountCents: direction * cents,
       note: opening ? 'Previous total' : String(note || '').trim().slice(0, 60),
       ...(opening ? { kind: 'opening' } : {})
     }]
@@ -655,20 +657,12 @@ function renderGambling() {
     minimumFractionDigits: 2, maximumFractionDigits: 2
   }).format(totals.balance / 100).replace(/,/g, ' ');
   renderDotValue($('#gambling-balance'), dots, gamblingMoney(totals.balance), 'kr', 'balance');
-  $('#gambling-money-in').textContent = gamblingMoney(totals.incoming);
-  $('#gambling-money-out').textContent = gamblingMoney(totals.outgoing);
+  const monthly = gamblingMonthlyResults(state.gamblingEntries)[5];
+  $('#gambling-month-direction').textContent = monthly.cents < 0 ? 'out' : 'in';
+  $('#gambling-month-amount').textContent = gamblingMoney(Math.abs(monthly.cents));
+  $('#gambling-balance-month').textContent = `${monthly.label.toUpperCase()} ${monthly.year}`;
   renderGamblingChart();
-  const opening = state.gamblingEntries.find(entry => entry.kind === 'opening');
   const entries = [...state.gamblingEntries].filter(entry => entry.kind !== 'opening' && entry.date?.startsWith(`${period}-`)).reverse().sort((a, b) => b.date.localeCompare(a.date));
-  const openingRow = opening ? gamblingSwipeRow(opening, `<article class="record-row xcoin-total-row">
-    <span class="record-icon ${gamblingResultClass(opening.amountCents)}" aria-hidden="true">${opening.amountCents < 0 ? '−' : '+'}</span>
-    <div class="record-main"><strong>Previous total${opening.amountCents > 0 ? ' gain' : opening.amountCents < 0 ? ' loss' : ''}</strong><span>Before you started tracking</span></div>
-    <div class="record-amount ${gamblingResultClass(opening.amountCents)}">${gamblingSignedMoney(opening.amountCents)}</div>
-  </article>`, 'previous total') : `<button type="button" class="record-row xcoin-opening-trigger" data-gambling-opening aria-label="Set previous gain or loss">
-    <span class="record-icon" aria-hidden="true">±</span>
-    <span class="record-main"><strong>Previous total</strong><span>Set your gain or loss so far</span></span>
-    <span class="xcoin-opening-label">Set total ↗</span>
-  </button>`;
   const transactions = entries.length ? entries.map(entry => {
     const incoming = entry.amountCents > 0;
     const label = entry.note || (incoming ? 'In' : 'Out');
@@ -678,19 +672,23 @@ function renderGambling() {
       <div class="record-amount${incoming ? '' : ' expense-amount'}">${incoming ? '+' : '−'}${gamblingMoney(Math.abs(entry.amountCents))}</div>
     </article>`, label);
   }).join('') : empty('No entries for this month', 'Choose another month or use + or − to log an entry for today.', '↕');
-  $('#gambling-transactions').innerHTML = openingRow + transactions;
+  $('#gambling-transactions').innerHTML = transactions;
 }
 function openGamblingEntry(direction, opening = false) {
-  if (opening && state.gamblingEntries.some(entry => entry.kind === 'opening')) return;
+  const previousOpening = opening ? state.gamblingEntries.find(entry => entry.kind === 'opening') : null;
   const form = $('#gambling-entry-form');
   form.reset();
   form.elements.amount.setCustomValidity('');
   form.elements.amount.min = opening ? '0' : '0.01';
   form.elements.direction.value = direction;
   form.elements.kind.value = opening ? 'opening' : 'entry';
+  if (opening) {
+    form.elements.openingDirection.value = previousOpening?.amountCents < 0 ? '-1' : '1';
+    form.elements.amount.value = previousOpening ? (Math.abs(previousOpening.amountCents) / 100).toFixed(2) : '';
+  }
   $('#xcoin-opening-direction').hidden = !opening;
   $('#gambling-entry-note').hidden = opening;
-  $('#gambling-entry-title').textContent = opening ? 'Previous total' : direction > 0 ? 'Add money' : 'Subtract money';
+  $('#gambling-entry-title').textContent = opening ? previousOpening ? 'Edit previous total' : 'Previous total' : direction > 0 ? 'Add money' : 'Subtract money';
   $('#gambling-entry-submit').innerHTML = `${opening ? 'Save previous total' : 'Save entry'} <span>↗</span>`;
   $('#gambling-entry-dialog').showModal();
 }
@@ -698,7 +696,11 @@ document.querySelectorAll('[data-gambling-direction]').forEach(button => {
   button.addEventListener('click', () => openGamblingEntry(Number(button.dataset.gamblingDirection)));
 });
 document.addEventListener('click', event => {
-  if (event.target.closest('[data-gambling-opening]')) openGamblingEntry(1, true);
+  if (event.target.closest('[data-gambling-edit-opening]')) {
+    resetShiftRowGesture();
+    closeShiftRow();
+    openGamblingEntry(1, true);
+  }
 });
 $('#gambling-entry-form').elements.amount.addEventListener('input', event => event.target.setCustomValidity(''));
 $('#gambling-entry-form').addEventListener('submit', event => {
