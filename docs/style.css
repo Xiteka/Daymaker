@@ -491,15 +491,15 @@ button:disabled{cursor:default;opacity:.6}
   padding:0 18px;
   border:1px solid transparent;
   border-radius:999px;
-  background:linear-gradient(155deg,#7d898b 0%,#505d61 54%,#849093 100%) padding-box,linear-gradient(150deg,#f2fbfcdc 0%,#34434799 46%,#e4f1f3dc 100%) border-box;
-  color:#f3f7f7;
-  box-shadow:inset 0 1px 1px #ffffff80,inset 0 -2px 3px #d8e6e875,inset 2px 2px 5px #ffffff16,inset -2px -3px 6px #1e2c3080,0 2px 4px #26333635,0 0 0 1px #4c5b5f6b;
+  background:radial-gradient(ellipse at 50% 135%,#ffe2b9b8 0%,#ffb17d3b 34%,transparent 68%) padding-box,linear-gradient(180deg,#fa7548 0%,var(--orange) 45%,#e84f28 72%,#ff8254 100%) padding-box,linear-gradient(150deg,#fff8efee 0%,#bc3f2077 46%,#ffe1c3ee 100%) border-box;
+  color:#fff8f1;
+  box-shadow:inset 0 1px 1px #fff8ecbf,inset 0 -2px 5px #ffe0c3b3,inset 2px 2px 6px #ffffff1a,inset -2px -3px 7px #9e321d5c,0 3px 6px #b742243b,0 0 0 1px #b94a3059;
   transition:filter .15s,transform .15s,box-shadow .15s;
 }
-.gambling-balance-actions .primary-button::before { content:''; position:absolute; inset:2px; border-radius:inherit; background:linear-gradient(115deg,#ffffff18,transparent 45%,#ffffff0b); pointer-events:none }
+.gambling-balance-actions .primary-button::before { content:''; position:absolute; inset:2px; border-radius:inherit; background:linear-gradient(120deg,#fff4e51a,transparent 42%,#fff0df0d); pointer-events:none }
 .gambling-balance-actions .primary-button:hover { filter:brightness(1.06) }
-.gambling-balance-actions .primary-button:active { transform:translateY(1px); box-shadow:inset 0 2px 5px #20303465,inset 0 -1px 2px #f1fbfc80,0 0 0 1px #4c5b5f6b }
-.xcoin-money-icon { position:relative; width:27px; height:27px; fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; filter:drop-shadow(0 1px 0 #ffffff65) drop-shadow(0 -1px 1px #21303470) }
+.gambling-balance-actions .primary-button:active { transform:translateY(1px); box-shadow:inset 0 2px 6px #a53c245c,inset 0 -1px 3px #ffe2c699,0 0 0 1px #b94a3059 }
+.xcoin-money-icon { position:relative; width:27px; height:27px; fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; filter:drop-shadow(0 1px 0 #ffffff65) drop-shadow(0 -1px 1px #a3351e70) }
 @media(prefers-reduced-motion:reduce) { .gambling-balance-actions .primary-button { transition:none } }
 #gambling-transactions .record-main strong { overflow-wrap:anywhere }
 
