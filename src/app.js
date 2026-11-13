@@ -965,7 +965,6 @@ function setAccountMenuOpen(open) {
     showPage('account', true);
     return;
   }
-  $('#account-menu').classList.toggle('is-open', open);
   $('#account-dropdown').hidden = !open;
   $('#account-open').setAttribute('aria-expanded', String(open));
 }
