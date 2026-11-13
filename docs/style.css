@@ -428,10 +428,10 @@ button:disabled{cursor:default;opacity:.6}
   display:block;
   position:absolute;
   z-index:0;
-  top:13px;
+  top:calc(100% - 26px);
   right:0;
-  width:112px;
-  height:54px;
+  width:min(276px,calc(100vw - 38px));
+  height:152px;
   fill:var(--deep);
   pointer-events:none;
   transform-origin:90% 0;
@@ -442,13 +442,13 @@ button:disabled{cursor:default;opacity:.6}
   position:absolute;
   z-index:1;
   top:calc(100% + 6px);
-  right:26px;
+  right:62px;
   width:214px;
-  max-width:calc(100vw - 72px);
+  max-width:calc(100vw - 100px);
   padding:12px;
   border:0;
   border-radius:32px;
-  background:var(--deep);
+  background:transparent;
   transform-origin:top right;
   animation:account-bubble-in .22s cubic-bezier(.2,.8,.2,1);
 }
