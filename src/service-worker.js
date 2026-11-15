@@ -1,8 +1,8 @@
 importScripts('./reminder-device.js?v=1');
-const CACHE_NAME = 'daymaker-shell-v85';
+const CACHE_NAME = 'daymaker-shell-v86';
 const SHELL = [
-  './', './index.html', './style.css?v=72', './app.js?v=64', './cloud.js?v=10', './friends.js?v=4', './supabase-config.js?v=1', './reminder-device.js?v=1', './reminders.js?v=2', './vendor/supabase-2.119.0.js', './manifest.webmanifest?v=2',
-  './icons/daymaker-bold.svg', './icons/daymaker-bold-180.png', './icons/daymaker-bold-192.png', './icons/daymaker-bold-512.png'
+  './', './index.html', './style.css?v=72', './app.js?v=64', './cloud.js?v=10', './friends.js?v=4', './supabase-config.js?v=1', './reminder-device.js?v=1', './reminders.js?v=2', './vendor/supabase-2.119.0.js', './manifest.webmanifest?v=3',
+  './icons/daymaker-flow.svg', './icons/daymaker-flow-180.png', './icons/daymaker-flow-192.png', './icons/daymaker-flow-512.png'
 ];
 
 self.addEventListener('install', event => {
@@ -38,7 +38,7 @@ self.addEventListener('push', event => {
     if (typeof message.title !== 'string' || typeof message.body !== 'string') return;
     await self.registration.showNotification(message.title, {
       body: message.body,
-      icon: new URL('./icons/daymaker-bold-192.png', self.registration.scope).href,
+      icon: new URL('./icons/daymaker-flow-192.png', self.registration.scope).href,
       tag: message.tag,
       data: { date: message.date, userId: message.userId }
     });
