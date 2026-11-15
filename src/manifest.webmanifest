@@ -1,6 +1,6 @@
 {
   "id": "./",
-  "name": "Daymaker · work & money",
+  "name": "Daymaker \u00b7 work & money",
   "short_name": "Daymaker",
   "description": "Track work hours, pay, expenses, and savings goals.",
   "lang": "en",
@@ -11,8 +11,23 @@
   "background_color": "#e6e5e0",
   "theme_color": "#e6e5e0",
   "icons": [
-    { "src": "./icons/daymaker-flow-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
-    { "src": "./icons/daymaker-flow-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
-    { "src": "./icons/daymaker-flow-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+    {
+      "src": "./icons/daymaker-spark-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./icons/daymaker-spark-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./icons/daymaker-spark-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
   ]
 }
