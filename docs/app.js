@@ -352,7 +352,7 @@ function resetShiftRowGesture() {
   setShiftRowOpen(gesture.row, gesture.wasOpen);
   if (gesture.content.hasPointerCapture(gesture.pointerId)) gesture.content.releasePointerCapture(gesture.pointerId);
 }
-for (const shiftPage of [$('#work-page'), $('#home-page'), $('#expenses-page'), $('#friends-page'), $('#gambling-page')]) {
+for (const shiftPage of [$('#work-page'), $('#home-page'), $('#expenses-page'), $('#wishlist-page'), $('#friends-page'), $('#gambling-page')]) {
 shiftPage.addEventListener('pointerdown', event => {
   if (!event.isPrimary || (event.pointerType === 'mouse' && event.button !== 0)) return;
   if (event.target.closest('button, input, select, a, .swipe-track, .shift-row-actions')) return;
@@ -769,7 +769,7 @@ $('#gambling-entry-form').addEventListener('submit', event => {
 
 function renderExpenses() {
   const rows = [...state.expenses].sort((a, b) => b.date.localeCompare(a.date));
-  $('#expense-list').innerHTML = rows.length ? rows.map(item => `<article class="record-row"><span class="record-icon expense-icon">${item.category === 'Food' ? '⌁' : item.category === 'Transport' ? '↗' : '↘'}</span><div class="record-main"><strong>${esc(item.title)}</strong><span>${longDate(item.date)} · ${esc(item.category)}</span></div><div class="record-amount expense-amount">−${money(item.amount)}</div><button class="delete-button" data-delete="expense" data-id="${esc(item.id)}" aria-label="Delete expense">×</button></article>`).join('') : empty('A clear picture starts here', 'Add an expense when you want to keep track.', '↘');
+  $('#expense-list').innerHTML = rows.length ? rows.map(item => `<div class="shift-swipe-row record-swipe-row" data-action-width="64" tabindex="0" role="group" aria-label="${esc(`${item.title}, ${longDate(item.date)}. Swipe right to reveal Delete.`)}"><div class="shift-row-actions" aria-hidden="true" inert><button type="button" class="shift-row-delete" data-delete="expense" data-id="${esc(item.id)}" aria-label="${esc(`Delete ${item.title}`)}">Delete</button></div><div class="shift-swipe-content"><article class="record-row"><span class="record-icon expense-icon">${item.category === 'Food' ? '⌁' : item.category === 'Transport' ? '↗' : '↘'}</span><div class="record-main"><strong>${esc(item.title)}</strong><span>${longDate(item.date)} · ${esc(item.category)}</span></div><div class="record-amount expense-amount">−${money(item.amount)}</div></article></div></div>`).join('') : empty('A clear picture starts here', 'Add an expense when you want to keep track.', '↘');
 }
 
 function renderMonthlyExpenses() {
@@ -789,13 +789,14 @@ const wishIsPurchased = wish => Boolean(wish.purchasedAt);
 const wishIsFunded = wish => Number.isFinite(Number(wish.target)) && Number(wish.target) > 0
   && Number(wish.saved) >= Number(wish.target);
 
-function purchaseWish(id, expectedAmount) {
+function purchaseWish(id, expectedTarget, purchaseAmount) {
   const wish = state.wishes.find(item => item.id === id);
-  if (!wish || wishIsPurchased(wish) || !wishIsFunded(wish)) {
+  const amount = Number(purchaseAmount);
+  if (!wish || wishIsPurchased(wish) || (Number(wish.target) > 0 && !wishIsFunded(wish)) || !Number.isFinite(amount) || amount <= 0) {
     toast('This wish changed. Close this window and check your wishlist.');
     return false;
   }
-  if (Number(wish.target) !== expectedAmount) {
+  if (Number(wish.target) !== expectedTarget) {
     toast('The wish price changed. Please check it and try again.');
     return false;
   }
@@ -807,7 +808,7 @@ function purchaseWish(id, expectedAmount) {
     wishId: wish.id,
     date: dateKey(),
     title: wish.title,
-    amount: Number(wish.target),
+    amount,
     category: 'Wishlist'
   };
   const previous = state;
@@ -881,15 +882,24 @@ $('#wish-move-dialog').addEventListener('click', event => {
   if (!event.target.closest('.wish-move-picker')) setMoveFolderExpanded(false);
 });
 function wishCard(item, index, allowMove = false) {
-  const ratio = Math.max(0, Math.min(100, Number(item.saved) / Number(item.target) * 100));
+  const target = Math.max(0, Number(item.target) || 0);
+  const saved = Math.max(0, Number(item.saved) || 0);
+  const ratio = target > 0 ? Math.max(0, Math.min(100, saved / target * 100)) : 0;
   const colors = ['wish-peach', 'wish-mint', 'wish-lilac', 'wish-yellow'];
   const move = allowMove ? `<button type="button" class="wish-move-button" data-move-wish="${esc(item.id)}" aria-label="${esc(`Move ${item.title} to another folder`)}" title="Move to folder">${wishFolderIcon}</button>` : '';
   const favorite = allowMove ? Number(item.favoriteAt) > 0 : false;
   const purchaseButton = wishIsFunded(item)
     ? `<button class="save-more wish-purchase-button" data-purchase-wish="${esc(item.id)}" type="button" aria-label="${esc(`Mark ${item.title} as purchased`)}">✓ Got it</button>`
-    : `<button class="save-more" data-add-saving="${esc(item.id)}" type="button">＋ Add</button>`;
+    : target === 0
+      ? `<button class="save-more wish-purchase-button" data-purchase-wish="${esc(item.id)}" type="button" aria-label="${esc(`Mark ${item.title} as purchased`)}">✓ Got it</button>`
+      : `<button class="save-more" data-add-saving="${esc(item.id)}" type="button">＋ Add</button>`;
+  const amountMarkup = target > 0
+    ? `<strong>${money(saved)}</strong><span>of ${money(target)}</span>`
+    : `<strong>${saved > 0 ? money(saved) : '—'}</strong><span>${saved > 0 ? 'saved · no price set' : 'price not set'}</span>`;
+  const progressMarkup = target > 0 ? `<div class="wish-progress"><span style="width:${ratio}%"></span></div>` : '';
+  const progressNote = target > 0 ? (ratio >= 100 ? 'You made it! ✨' : `${Math.round(ratio)}% saved`) : 'Add a price whenever you’re ready';
   const favoriteButton = allowMove ? `<button type="button" class="wish-favorite-button${favorite ? ' is-favorite' : ''}" data-toggle-wish-favorite="${esc(item.id)}" aria-label="${esc(favorite ? `Remove ${item.title} from Home wishlist` : `Show ${item.title} on Home`)}" aria-pressed="${favorite}" title="${esc(favorite ? 'Remove from Home wishlist' : 'Show on Home')}">${favorite ? '♥' : '☆'}</button>` : '';
-  return `<article class="wish-card ${colors[index % colors.length]}"><div class="wish-top">${favoriteButton}<div class="wish-card-actions">${move}<button class="delete-button" data-delete="wish" data-id="${esc(item.id)}" aria-label="Delete wish">×</button></div></div><h3>${esc(item.title)}</h3><div class="wish-amounts"><strong>${money(item.saved)}</strong><span>of ${money(item.target)}</span></div><div class="wish-progress"><span style="width:${ratio}%"></span></div><div class="wish-card-foot"><p>${ratio >= 100 ? 'You made it! ✨' : `${Math.round(ratio)}% saved`}</p>${purchaseButton}</div></article>`;
+  return `<article class="wish-card ${colors[index % colors.length]}"><div class="wish-top">${favoriteButton}<div class="wish-card-actions">${move}<button class="delete-button" data-delete="wish" data-id="${esc(item.id)}" aria-label="Delete wish">×</button></div></div><h3>${esc(item.title)}</h3><div class="wish-amounts">${amountMarkup}</div>${progressMarkup}<div class="wish-card-foot"><p>${progressNote}</p>${purchaseButton}</div></article>`;
 }
 function wishFolderCard(folder, index) {
   const folderWishes = state.wishes.filter(wish => folderForWish(wish) === folder.id);
@@ -900,7 +910,7 @@ function wishFolderCard(folder, index) {
   const colors = ['wish-peach', 'wish-mint', 'wish-lilac', 'wish-yellow'];
   const emptyLabel = folderWishes.length ? '' : 'Add your first wish';
   const remove = folder.id === GENERAL_WISH_FOLDER ? '' : `<button type="button" class="wish-folder-delete" data-delete="wish-folder" data-id="${esc(folder.id)}" aria-label="Delete ${esc(folder.name)} folder" title="Delete folder">×</button>`;
-  return `<article class="wish-folder-card ${colors[index % colors.length]}"><button type="button" class="wish-folder-open" data-wish-folder="${esc(folder.id)}"><span class="wish-folder-top"><span class="wish-folder-icon">${wishFolderIcon}</span></span><strong class="wish-folder-title">${esc(folder.name)}</strong><span class="wish-folder-amount">${wishes.length ? `${money(saved)} <small>of ${money(target)}</small>` : emptyLabel}</span><span class="wish-progress"><span style="width:${ratio}%"></span></span></button>${remove}</article>`;
+  return `<article class="wish-folder-card ${colors[index % colors.length]}"><button type="button" class="wish-folder-open" data-wish-folder="${esc(folder.id)}"><span class="wish-folder-top"><span class="wish-folder-icon">${wishFolderIcon}</span></span><strong class="wish-folder-title">${esc(folder.name)}</strong><span class="wish-folder-amount">${wishes.length ? `${money(saved)} <small>${target > 0 ? `of ${money(target)}` : 'saved'}</small>` : emptyLabel}</span>${target > 0 ? `<span class="wish-progress"><span style="width:${ratio}%"></span></span>` : ''}</button>${remove}</article>`;
 }
 function renderWishes() {
   const wishes = state.wishes.filter(wish => !wishIsPurchased(wish));
@@ -923,14 +933,17 @@ function renderWishes() {
   ).sort((a, b) => b.purchasedAt.localeCompare(a.purchasedAt)) : [];
   $('#wishlist-purchased').hidden = purchased.length === 0;
   $('#wishlist-purchased-list').innerHTML = purchased.map(wish => `
-    <article class="record-row">
-      <span class="record-icon expense-icon" aria-hidden="true">✓</span>
-      <div class="record-main"><strong>${esc(wish.title)}</strong><span>${longDate(wish.purchasedDate)} · Purchased</span></div>
-      <div class="record-amount expense-amount">−${money(wish.purchaseAmount)}</div>
-      <button class="delete-button" data-delete="wish" data-id="${esc(wish.id)}" aria-label="${esc(`Remove ${wish.title} from Purchased`)}">×</button>
-    </article>`
+    <div class="shift-swipe-row record-swipe-row" data-action-width="64" tabindex="0" role="group" aria-label="${esc(`${wish.title}, purchased ${longDate(wish.purchasedDate)}. Swipe right to reveal Delete.`)}">
+      <div class="shift-row-actions" aria-hidden="true" inert><button type="button" class="shift-row-delete" data-delete="wish" data-id="${esc(wish.id)}" aria-label="${esc(`Remove ${wish.title} from Purchased`)}">Delete</button></div>
+      <div class="shift-swipe-content"><article class="record-row">
+        <span class="record-icon expense-icon" aria-hidden="true">✓</span>
+        <div class="record-main"><strong>${esc(wish.title)}</strong><span>${longDate(wish.purchasedDate)} · Purchased</span></div>
+        <div class="record-amount expense-amount">−${money(wish.purchaseAmount)}</div>
+      </article></div>
+    </div>`
   ).join('');
-  const sorted = [...wishes].sort((a, b) => (b.saved / b.target) - (a.saved / a.target));
+  const progressOf = wish => Number(wish.target) > 0 ? Number(wish.saved) / Number(wish.target) : -1;
+  const sorted = [...wishes].sort((a, b) => progressOf(b) - progressOf(a));
   const lastHearted = wishes.filter(wish => Number(wish.favoriteAt) > 0).sort((a, b) => Number(b.favoriteAt) - Number(a.favoriteAt))[0];
   const homeWish = lastHearted || sorted[0];
   $('#home-wishlist').innerHTML = homeWish ? `<div class="home-wish">${wishCard(homeWish, 0)}<div class="wish-total-note"><span class="eyebrow">AIMING FOR</span><strong>${money(total)}</strong><span>across ${wishes.length} ${wishes.length === 1 ? 'wish' : 'wishes'}</span></div></div>` : empty('Dream a little', 'Add your first wishlist item.', '♡');
@@ -1367,7 +1380,8 @@ $('#monthly-expense-form').addEventListener('submit', event => {
 });
 $('#wish-form').addEventListener('submit', event => {
   event.preventDefault(); const data = new FormData(event.currentTarget);
-  state.wishes.push({ id: crypto.randomUUID(), title: data.get('title').trim(), target: Number(data.get('target')), saved: Number(data.get('saved')) || 0, folderId: folderForWish({ folderId: data.get('folderId') }) });
+  const rawTarget = data.get('target');
+  state.wishes.push({ id: crypto.randomUUID(), title: data.get('title').trim(), target: rawTarget === '' ? 0 : Number(rawTarget), saved: Number(data.get('saved')) || 0, folderId: folderForWish({ folderId: data.get('folderId') }) });
   if (!persist()) return; event.currentTarget.closest('dialog').close(); toast('A new thing to look forward to.');
 });
 $('#wish-folder-form').elements.name.addEventListener('input', event => event.target.setCustomValidity(''));
@@ -1412,11 +1426,14 @@ document.addEventListener('click', event => {
   const purchaseButton = event.target.closest('[data-purchase-wish]');
   if (purchaseButton) {
     const wish = state.wishes.find(item => item.id === purchaseButton.dataset.purchaseWish);
-    if (wish && !wishIsPurchased(wish) && wishIsFunded(wish)) {
+    if (wish && !wishIsPurchased(wish) && (wishIsFunded(wish) || Number(wish.target) <= 0)) {
       const form = $('#wish-purchase-form');
       form.elements.wishId.value = wish.id;
-      form.elements.amount.value = wish.target;
-      $('#wish-purchase-description').textContent = `Add ${wish.title} to Expenses for ${money(wish.target)} today and move it to Purchased in its folder?`;
+      form.elements.expectedTarget.value = Number(wish.target) || 0;
+      form.elements.amount.value = Number(wish.target) > 0 ? wish.target : '';
+      $('#wish-purchase-description').textContent = Number(wish.target) > 0
+        ? `Confirm the amount to add ${wish.title} to Expenses. It will then move to Purchased.`
+        : `Enter what you paid for ${wish.title}. It will be added to Expenses and moved to Purchased.`;
       $('#wish-purchase-dialog').showModal();
     }
     return;
@@ -1559,7 +1576,10 @@ $('#delete-confirm-form').addEventListener('submit', event => {
 $('#wish-purchase-form').addEventListener('submit', event => {
   event.preventDefault();
   const form = event.currentTarget;
-  if (!purchaseWish(form.elements.wishId.value, Number(form.elements.amount.value))) return;
+  if (!purchaseWish(form.elements.wishId.value, Number(form.elements.expectedTarget.value), Number(form.elements.amount.value))) {
+    toast('Enter a purchase amount and try again.');
+    return;
+  }
   form.closest('dialog').close();
   toast('Added to Expenses and Purchased.');
 });

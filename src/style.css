@@ -563,3 +563,10 @@ button:disabled{cursor:default;opacity:.6}
 .xcoin-day-history { display:flex; align-items:center; justify-content:space-between; gap:12px; min-height:54px; padding:14px 0; border-bottom:1px solid var(--line) }
 .xcoin-day-history > strong { font-size:13px; font-weight:600 }
 .xcoin-day-history > .xcoin-day-result { flex-shrink:0; font:500 13px var(--mono); text-align:right }
+
+.record-swipe-row{border-top:0}
+.record-swipe-row .shift-row-actions{width:64px}
+.record-swipe-row .shift-row-delete{font-size:12px}
+.record-swipe-row .shift-swipe-content{padding:0 2px}
+.record-swipe-row .record-row{margin:0}
+.wishlist-actions .wish-add-button{grid-column:1/-1;width:100%;min-height:48px;border-radius:14px}
