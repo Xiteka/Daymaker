@@ -491,15 +491,17 @@ button:disabled{cursor:default;opacity:.6}
   padding:0 18px;
   border:1px solid transparent;
   border-radius:14px;
-  background:radial-gradient(ellipse at 50% 135%,#ffe2b9b8 0%,#ffb17d3b 34%,transparent 68%) padding-box,linear-gradient(180deg,#fa7548 0%,var(--orange) 45%,#e84f28 72%,#ff8254 100%) padding-box,linear-gradient(150deg,#fff8efee 0%,#bc3f2077 46%,#ffe1c3ee 100%) border-box;
-  color:#fff8f1;
-  box-shadow:inset 0 1px 1px #fff8ecbf,inset 0 -2px 5px #ffe0c3b3,inset 2px 2px 6px #ffffff1a,inset -2px -3px 7px #9e321d5c,0 3px 6px #b742243b,0 0 0 1px #b94a3059;
+  background:radial-gradient(ellipse at 30% 0%,#ffffff52 0%,transparent 65%) padding-box,linear-gradient(145deg,#edfaff30 0%,#c8e6f214 50%,#ffffff24 100%) padding-box,linear-gradient(145deg,#ffffffaa 0%,#c6e7f833 45%,#ffffff77 100%) border-box;
+  color:#f4fbff;
+  box-shadow:inset 0 1px 1px #ffffffaa,inset 0 -2px 5px #d5f2ff22,inset 2px 2px 6px #ffffff14,0 3px 6px #0003;
+  -webkit-backdrop-filter:blur(8px);
+  backdrop-filter:blur(8px);
   transition:filter .15s,transform .15s,box-shadow .15s;
 }
-.gambling-balance-actions .primary-button::before { content:''; position:absolute; inset:2px; border-radius:inherit; background:linear-gradient(120deg,#fff4e51a,transparent 42%,#fff0df0d); pointer-events:none }
+.gambling-balance-actions .primary-button::before { content:''; position:absolute; inset:2px; border-radius:inherit; background:linear-gradient(120deg,#ffffff2b,transparent 42%,#d4f3ff0f); pointer-events:none }
 .gambling-balance-actions .primary-button:hover { filter:brightness(1.06) }
-.gambling-balance-actions .primary-button:active { transform:translateY(1px); box-shadow:inset 0 2px 6px #a53c245c,inset 0 -1px 3px #ffe2c699,0 0 0 1px #b94a3059 }
-.xcoin-money-icon { position:relative; width:27px; height:27px; fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; filter:drop-shadow(0 1px 0 #ffffff65) drop-shadow(0 -1px 1px #a3351e70) }
+.gambling-balance-actions .primary-button:active { transform:translateY(1px); box-shadow:inset 0 2px 6px #0005,inset 0 -1px 3px #e5f7ff66,0 0 0 1px #ffffff55 }
+.xcoin-money-icon { position:relative; width:27px; height:27px; fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; filter:drop-shadow(0 1px 0 #ffffff65) drop-shadow(0 -1px 1px #0005) }
 @media(prefers-reduced-motion:reduce) { .gambling-balance-actions .primary-button { transition:none } }
 #gambling-transactions .record-main strong { overflow-wrap:anywhere }
 
@@ -538,28 +540,24 @@ button:disabled{cursor:default;opacity:.6}
 .xcoin-balance-swipe { border-radius:22px }
 .xcoin-balance-swipe .shift-row-actions { inset:0 0 0 auto; width:72px; padding:4px 0 4px 6px }
 .xcoin-balance-swipe .balance-foot { justify-content:space-between; gap:8px }
-.xcoin-balance-month { align-self:center; font:9px var(--mono); letter-spacing:.7px }
-.xcoin-balance-swipe .gambling-balance-card { background:var(--orange) }
+.xcoin-balance-swipe .gambling-balance-card { display:flex; flex-direction:column; justify-content:center; min-height:136px; padding:12px 20px; background:var(--orange) }
 
-/* X-Coin: live daily totals and one expandable result for each finished day. */
-.xcoin-balance-swipe .gambling-balance-card { display:grid; grid-template-columns:minmax(0,1fr) 48px; column-gap:14px; align-items:center; min-height:136px; padding:12px 20px }
-.xcoin-balance-heading { grid-column:1; display:flex; align-items:center; flex-wrap:wrap; gap:6px 12px; position:relative; z-index:1 }
-.xcoin-balance-heading .eyebrow { margin:0 }
-.xcoin-balance-heading .xcoin-balance-month { color:#ffffffbb; font-size:9px }
-.xcoin-balance-values { grid-column:1; min-width:0 }
-.xcoin-balance-values .balance { margin:10px 0 14px; padding:0; gap:7px }
-.xcoin-balance-values .balance-number { height:clamp(28px,8vw,42px); max-width:calc(100% - 25px) }
-.xcoin-balance-values .balance-currency { font-size:13px }
-.xcoin-balance-swipe .gambling-balance-actions { grid-column:2; grid-row:1 / span 2; position:relative; z-index:1 }
-.xcoin-balance-swipe .gambling-balance-actions .primary-button { width:48px; height:48px; min-height:48px; padding:0 }
-.xcoin-today-card { margin-top:16px; background:var(--deep); min-height:136px; padding:12px 20px }
-.xcoin-today-heading { display:flex; align-items:center; justify-content:space-between; gap:12px; position:relative; z-index:1 }
-.xcoin-today-heading h2 { margin:0; font:500 9px var(--mono); letter-spacing:1px }
-.xcoin-today-heading > span { color:#ffffffbb; font:9px var(--mono) }
-.xcoin-today-card .balance { margin:14px 0 16px; padding:0 }
+/* X-Coin: matching card headings and frosted controls for today's entries. */
+.xcoin-balance-heading,.xcoin-today-heading { display:flex; align-items:baseline; flex-wrap:wrap; gap:6px 10px; position:relative; z-index:1 }
+.xcoin-balance-heading .eyebrow,.xcoin-today-heading .eyebrow { margin:0; color:#ffffffbb; font:500 10px/1.4 var(--mono); letter-spacing:1.15px; text-transform:uppercase }
+.xcoin-balance-heading,.xcoin-balance-values { width:100% }
+.xcoin-balance-values,.xcoin-today-values { min-width:0 }
+.xcoin-balance-values .balance,.xcoin-today-values .balance { margin:10px 0 14px; padding:0; gap:7px }
+.xcoin-balance-values .balance-number,.xcoin-today-values .balance-number { height:clamp(28px,8vw,42px); max-width:calc(100% - 25px) }
+.xcoin-balance-values .balance-currency,.xcoin-today-values .balance-currency { font-size:13px }
+.xcoin-today-card { display:grid; grid-template-columns:minmax(0,1fr) 48px; column-gap:14px; align-items:center; margin-top:16px; background:var(--deep); min-height:136px; padding:12px 20px }
+.xcoin-today-heading,.xcoin-today-values { grid-column:1 }
+.xcoin-today-card .gambling-balance-actions { grid-column:2; grid-row:1 / span 2; position:relative; z-index:1 }
+.xcoin-today-card .gambling-balance-actions .primary-button { width:48px; height:48px; min-height:48px; padding:0 }
 .xcoin-today-card .xcoin-gain { color:#79d5a7 }
 .xcoin-today-card .xcoin-even { color:#fff }
-.xcoin-today-totals { position:relative; z-index:1; justify-content:space-between; flex-wrap:wrap; gap:6px 16px; font-size:11px }
+.xcoin-today-totals { position:relative; z-index:1; justify-content:flex-start; flex-wrap:wrap; gap:6px 12px; font-size:11px }
+.xcoin-today-totals > span { white-space:nowrap }
 .gambling-balance-card::after,.xcoin-today-card::after { pointer-events:none }
 .xcoin-day-label { margin:15px 0 2px; color:var(--muted); font:500 10px var(--mono); letter-spacing:.7px; text-transform:uppercase }
 .xcoin-day-history { border-bottom:1px solid var(--line) }
