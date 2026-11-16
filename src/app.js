@@ -959,7 +959,6 @@ function renderWishes() {
   $('#wish-folder-grid').innerHTML = folders.map(wishFolderCard).join('');
   $('#wish-folder-heading').hidden = !activeWishFolder;
   $('#wish-folder-name').textContent = folders.find(folder => folder.id === activeWishFolder)?.name || '';
-  $('#wish-summary-note').hidden = !activeWishFolder;
   $('#wishlist-list').hidden = !activeWishFolder;
   $('#wishlist-list').innerHTML = activeWishFolder ? visibleWishes.length
     ? visibleWishes.map((wish, index) => wishCard(wish, index, true)).join('')
