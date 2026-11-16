@@ -490,7 +490,7 @@ button:disabled{cursor:default;opacity:.6}
   min-height:54px;
   padding:0 18px;
   border:1px solid transparent;
-  border-radius:999px;
+  border-radius:14px;
   background:radial-gradient(ellipse at 50% 135%,#ffe2b9b8 0%,#ffb17d3b 34%,transparent 68%) padding-box,linear-gradient(180deg,#fa7548 0%,var(--orange) 45%,#e84f28 72%,#ff8254 100%) padding-box,linear-gradient(150deg,#fff8efee 0%,#bc3f2077 46%,#ffe1c3ee 100%) border-box;
   color:#fff8f1;
   box-shadow:inset 0 1px 1px #fff8ecbf,inset 0 -2px 5px #ffe0c3b3,inset 2px 2px 6px #ffffff1a,inset -2px -3px 7px #9e321d5c,0 3px 6px #b742243b,0 0 0 1px #b94a3059;
