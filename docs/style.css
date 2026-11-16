@@ -619,3 +619,8 @@ button:disabled{cursor:default;opacity:.6}
 .topbar.account-menu-open .account-dropdown{top:calc(100% - 1px);right:-12px;left:-12px;width:auto;max-width:none;padding:8px 12px 14px;border:0;border-radius:0 0 23px 23px;animation:none}
 .topbar.account-menu-open .account-dropdown button{background:#ffffff0d;margin:0 0 6px}
 .topbar.account-menu-open .account-dropdown button:hover{background:#ffffff1c}
+
+.topbar.account-menu-open{margin-bottom:138px}
+.topbar.account-menu-open::before{top:calc(-1 * env(safe-area-inset-top, 0px));left:calc(50% - 50vw);right:calc(50% - 50vw);border-radius:0}
+.topbar.account-menu-open .account-dropdown{left:calc(50% - 50vw);right:calc(50% - 50vw);padding-left:max(19px, env(safe-area-inset-left, 0px));padding-right:max(19px, env(safe-area-inset-right, 0px));border-radius:0}
+@media(min-width:700px){.topbar.account-menu-open::before{top:-28px;left:-36px;right:-36px;border-radius:32px 32px 0 0}.topbar.account-menu-open .account-dropdown{left:-36px;right:-36px;padding-left:36px;padding-right:36px}}
