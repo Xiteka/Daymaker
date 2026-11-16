@@ -587,3 +587,7 @@ button:disabled{cursor:default;opacity:.6}
 
 .wish-compact[role="button"]{cursor:pointer}
 .wish-compact[role="button"]:focus-visible{outline:2px solid var(--orange);outline-offset:-3px}
+
+.expense-total-card #expenses-month-total{display:flex;align-items:flex-end;gap:8px;min-width:0;width:100%;line-height:1}
+.expense-total-card #expenses-month-total .balance-number{height:37px;max-width:calc(100% - 36px)}
+.expense-total-card #expenses-month-total .balance-currency{font-size:15px}

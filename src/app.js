@@ -132,7 +132,7 @@ function render() {
   $('#work-month-hours').textContent = `${calendarHours(hours)} h`;
   $('#work-month-pay').textContent = money(earned);
   $('#work-rate').innerHTML = `${money(state.rate)}<span class="small-unit">/h</span>`;
-  $('#expenses-month-total').textContent = money(spent);
+  renderDotValue($('#expenses-month-total'), wholeNumber(spent), money(spent), 'kr', 'balance');
   $('#expenses-month-note').textContent = expenses.length ? `${expenses.length} purchases recorded this month` : 'Your spending, all in one place.';
   renderCalendar(); renderShifts(); renderTodayShifts(); renderExpenses(); renderMonthlyExpenses(); renderWishes(); renderActivity(); renderGambling();
 }
