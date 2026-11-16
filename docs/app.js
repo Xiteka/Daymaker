@@ -658,8 +658,8 @@ function addGamblingEntry(direction, amount, note, opening = false) {
   render();
   return false;
 }
-function gamblingSwipeRow(entry, content, label) {
-  return `<div class="shift-swipe-row xcoin-swipe-row" data-swipe-direction="left" data-action-width="64" tabindex="0" role="group" aria-label="${esc(`${label}. Swipe left to reveal Delete.`)}"><div class="shift-row-actions" aria-hidden="true" inert><button type="button" class="shift-row-delete" data-delete="gambling" data-id="${esc(entry.id)}" aria-label="${esc(`Delete ${label}`)}">Delete</button></div><div class="shift-swipe-content">${content}</div></div>`;
+function gamblingSwipeRow(entry, content, label, type = 'gambling') {
+  return `<div class="shift-swipe-row xcoin-swipe-row" data-swipe-direction="left" data-action-width="64" tabindex="0" role="group" aria-label="${esc(`${label}. Swipe left to reveal Delete.`)}"><div class="shift-row-actions" aria-hidden="true" inert><button type="button" class="shift-row-delete" data-delete="${type}" data-id="${esc(entry.id)}" aria-label="${esc(`Delete ${label}`)}">Delete</button></div><div class="shift-swipe-content">${content}</div></div>`;
 }
 function gamblingTransactionRow(entry) {
   const incoming = entry.amountCents > 0;
@@ -698,14 +698,11 @@ function renderGambling() {
   renderGamblingChart();
   const days = gamblingDailyGroups(state.gamblingEntries, today, period);
   const transactions = days.length ? days.map(day => {
-    const rows = day.entries.map(gamblingTransactionRow).join('');
     if (!day.closed) return `<section class="xcoin-live-day" aria-label="${esc(day.date === today ? 'Today’s transactions' : longDate(day.date))}">
-      <h3 class="xcoin-day-label">${day.date === today ? 'Today' : longDate(day.date)}</h3>${rows}</section>`;
-    return `<details class="xcoin-day-history">
-      <summary><span class="xcoin-day-main"><strong>${longDate(day.date)}</strong><span>In ${gamblingMoney(day.totals.incoming)} · Out ${gamblingMoney(day.totals.outgoing)}</span></span>
-        <span class="xcoin-day-result"><strong class="${gamblingResultClass(day.totals.balance)}">${gamblingSignedMoney(day.totals.balance)}</strong><small>${day.entries.length} ${day.entries.length === 1 ? 'entry' : 'entries'} <span class="xcoin-day-chevron" aria-hidden="true">⌄</span></small></span></summary>
-      <div class="xcoin-day-entries">${rows}</div>
-    </details>`;
+      <h3 class="xcoin-day-label">${day.date === today ? 'Today' : longDate(day.date)}</h3>${day.entries.map(gamblingTransactionRow).join('')}</section>`;
+    return gamblingSwipeRow({ id: day.date }, `<article class="xcoin-day-history">
+      <strong>${longDate(day.date)}</strong><strong class="xcoin-day-result ${gamblingResultClass(day.totals.balance)}">${gamblingSignedMoney(day.totals.balance)}</strong>
+    </article>`, `X-Coin result for ${longDate(day.date)}`, 'gambling-day');
   }).join('') : empty('No entries for this month', 'Choose another month or use + or − to log an entry for today.', '↕');
   $('#gambling-transactions').innerHTML = transactions;
 }
@@ -1469,6 +1466,17 @@ document.addEventListener('click', event => {
 let pendingDelete = null;
 function requestDelete(button) {
   const type = button.dataset.delete;
+  if (type === 'gambling-day') {
+    const date = button.dataset.id;
+    const entries = state.gamblingEntries.filter(entry => entry.kind !== 'opening' && entry.date === date && date < dateKey());
+    if (!entries.length) return;
+    pendingDelete = { type, ids: entries.map(entry => entry.id) };
+    $('#delete-confirm-title').textContent = 'Delete this day’s result?';
+    $('#delete-confirm-name').textContent = longDate(date);
+    $('#delete-confirm-message').textContent = 'This removes the X-Coin entries for this day and updates your balance. This cannot be undone.';
+    $('#delete-confirm-dialog').showModal();
+    return;
+  }
   const list = { shift: 'shifts', expense: 'expenses', 'monthly-expense': 'monthlyExpenses', wish: 'wishes', gambling: 'gamblingEntries' }[type];
   const item = type === 'wish-folder'
     ? state.wishFolders.find(folder => folder.id === button.dataset.id)
@@ -1498,9 +1506,10 @@ $('#delete-confirm-form').addEventListener('submit', event => {
   event.preventDefault();
   if (!pendingDelete) return;
   const { type, list, id } = pendingDelete;
-  if (type === 'gambling') {
+  if (type === 'gambling' || type === 'gambling-day') {
     const previous = state;
-    state = { ...state, gamblingEntries: state.gamblingEntries.filter(entry => entry.id !== id) };
+    const ids = new Set(type === 'gambling-day' ? pendingDelete.ids : [id]);
+    state = { ...state, gamblingEntries: state.gamblingEntries.filter(entry => !ids.has(entry.id)) };
     if (!persist()) {
       state = previous;
       render();

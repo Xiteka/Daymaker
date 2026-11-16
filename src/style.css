@@ -560,16 +560,6 @@ button:disabled{cursor:default;opacity:.6}
 .xcoin-today-totals > span { white-space:nowrap }
 .gambling-balance-card::after,.xcoin-today-card::after { pointer-events:none }
 .xcoin-day-label { margin:15px 0 2px; color:var(--muted); font:500 10px var(--mono); letter-spacing:.7px; text-transform:uppercase }
-.xcoin-day-history { border-bottom:1px solid var(--line) }
-.xcoin-day-history > summary { display:flex; align-items:center; justify-content:space-between; gap:12px; min-height:76px; padding:14px 0; cursor:pointer; list-style:none }
-.xcoin-day-history > summary::-webkit-details-marker { display:none }
-.xcoin-day-main { display:grid; gap:5px; min-width:0 }
-.xcoin-day-main > strong { font-size:13px; font-weight:600 }
-.xcoin-day-main > span { color:var(--muted); font-size:10px; overflow-wrap:anywhere }
-.xcoin-day-result { display:grid; gap:4px; flex-shrink:0; text-align:right }
-.xcoin-day-result > strong { font:500 13px var(--mono) }
-.xcoin-day-result > small { color:var(--muted); font-size:10px }
-.xcoin-day-chevron { display:inline-block; margin-left:4px; transition:transform .15s }
-.xcoin-day-history[open] .xcoin-day-chevron { transform:rotate(180deg) }
-.xcoin-day-entries { padding:0 0 8px 10px; border-left:2px solid var(--line) }
-@media (prefers-reduced-motion:reduce) { .xcoin-day-chevron { transition:none } }
+.xcoin-day-history { display:flex; align-items:center; justify-content:space-between; gap:12px; min-height:54px; padding:14px 0; border-bottom:1px solid var(--line) }
+.xcoin-day-history > strong { font-size:13px; font-weight:600 }
+.xcoin-day-history > .xcoin-day-result { flex-shrink:0; font:500 13px var(--mono); text-align:right }
