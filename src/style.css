@@ -601,3 +601,5 @@ button:disabled{cursor:default;opacity:.6}
 .monthly-label-number,.monthly-total-number{display:block;fill:currentColor;width:auto;max-width:100%}
 .monthly-label-number{height:10px}
 .monthly-total-number{height:17px}
+
+.expense-see-more{width:100%;margin-top:12px;min-height:44px}

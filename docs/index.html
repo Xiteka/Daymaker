@@ -11,7 +11,7 @@
     <link rel="icon" href="./icons/daymaker-spark.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="./icons/daymaker-spark-180.png">
     <title>Daymaker · work & money</title>
-    <link rel="stylesheet" href="style.css?v=87">
+    <link rel="stylesheet" href="style.css?v=88">
     <script src="vendor/supabase-2.119.0.js" defer></script>
     <script src="supabase-config.js?v=1" defer></script>
     <script src="friends.js?v=4" defer></script>
@@ -19,7 +19,7 @@
     <script src="reminders.js?v=2" defer></script>
     <script src="xcoin-storage.js?v=1" defer></script>
     <script src="cloud.js?v=11" defer></script>
-    <script src="app.js?v=74" defer></script>
+    <script src="app.js?v=75" defer></script>
   </head>
   <body class="app-loading">
     <div class="app-loader" id="app-loader" role="status" aria-label="Loading Daymaker">
@@ -118,7 +118,7 @@
         </div>
         <div class="expense-total-card"><span class="eyebrow light">SPENT THIS MONTH</span><strong id="expenses-month-total">kr 0</strong><span id="expenses-month-note">Your spending, all in one place.</span></div>
         <div class="section-heading list-heading"><div><p class="eyebrow">REPEATS EACH MONTH</p><h2>Monthly expenses</h2></div><button class="primary-button" data-open="monthly-expense-dialog">＋ <span>Add monthly</span></button></div><div class="monthly-expense-total"><span id="monthly-expense-label">MONTHLY TOTAL</span><strong id="monthly-expense-total">0 kr</strong></div><div id="monthly-expense-list" class="monthly-expense-list"></div>
-        <div class="section-heading list-heading"><div><p class="eyebrow">RECENTLY</p><h2>Transactions</h2></div></div><div id="expense-list" class="record-list"></div>
+        <div class="section-heading list-heading"><div><p class="eyebrow">RECENTLY</p><h2>Transactions</h2></div></div><div id="expense-list" class="record-list"></div><button type="button" id="expense-see-more" class="primary-button expense-see-more" aria-controls="expense-list" aria-expanded="false" hidden>See more</button>
       </section>
 
       <section class="page" id="gambling-page" aria-labelledby="gambling-title" hidden>

@@ -782,10 +782,22 @@ $('#gambling-entry-form').addEventListener('submit', event => {
   toast('Balance updated.');
 });
 
+let showAllExpenses = false;
 function renderExpenses() {
   const rows = [...state.expenses].sort((a, b) => b.date.localeCompare(a.date));
-  $('#expense-list').innerHTML = rows.length ? rows.map(item => `<div class="shift-swipe-row record-swipe-row" data-action-width="64" tabindex="0" role="group" aria-label="${esc(`${item.title}, ${longDate(item.date)}. Swipe right to reveal Delete.`)}"><div class="shift-row-actions" aria-hidden="true" inert><button type="button" class="shift-row-delete" data-delete="expense" data-id="${esc(item.id)}" aria-label="${esc(`Delete ${item.title}`)}">Delete</button></div><div class="shift-swipe-content"><article class="record-row"><span class="record-icon expense-icon">${item.category === 'Food' ? '⌁' : item.category === 'Transport' ? '↗' : '↘'}</span><div class="record-main"><strong>${esc(item.title)}</strong><span>${longDate(item.date)} · ${esc(item.category)}</span></div><div class="record-amount expense-amount">−${money(item.amount)}</div></article></div></div>`).join('') : empty('A clear picture starts here', 'Add an expense when you want to keep track.', '↘');
+  const visibleRows = showAllExpenses ? rows : rows.slice(0, 5);
+  const moreButton = $('#expense-see-more');
+  moreButton.hidden = rows.length <= 5;
+  moreButton.textContent = showAllExpenses ? 'See less' : 'See more';
+  moreButton.setAttribute('aria-expanded', String(showAllExpenses));
+  $('#expense-list').innerHTML = rows.length ? visibleRows.map(item => `<div class="shift-swipe-row record-swipe-row" data-action-width="64" tabindex="0" role="group" aria-label="${esc(`${item.title}, ${longDate(item.date)}. Swipe right to reveal Delete.`)}"><div class="shift-row-actions" aria-hidden="true" inert><button type="button" class="shift-row-delete" data-delete="expense" data-id="${esc(item.id)}" aria-label="${esc(`Delete ${item.title}`)}">Delete</button></div><div class="shift-swipe-content"><article class="record-row"><span class="record-icon expense-icon">${item.category === 'Food' ? '⌁' : item.category === 'Transport' ? '↗' : '↘'}</span><div class="record-main"><strong>${esc(item.title)}</strong><span>${longDate(item.date)} · ${esc(item.category)}</span></div><div class="record-amount expense-amount">−${money(item.amount)}</div></article></div></div>`).join('') : empty('A clear picture starts here', 'Add an expense when you want to keep track.', '↘');
 }
+
+$('#expense-see-more').addEventListener('click', () => {
+  showAllExpenses = !showAllExpenses;
+  closeShiftRow();
+  renderExpenses();
+});
 
 function renderMonthlyExpenses() {
   const month = dateKey().slice(0, 7);
