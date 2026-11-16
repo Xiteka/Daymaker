@@ -11,14 +11,14 @@
     <link rel="icon" href="./icons/daymaker-spark.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="./icons/daymaker-spark-180.png">
     <title>Daymaker · work & money</title>
-    <link rel="stylesheet" href="style.css?v=73">
+    <link rel="stylesheet" href="style.css?v=74">
     <script src="vendor/supabase-2.119.0.js" defer></script>
     <script src="supabase-config.js?v=1" defer></script>
     <script src="friends.js?v=4" defer></script>
     <script src="reminder-device.js?v=1" defer></script>
     <script src="reminders.js?v=2" defer></script>
     <script src="cloud.js?v=10" defer></script>
-    <script src="app.js?v=65" defer></script>
+    <script src="app.js?v=66" defer></script>
   </head>
   <body class="app-loading">
     <div class="app-loader" id="app-loader" role="status" aria-label="Loading Daymaker">
@@ -128,21 +128,21 @@
         <div class="shift-swipe-row xcoin-balance-swipe" data-swipe-direction="left" data-action-width="72" tabindex="0" role="group" aria-label="X-Coin balance. Swipe left to edit your previous total.">
           <div class="shift-row-actions" aria-hidden="true" inert><button type="button" class="shift-row-edit" data-gambling-edit-opening aria-label="Edit previous total">Edit</button></div>
           <section class="shift-swipe-content balance-card gambling-balance-card" aria-label="X-Coin balance">
-            <p class="eyebrow light">BALANCE</p>
-            <div class="balance" id="gambling-balance">0 kr</div>
-            <div class="balance-foot">
-              <span><span id="gambling-month-direction">in</span> <b id="gambling-month-amount">0 kr</b></span>
-              <span id="gambling-balance-month" class="xcoin-balance-month"></span>
+            <div class="xcoin-balance-heading"><p class="eyebrow light">BALANCE</p><span id="gambling-balance-month" class="xcoin-balance-month"></span></div>
+            <div class="xcoin-balance-values">
+              <div class="balance" id="gambling-balance">0 kr</div>
+              <div class="balance-foot"><span><span id="gambling-month-direction">in</span> <b id="gambling-month-amount">0 kr</b></span></div>
+            </div>
+            <div class="gambling-balance-actions">
+              <button type="button" class="primary-button" data-gambling-direction="1" aria-label="Add money"><svg class="xcoin-money-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M12 5v14"/></svg></button>
+              <button type="button" class="primary-button" data-gambling-direction="-1" aria-label="Subtract money"><svg class="xcoin-money-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/></svg></button>
             </div>
           </section>
         </div>
-        <div class="gambling-balance-actions">
-          <button type="button" class="primary-button" data-gambling-direction="1" aria-label="Add money"><svg class="xcoin-money-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M12 5v14"/></svg></button>
-          <button type="button" class="primary-button" data-gambling-direction="-1" aria-label="Subtract money"><svg class="xcoin-money-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/></svg></button>
-        </div>
-        <section class="xcoin-today-card" aria-labelledby="xcoin-today-title">
-          <div class="xcoin-today-heading"><h2 id="xcoin-today-title">Today</h2><span id="xcoin-today-date"></span></div>
-          <div class="xcoin-today-totals"><div><span>IN</span><strong class="xcoin-gain" id="xcoin-today-in">0 kr</strong></div><div><span>OUT</span><strong class="xcoin-loss" id="xcoin-today-out">0 kr</strong></div></div>
+        <section class="balance-card xcoin-today-card" aria-labelledby="xcoin-today-title">
+          <div class="xcoin-today-heading"><h2 class="eyebrow light" id="xcoin-today-title">TODAY</h2><span id="xcoin-today-date"></span></div>
+          <div class="balance" id="xcoin-today-net">0 kr</div>
+          <div class="balance-foot xcoin-today-totals"><span>in <b id="xcoin-today-in">0 kr</b></span><span>out <b id="xcoin-today-out">0 kr</b></span></div>
         </section>
         <section class="xcoin-chart-card" aria-labelledby="xcoin-chart-title">
           <div class="xcoin-chart-heading">

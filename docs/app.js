@@ -26,6 +26,7 @@ const balanceDigits = {
   '7': ['11111','00001','00010','00100','01000','01000','01000'],
   '8': ['01110','10001','10001','01110','10001','10001','01110'],
   '9': ['01110','10001','10001','01111','00001','00001','01110'],
+  '+': ['00000','00100','00100','11111','00100','00100','00000'],
   '-': ['00000','00000','00000','11111','00000','00000','00000'],
   '.': ['0','0','0','0','0','0','1']
 };
@@ -562,6 +563,9 @@ function renderWorkShiftLists(today) {
 const gamblingMoney = cents => new Intl.NumberFormat('nb-NO', {
   style: 'currency', currency: 'NOK', minimumFractionDigits: 2, maximumFractionDigits: 2
 }).format(cents / 100).replace(/\s/g, ' ');
+const gamblingDotNumber = cents => new Intl.NumberFormat('en-GB', {
+  minimumFractionDigits: 2, maximumFractionDigits: 2
+}).format(cents / 100).replace(/,/g, ' ');
 function gamblingTotals(entries) {
   return entries.reduce((totals, entry) => {
     if (!Number.isSafeInteger(entry.amountCents)) return totals;
@@ -679,16 +683,16 @@ function renderGambling() {
   renderWorkPeriodPicker(gamblingMonth, workMonthOptions, month);
   renderWorkPeriodPicker(gamblingYear, [...years].sort((a, b) => a - b).map(value => ({ value: String(value), label: String(value) })), year);
   const totals = gamblingTotals(state.gamblingEntries);
-  const dots = new Intl.NumberFormat('en-GB', {
-    minimumFractionDigits: 2, maximumFractionDigits: 2
-  }).format(totals.balance / 100).replace(/,/g, ' ');
-  renderDotValue($('#gambling-balance'), dots, gamblingMoney(totals.balance), 'kr', 'balance');
+  renderDotValue($('#gambling-balance'), gamblingDotNumber(totals.balance), gamblingMoney(totals.balance), 'kr', 'balance');
   const monthly = gamblingMonthlyResults(state.gamblingEntries)[5];
   $('#gambling-month-direction').textContent = monthly.cents < 0 ? 'out' : 'in';
   $('#gambling-month-amount').textContent = gamblingMoney(Math.abs(monthly.cents));
   $('#gambling-balance-month').textContent = `${monthly.label.toUpperCase()} ${monthly.year}`;
   const daily = gamblingTodayTotals(state.gamblingEntries, today);
   $('#xcoin-today-date').textContent = longDate(today);
+  const dailyNet = $('#xcoin-today-net');
+  dailyNet.className = `balance ${gamblingResultClass(daily.balance)}`;
+  renderDotValue(dailyNet, `${daily.balance > 0 ? '+' : ''}${gamblingDotNumber(daily.balance)}`, gamblingSignedMoney(daily.balance), 'kr', 'balance');
   $('#xcoin-today-in').textContent = gamblingMoney(daily.incoming);
   $('#xcoin-today-out').textContent = gamblingMoney(daily.outgoing);
   renderGamblingChart();
