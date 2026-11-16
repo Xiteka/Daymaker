@@ -983,7 +983,7 @@ function renderWishes() {
   const sorted = [...wishes].sort((a, b) => progressOf(b) - progressOf(a));
   const lastHearted = wishes.filter(wish => Number(wish.favoriteAt) > 0).sort((a, b) => Number(b.favoriteAt) - Number(a.favoriteAt))[0];
   const homeWish = lastHearted || sorted[0];
-  $('#home-wishlist').innerHTML = homeWish ? `<div class="home-wish">${wishCard(homeWish, 0)}<div class="wish-total-note"><span class="eyebrow">AIMING FOR</span><strong>${money(total)}</strong><span>across ${wishes.length} ${wishes.length === 1 ? 'wish' : 'wishes'}</span></div></div>` : empty('Dream a little', 'Add your first wishlist item.', '♡');
+  $('#home-wishlist').innerHTML = homeWish ? `<div class="home-wish">${wishCard(homeWish, 0, true)}<div class="wish-total-note"><span class="eyebrow">AIMING FOR</span><strong>${money(total)}</strong><span>across ${wishes.length} ${wishes.length === 1 ? 'wish' : 'wishes'}</span></div></div>` : empty('Dream a little', 'Add your first wishlist item.', '♡');
 }
 $('#wish-folder-back').addEventListener('click', () => {
   const previous = activeWishFolder;

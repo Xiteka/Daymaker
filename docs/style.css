@@ -603,3 +603,7 @@ button:disabled{cursor:default;opacity:.6}
 .monthly-total-number{height:17px}
 
 .expense-see-more,.expense-see-more:hover{width:100%;margin-top:12px;min-height:44px;background:transparent;color:var(--orange)}
+
+.home-wish{grid-template-columns:minmax(0,1fr)}
+.home-wish .wish-compact{min-height:0;padding:12px 14px}
+.home-wish .wish-compact h3{flex:1;min-width:0;margin:0;font-size:15px;overflow-wrap:anywhere}
