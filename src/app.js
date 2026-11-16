@@ -782,6 +782,7 @@ function renderMonthlyExpenses() {
   const [year, monthNumber] = month.split('-').map(Number);
   const lastDay = new Date(year, monthNumber, 0).getDate();
   const bills = [...state.monthlyExpenses].sort((a, b) => Number(a.dueDay) - Number(b.dueDay));
+  $('#monthly-expense-total').textContent = money(bills.reduce((sum, bill) => sum + (Number(bill.amount) || 0), 0));
   $('#monthly-expense-list').innerHTML = bills.length ? bills.map(bill => {
     const dueDay = Math.min(Math.max(1, Number(bill.dueDay) || 1), lastDay);
     const dueDate = `${month}-${String(dueDay).padStart(2, '0')}`;
