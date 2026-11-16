@@ -542,7 +542,7 @@ button:disabled{cursor:default;opacity:.6}
 .xcoin-balance-swipe .gambling-balance-card { background:var(--orange) }
 
 /* X-Coin: live daily totals and one expandable result for each finished day. */
-.xcoin-balance-swipe .gambling-balance-card { display:grid; grid-template-columns:minmax(0,1fr) 48px; column-gap:14px; align-items:center; min-height:154px }
+.xcoin-balance-swipe .gambling-balance-card { display:grid; grid-template-columns:minmax(0,1fr) 48px; column-gap:14px; align-items:center; min-height:136px; padding:12px 20px }
 .xcoin-balance-heading { grid-column:1; display:flex; align-items:center; flex-wrap:wrap; gap:6px 12px; position:relative; z-index:1 }
 .xcoin-balance-heading .eyebrow { margin:0 }
 .xcoin-balance-heading .xcoin-balance-month { color:#ffffffbb; font-size:9px }
@@ -552,11 +552,11 @@ button:disabled{cursor:default;opacity:.6}
 .xcoin-balance-values .balance-currency { font-size:13px }
 .xcoin-balance-swipe .gambling-balance-actions { grid-column:2; grid-row:1 / span 2; position:relative; z-index:1 }
 .xcoin-balance-swipe .gambling-balance-actions .primary-button { width:48px; height:48px; min-height:48px; padding:0 }
-.xcoin-today-card { margin-top:16px; background:var(--deep); min-height:154px }
+.xcoin-today-card { margin-top:16px; background:var(--deep); min-height:136px; padding:12px 20px }
 .xcoin-today-heading { display:flex; align-items:center; justify-content:space-between; gap:12px; position:relative; z-index:1 }
 .xcoin-today-heading h2 { margin:0; font:500 9px var(--mono); letter-spacing:1px }
 .xcoin-today-heading > span { color:#ffffffbb; font:9px var(--mono) }
-.xcoin-today-card .balance { margin:18px 0 20px; padding:0 }
+.xcoin-today-card .balance { margin:14px 0 16px; padding:0 }
 .xcoin-today-card .xcoin-gain { color:#79d5a7 }
 .xcoin-today-card .xcoin-even { color:#fff }
 .xcoin-today-totals { position:relative; z-index:1; justify-content:space-between; flex-wrap:wrap; gap:6px 16px; font-size:11px }
