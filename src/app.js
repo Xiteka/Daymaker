@@ -400,6 +400,11 @@ shiftPage.addEventListener('click', event => {
 }, true);
 }
 document.addEventListener('keydown', event => {
+  if (event.target.matches('.wish-compact[data-add-saving]') && ['Enter', ' '].includes(event.key)) {
+    event.preventDefault();
+    event.target.click();
+    return;
+  }
   const row = event.target.closest('.shift-swipe-row');
   if (row && event.target === row && event.key === (rowSwipeDirection(row) === -1 ? 'ArrowLeft' : 'ArrowRight')) {
     event.preventDefault();
@@ -902,8 +907,9 @@ function wishCard(item, index, allowMove = false) {
   if (allowMove) {
     const action = wishIsFunded(item) || target === 0
       ? `<button type="button" class="wish-action-get" data-purchase-wish="${esc(item.id)}" aria-label="${esc(`Mark ${item.title} as purchased`)}">✓</button>`
-      : `<button type="button" class="wish-action-save" data-add-saving="${esc(item.id)}" aria-label="${esc(`Add savings to ${item.title}`)}">＋</button>`;
-    return `<div class="shift-swipe-row wish-swipe-row" data-swipe-direction="left" data-action-width="144" tabindex="0" role="group" aria-label="${esc(`${item.title}. Swipe left for wish options.`)}"><div class="shift-row-actions" aria-hidden="true" inert>${action}<button type="button" class="wish-action-move" data-move-wish="${esc(item.id)}" aria-label="${esc(`Move ${item.title} to another folder`)}">${wishFolderIcon}</button><button type="button" class="shift-row-delete wish-action-delete" data-delete="wish" data-id="${esc(item.id)}" aria-label="${esc(`Delete ${item.title}`)}">×</button></div><div class="shift-swipe-content"><article class="wish-card wish-compact ${colors[index % colors.length]}"><div class="wish-compact-top">${favoriteButton}<h3>${esc(item.title)}</h3>${target > 0 ? `<strong class="wish-compact-price">${money(target)}</strong>` : ''}</div>${target > 0 ? `<div class="wish-progress"><span style="width:${ratio}%"></span></div><p class="wish-compact-percent">${Math.round(ratio)}% saved</p>` : ''}</article></div></div>`;
+      : '';
+    const actionWidth = action ? 144 : 96;
+    return `<div class="shift-swipe-row wish-swipe-row" data-action-width="${actionWidth}" tabindex="0" role="group" aria-label="${esc(`${item.title}. Swipe right for wish options.`)}"><div class="shift-row-actions" style="width:${actionWidth}px" aria-hidden="true" inert>${action}<button type="button" class="wish-action-move" data-move-wish="${esc(item.id)}" aria-label="${esc(`Move ${item.title} to another folder`)}">${wishFolderIcon}</button><button type="button" class="shift-row-delete wish-action-delete" data-delete="wish" data-id="${esc(item.id)}" aria-label="${esc(`Delete ${item.title}`)}">×</button></div><div class="shift-swipe-content"><article class="wish-card wish-compact ${colors[index % colors.length]}" data-add-saving="${esc(item.id)}" role="button" tabindex="0" aria-label="${esc(`Add savings to ${item.title}`)}"><div class="wish-compact-top">${favoriteButton}<h3>${esc(item.title)}</h3>${target > 0 ? `<strong class="wish-compact-price">${money(target)}</strong>` : ''}</div>${target > 0 ? `<div class="wish-progress"><span style="width:${ratio}%"></span></div><p class="wish-compact-percent">${Math.round(ratio)}% saved</p>` : ''}</article></div></div>`;
   }
   return `<article class="wish-card ${colors[index % colors.length]}"><div class="wish-top">${favoriteButton}<div class="wish-card-actions">${move}<button class="delete-button" data-delete="wish" data-id="${esc(item.id)}" aria-label="Delete wish">×</button></div></div><h3>${esc(item.title)}</h3><div class="wish-amounts">${amountMarkup}</div>${progressMarkup}<div class="wish-card-foot"><p>${progressNote}</p>${purchaseButton}</div></article>`;
 }
@@ -1491,6 +1497,8 @@ document.addEventListener('click', event => {
   }
   const saveButton = event.target.closest('[data-add-saving]');
   if (saveButton) {
+    const swipeRow = saveButton.closest('.wish-swipe-row');
+    if (swipeRow?.classList.contains('actions-open')) { closeShiftRow(); return; }
     const wish = state.wishes.find(item => item.id === saveButton.dataset.addSaving);
     if (wish && !wishIsPurchased(wish)) {
       const form = $('#saving-form');

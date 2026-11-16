@@ -573,7 +573,7 @@ button:disabled{cursor:default;opacity:.6}
 .wishlist-grid{grid-template-columns:minmax(0,1fr)}
 
 .wish-swipe-row{border-radius:17px}
-.wish-swipe-row .shift-row-actions{inset:0 0 0 auto;width:144px;padding:4px 0 4px 6px}
+.wish-swipe-row .shift-row-actions{inset:0 auto 0 0;padding:4px 6px 4px 0}
 .wish-swipe-row .shift-row-actions button{display:grid;place-items:center;font-size:22px}
 .wish-action-save,.wish-action-get{background:#d7dbd1;color:var(--ink)}
 .wish-action-move{background:#f5b09b;color:var(--ink)}
@@ -584,3 +584,6 @@ button:disabled{cursor:default;opacity:.6}
 .wish-compact-price{flex:none;font:500 13px var(--display);white-space:nowrap}
 .wish-compact .wish-progress{margin-top:9px}
 .wish-compact .wish-compact-percent{margin:4px 0 0;color:var(--muted);font-size:10px}
+
+.wish-compact[role="button"]{cursor:pointer}
+.wish-compact[role="button"]:focus-visible{outline:2px solid var(--orange);outline-offset:-3px}
