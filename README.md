@@ -1,45 +1,123 @@
+<p align="center">
+  <img src="branding/readme/daymaker-banner.png" alt="Daymaker — A little more in control. Work hours, pay, expenses and wishlists." width="100%">
+</p>
+
 # Daymaker
 
-A mobile-first tracker for work hours, estimated pay, expenses, and savings wishes. It uses a warm stone background, rounded dashboard cards, dark navigation, and a coral accent inspired by the supplied references.
+A little more in control of your time, your money and the things you want.
 
-## Run
+Daymaker is a mobile-first app for tracking work hours, estimated earnings, everyday spending and savings goals. Plan a shift, finish your workday with a swipe, keep monthly bills in view and save towards your next little win.
 
-Requires Node.js 22.13 or newer and npm 10.9 or newer.
+**[Open Daymaker →](https://xiteka.github.io/Daymaker/)** · [Install on iPhone](#install-on-iphone) · [Screenshots](#screenshots) · [Run locally](#run-locally)
+
+## Screenshots
+
+Real app screens at an iPhone-sized viewport. All names, shifts, amounts and wishes below are **fictional demonstration data**, captured in November 2026.
+
+<table>
+  <tr>
+    <th>Home</th>
+    <th>Work log</th>
+    <th>Calendar</th>
+  </tr>
+  <tr>
+    <td width="33%"><img src="branding/readme/home.jpg" alt="Home dashboard with dotted earnings, worked hours, expenses and today's shift slider" width="260"></td>
+    <td width="33%"><img src="branding/readme/work.jpg" alt="Work log with today's shift, month and year filters, and upcoming shifts" width="260"></td>
+    <td width="33%"><img src="branding/readme/calendar.jpg" alt="November calendar with rounded day tiles and selected-day hours, pay and shift times" width="260"></td>
+  </tr>
+  <tr>
+    <th>Expenses</th>
+    <th>Wishlist folders</th>
+    <th>Savings goals</th>
+  </tr>
+  <tr>
+    <td><img src="branding/readme/expenses.jpg" alt="Expenses with a monthly spending summary, recurring bills, paid status and transactions" width="260"></td>
+    <td><img src="branding/readme/wishlist-folders.jpg" alt="General, Summer trip and Christmas wishlist folders with savings progress" width="260"></td>
+    <td><img src="branding/readme/wishlist.jpg" alt="Wishlist items with a favourite heart, savings progress and a Got it purchase button" width="260"></td>
+  </tr>
+</table>
+
+## What you can do
+
+| Area | Features |
+| --- | --- |
+| **Home** | See money earned and spent this month, worked hours, estimated earnings, the next payday, today's or the next shift, recent activity and a favourite wish. |
+| **Work** | Schedule shifts with start/end times, a title, hourly rate and paid or unpaid breaks. Swipe or hold to finish today's shift, adjust actual hours or earnings, and browse upcoming shifts or history by month and year. |
+| **Calendar** | See completed and planned workdays. Tap a day on a phone or hover on a computer for hours, earnings and shift times. Log a shift directly for the selected date. |
+| **Expenses** | Log everyday purchases and recurring monthly bills, choose due days, mark bills paid and review transactions. |
+| **Wishlist** | Organise wishes into General or custom folders, add savings, favourite an item for Home and mark a funded wish purchased. Purchases become expenses and stay in the folder's purchased history. |
+| **Account & friends** | Save a nickname, change settings, sync an account, download backups, add friends by email and optionally view shared shift calendars. |
+| **iPhone reminders** | Opt in to a work reminder 60 minutes before a shift, using the installed Home Screen app and notification permission. |
+
+### How shift totals work
+
+- Only **completed shifts** count towards worked hours and earned pay. The monthly estimate also includes upcoming shifts.
+- New shifts use your saved hourly rate. The initial default is **220 NOK/hour**; the default payday is the **25th**. Both can be changed in **Account → Your settings**.
+- A shift of **6 hours or longer** suggests a 30-minute unpaid break. Shorter shifts leave it blank. You can override the break or mark it paid.
+- When you finish a shift, adjust the actual times and break. Completed shifts also support a manual earned amount, which updates the totals throughout the app.
+- Missed completion can be handled later from Work. Swiping a shift reveals edit/delete actions, and deletion asks for confirmation.
+- Earnings are estimates based on the recorded rate and paid hours. Tax and overtime premiums are not calculated automatically.
+
+## Install on iPhone
+
+1. Open **[Daymaker](https://xiteka.github.io/Daymaker/)** in Safari.
+2. Tap **Share → Add to Home Screen**.
+3. Add Daymaker, then launch it from its new icon.
+4. To use work reminders, log in and enable them from Account, then allow notifications when prompted.
+
+Daymaker is a **Progressive Web App (PWA)**. Its app shell is cached for offline use; account sync and push reminders need an internet connection. The repository also includes an Electron desktop wrapper. It currently has no native iOS/Xcode app or Home Screen widget.
+
+## Your data
+
+You can use Daymaker without an account: guest data stays in that browser's local storage. With Supabase login, existing device records are merged into the account, subsequent edits sync, and offline edits retry after reconnecting. Device and account backups are available from Account.
+
+Friends' calendar sharing requires both people to enable it. Shared calendar results contain a nickname, shift date and start/end times; earnings, expenses and wishlist contents are not included.
+
+For database, authentication, email and reminder configuration, see [Supabase setup](supabase/README.md), [friend requests](supabase/friends.sql) and [calendar sharing](supabase/friend-calendars.sql).
+
+## Visual identity
+
+Rounded cards, a warm stone background, dark navigation, dotted numbers and an orange accent keep the interface consistent across pages.
+
+<p>
+  <img src="src/icons/daymaker-spark-192.png" alt="Daymaker's orange rounded-square logo, with a flowing abstract mark and four-point sparkle" width="96" height="96">
+</p>
+
+| Orange | Stone | Ink |
+| --- | --- | --- |
+| `#F05432` | `#E6E5E0` | `#242824` |
+
+The [scalable logo master](src/icons/daymaker-spark.svg), app icon exports and [branding notes](branding/README.md) are included in the repository.
+
+## Run locally
+
+The web app uses plain HTML, CSS and JavaScript. From the repository root, serve `src/` with a local HTTP server, for example:
+
+```sh
+python3 -m http.server 4173 --bind 127.0.0.1 --directory src
+```
+
+Open **http://localhost:4173**. Use localhost for development and HTTPS for installation on a phone; opening `index.html` through `file://` does not enable service workers.
+
+For the Electron desktop wrapper, use Node.js **22.13+** and npm **10.9+**:
 
 ```sh
 npm ci
-npm run preview
+npm start
 ```
 
-Open the printed local URL in a browser. To run the Electron desktop wrapper, use `npm start`. The responsive interface is designed to fit an iPhone-sized screen. This repository currently packages an Electron app; it does not include a native iOS / Xcode project.
+### Project layout
 
-## Tracker behavior
+```text
+src/          Web app source, icons, manifest and service worker
+docs/         Published copy served by GitHub Pages
+branding/     Approved logo concept, branding notes and README images
+supabase/     Database SQL, authentication notes and reminder function
+main.cjs      Electron desktop entry point
+```
 
-- Schedule shifts with a date, start and end time, note, and hourly rate. On the scheduled day, swipe or hold the orange arrow on Home or Work to finish a shift and adjust the actual hours or times. Missed shifts can be finished later from Work.
-- Only completed shifts count toward work and pay totals; shifts saved before the completion feature remain completed. The calendar shows completed and scheduled days.
-- New shifts use the hourly rate from Your settings and automatically suggest a 30-minute unpaid break when the shift is 6 hours or longer; shorter shifts keep the break blank. A manually entered or cleared break is preserved while you adjust the times. Adjust the break or check Paid to include it in paid hours. Existing shifts retain their recorded hours until edited.
-- Break minutes and paid status can also be updated when finishing or editing a shift; dashboard, calendar, and pay estimates use the resulting paid hours.
-- Home and Work show today’s unfinished shift with its completion slider, then show the next shift after today’s shifts are finished.
-- Estimated pay uses each shift’s hourly rate and does not automatically add an overtime premium.
-- Add expenses with a category and date.
-- Save wishlist items with a target and the amount already saved. Existing wishes belong to General; create named folders for gifts, trips, and other plans. Add wishes directly inside a folder or move existing wishes with the folder icon. Home continues to summarize wishes across every folder.
-- Dashboard totals show current-month pay and expenses, with an estimated take-home figure.
-- Guest data stays in local browser storage. Optional Supabase login copies existing device data into a private account, retains device backups, and syncs subsequent edits. Offline edits retry when connected. See [Supabase setup](supabase/README.md).
+### Publish with GitHub Pages
 
-Tap the compact name pill in the top bar to open the Account page. Signed-in users can save a name or nickname, which syncs with their private account and appears in the pill. Until a name is saved, the email username is shown.
+The [Publish Daymaker workflow](.github/workflows/pages.yml) publishes `docs/` when `main` changes. For app releases, keep changed files in `src/` and `docs/` in sync, update the relevant asset versions and service-worker cache, then push to `main`. Wait for the workflow to succeed before checking the live app.
 
-The default hourly rate is NOK 220 and can be changed from the Account page → Your settings. No shifts, expenses, or wishlist entries are prefilled.
-
-
-## Install on iPhone as a PWA
-
-The app includes a web app manifest, Home Screen icons, and a service worker that caches the app shell for offline use. For iPhone installation, publish the `src` folder at an HTTPS address. Open that address in Safari, choose Share → Add to Home Screen, then add Daymaker. The `file://` preview is for viewing only; service workers need HTTPS or localhost.
-
-For local development, run `npm run preview` and open the localhost address on your Mac. To install on an iPhone, deploy the `src` folder to an HTTPS static host and open that public address in Safari.
-
-
-## Publish with GitHub Pages
-
-GitHub Pages uses the GitHub Actions publishing source. The `Publish Daymaker` workflow in `.github/workflows/pages.yml` uploads `docs/` and publishes it on every push to `main`. It can also be started manually from the Actions tab.
-
-After changing the app, copy the changed files from `src/` to `docs/`, update the service worker cache and asset versions, and push the changes. Wait for the `Publish Daymaker` workflow to succeed before checking the live app.
+README images live in `branding/readme/`; updating documentation does not require changing the app cache or users' stored data.
