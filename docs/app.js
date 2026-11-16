@@ -16,6 +16,16 @@ try {
 const money = value => new Intl.NumberFormat('nb-NO', { style: 'currency', currency: 'NOK', maximumFractionDigits: 0 }).format(value || 0).replace(/\s/g, ' ');
 // Draw key numbers as a dot matrix while keeping their full text accessible.
 const balanceDigits = {
+  'M': ['10001','11011','10101','10101','10001','10001','10001'],
+  'O': ['01110','10001','10001','10001','10001','10001','01110'],
+  'N': ['10001','11001','10101','10011','10001','10001','10001'],
+  'T': ['11111','00100','00100','00100','00100','00100','00100'],
+  'H': ['10001','10001','10001','11111','10001','10001','10001'],
+  'L': ['10000','10000','10000','10000','10000','10000','11111'],
+  'Y': ['10001','10001','01010','00100','00100','00100','00100'],
+  'A': ['01110','10001','10001','11111','10001','10001','10001'],
+  'K': ['10001','10010','10100','11000','10100','10010','10001'],
+  'R': ['11110','10001','10001','11110','10100','10010','10001'],
   '0': ['01110','10001','10001','10001','10001','10001','01110'],
   '1': ['00100','01100','00100','00100','00100','00100','01110'],
   '2': ['01110','10001','00001','00010','00100','01000','11111'],
@@ -782,7 +792,9 @@ function renderMonthlyExpenses() {
   const [year, monthNumber] = month.split('-').map(Number);
   const lastDay = new Date(year, monthNumber, 0).getDate();
   const bills = [...state.monthlyExpenses].sort((a, b) => Number(a.dueDay) - Number(b.dueDay));
-  $('#monthly-expense-total').textContent = money(bills.reduce((sum, bill) => sum + (Number(bill.amount) || 0), 0));
+  const monthlyTotal = bills.reduce((sum, bill) => sum + (Number(bill.amount) || 0), 0);
+  renderDotValue($('#monthly-expense-label'), 'MONTHLY TOTAL', 'Monthly total', '', 'monthly-label');
+  renderDotValue($('#monthly-expense-total'), `${wholeNumber(monthlyTotal)} KR`, money(monthlyTotal), '', 'monthly-total');
   $('#monthly-expense-list').innerHTML = bills.length ? bills.map(bill => {
     const dueDay = Math.min(Math.max(1, Number(bill.dueDay) || 1), lastDay);
     const dueDate = `${month}-${String(dueDay).padStart(2, '0')}`;

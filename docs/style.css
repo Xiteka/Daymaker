@@ -595,3 +595,9 @@ button:disabled{cursor:default;opacity:.6}
 .monthly-expense-total{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 12px;padding:16px;border-radius:17px;background:var(--card)}
 .monthly-expense-total span{color:var(--muted);font:500 10px var(--mono);letter-spacing:.8px}
 .monthly-expense-total strong{font:500 19px var(--display);letter-spacing:-.4px;text-align:right}
+
+.monthly-expense-total{background:var(--orange);color:#fff}
+.monthly-expense-total #monthly-expense-label,.monthly-expense-total #monthly-expense-total{display:flex;align-items:center;min-width:0;color:inherit}
+.monthly-label-number,.monthly-total-number{display:block;fill:currentColor;width:auto;max-width:100%}
+.monthly-label-number{height:10px}
+.monthly-total-number{height:20px}
