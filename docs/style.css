@@ -540,3 +540,28 @@ button:disabled{cursor:default;opacity:.6}
 .xcoin-balance-swipe .balance-foot { justify-content:space-between; gap:8px }
 .xcoin-balance-month { align-self:center; font:9px var(--mono); letter-spacing:.7px }
 .xcoin-balance-swipe .gambling-balance-card { background:var(--orange) }
+
+/* X-Coin: live daily totals and one expandable result for each finished day. */
+.xcoin-today-card { margin-top:16px; padding:15px 18px; border-radius:20px; background:var(--card) }
+.xcoin-today-heading { display:flex; align-items:center; justify-content:space-between; gap:12px }
+.xcoin-today-heading h2 { margin:0; font:500 17px var(--display); letter-spacing:-.4px }
+.xcoin-today-heading > span { color:var(--muted); font:10px var(--mono) }
+.xcoin-today-totals { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:18px; margin-top:12px }
+.xcoin-today-totals > div { display:grid; gap:5px; min-width:0 }
+.xcoin-today-totals > div + div { padding-left:18px; border-left:1px solid var(--line) }
+.xcoin-today-totals span { color:var(--muted); font:10px var(--mono); letter-spacing:.8px }
+.xcoin-today-totals strong { font:500 20px var(--display); overflow-wrap:anywhere }
+.xcoin-day-label { margin:15px 0 2px; color:var(--muted); font:500 10px var(--mono); letter-spacing:.7px; text-transform:uppercase }
+.xcoin-day-history { border-bottom:1px solid var(--line) }
+.xcoin-day-history > summary { display:flex; align-items:center; justify-content:space-between; gap:12px; min-height:76px; padding:14px 0; cursor:pointer; list-style:none }
+.xcoin-day-history > summary::-webkit-details-marker { display:none }
+.xcoin-day-main { display:grid; gap:5px; min-width:0 }
+.xcoin-day-main > strong { font-size:13px; font-weight:600 }
+.xcoin-day-main > span { color:var(--muted); font-size:10px; overflow-wrap:anywhere }
+.xcoin-day-result { display:grid; gap:4px; flex-shrink:0; text-align:right }
+.xcoin-day-result > strong { font:500 13px var(--mono) }
+.xcoin-day-result > small { color:var(--muted); font-size:10px }
+.xcoin-day-chevron { display:inline-block; margin-left:4px; transition:transform .15s }
+.xcoin-day-history[open] .xcoin-day-chevron { transform:rotate(180deg) }
+.xcoin-day-entries { padding:0 0 8px 10px; border-left:2px solid var(--line) }
+@media (prefers-reduced-motion:reduce) { .xcoin-day-chevron { transition:none } }

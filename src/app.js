@@ -588,6 +588,22 @@ function gamblingMonthlyResults(entries, through = new Date()) {
   }
   return months;
 }
+// Daily history is a view over original entries; never merge or discard saved records.
+function gamblingDailyGroups(entries, today, period) {
+  const days = new Map();
+  for (const entry of [...entries].reverse()) {
+    if (entry.kind === 'opening' || !Number.isSafeInteger(entry.amountCents)
+      || !/^\d{4}-\d{2}-\d{2}$/.test(entry.date || '') || !entry.date.startsWith(`${period}-`)) continue;
+    if (!days.has(entry.date)) days.set(entry.date, []);
+    days.get(entry.date).push(entry);
+  }
+  return [...days].sort(([a], [b]) => b.localeCompare(a)).map(([date, items]) => ({
+    date, entries: items, totals: gamblingTotals(items), closed: date < today
+  }));
+}
+function gamblingTodayTotals(entries, today) {
+  return gamblingTotals(entries.filter(entry => entry.kind !== 'opening' && entry.date === today));
+}
 const gamblingResultClass = cents => cents > 0 ? 'xcoin-gain' : cents < 0 ? 'xcoin-loss' : 'xcoin-even';
 const gamblingSignedMoney = cents => `${cents > 0 ? '+' : cents < 0 ? '−' : ''}${gamblingMoney(Math.abs(cents))}`;
 function renderGamblingChart() {
@@ -641,8 +657,18 @@ function addGamblingEntry(direction, amount, note, opening = false) {
 function gamblingSwipeRow(entry, content, label) {
   return `<div class="shift-swipe-row xcoin-swipe-row" data-swipe-direction="left" data-action-width="64" tabindex="0" role="group" aria-label="${esc(`${label}. Swipe left to reveal Delete.`)}"><div class="shift-row-actions" aria-hidden="true" inert><button type="button" class="shift-row-delete" data-delete="gambling" data-id="${esc(entry.id)}" aria-label="${esc(`Delete ${label}`)}">Delete</button></div><div class="shift-swipe-content">${content}</div></div>`;
 }
+function gamblingTransactionRow(entry) {
+  const incoming = entry.amountCents > 0;
+  const label = entry.note || (incoming ? 'In' : 'Out');
+  return gamblingSwipeRow(entry, `<article class="record-row">
+    <span class="record-icon${incoming ? '' : ' expense-icon'}" aria-hidden="true">${incoming ? '＋' : '−'}</span>
+    <div class="record-main"><strong>${esc(label)}</strong><span>${longDate(entry.date)}</span></div>
+    <div class="record-amount${incoming ? '' : ' expense-amount'}">${incoming ? '+' : '−'}${gamblingMoney(Math.abs(entry.amountCents))}</div>
+  </article>`, label);
+}
 function renderGambling() {
-  const period = selectedGamblingPeriod || dateKey().slice(0, 7);
+  const today = dateKey();
+  const period = selectedGamblingPeriod || today.slice(0, 7);
   const [year, month] = period.split('-');
   const currentYear = new Date().getFullYear();
   const years = new Set(Array.from({ length: 21 }, (_, index) => currentYear - 10 + index));
@@ -661,16 +687,21 @@ function renderGambling() {
   $('#gambling-month-direction').textContent = monthly.cents < 0 ? 'out' : 'in';
   $('#gambling-month-amount').textContent = gamblingMoney(Math.abs(monthly.cents));
   $('#gambling-balance-month').textContent = `${monthly.label.toUpperCase()} ${monthly.year}`;
+  const daily = gamblingTodayTotals(state.gamblingEntries, today);
+  $('#xcoin-today-date').textContent = longDate(today);
+  $('#xcoin-today-in').textContent = gamblingMoney(daily.incoming);
+  $('#xcoin-today-out').textContent = gamblingMoney(daily.outgoing);
   renderGamblingChart();
-  const entries = [...state.gamblingEntries].filter(entry => entry.kind !== 'opening' && entry.date?.startsWith(`${period}-`)).reverse().sort((a, b) => b.date.localeCompare(a.date));
-  const transactions = entries.length ? entries.map(entry => {
-    const incoming = entry.amountCents > 0;
-    const label = entry.note || (incoming ? 'In' : 'Out');
-    return gamblingSwipeRow(entry, `<article class="record-row">
-      <span class="record-icon${incoming ? '' : ' expense-icon'}" aria-hidden="true">${incoming ? '＋' : '−'}</span>
-      <div class="record-main"><strong>${esc(label)}</strong><span>${longDate(entry.date)}</span></div>
-      <div class="record-amount${incoming ? '' : ' expense-amount'}">${incoming ? '+' : '−'}${gamblingMoney(Math.abs(entry.amountCents))}</div>
-    </article>`, label);
+  const days = gamblingDailyGroups(state.gamblingEntries, today, period);
+  const transactions = days.length ? days.map(day => {
+    const rows = day.entries.map(gamblingTransactionRow).join('');
+    if (!day.closed) return `<section class="xcoin-live-day" aria-label="${esc(day.date === today ? 'Today’s transactions' : longDate(day.date))}">
+      <h3 class="xcoin-day-label">${day.date === today ? 'Today' : longDate(day.date)}</h3>${rows}</section>`;
+    return `<details class="xcoin-day-history">
+      <summary><span class="xcoin-day-main"><strong>${longDate(day.date)}</strong><span>In ${gamblingMoney(day.totals.incoming)} · Out ${gamblingMoney(day.totals.outgoing)}</span></span>
+        <span class="xcoin-day-result"><strong class="${gamblingResultClass(day.totals.balance)}">${gamblingSignedMoney(day.totals.balance)}</strong><small>${day.entries.length} ${day.entries.length === 1 ? 'entry' : 'entries'} <span class="xcoin-day-chevron" aria-hidden="true">⌄</span></small></span></summary>
+      <div class="xcoin-day-entries">${rows}</div>
+    </details>`;
   }).join('') : empty('No entries for this month', 'Choose another month or use + or − to log an entry for today.', '↕');
   $('#gambling-transactions').innerHTML = transactions;
 }
