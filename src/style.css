@@ -607,3 +607,15 @@ button:disabled{cursor:default;opacity:.6}
 .home-wish{grid-template-columns:minmax(0,1fr)}
 .home-wish .wish-compact{min-height:0;padding:12px 14px}
 .home-wish .wish-compact h3{flex:1;min-width:0;margin:0;font-size:15px;overflow-wrap:anywhere}
+
+/* The expanded profile menu shares a single dark surface with the header. */
+.topbar{position:relative}
+.topbar.account-menu-open{z-index:21}
+.topbar.account-menu-open::before{content:'';position:absolute;z-index:-1;inset:3px -12px -1px;background:var(--deep);border-radius:23px 23px 0 0}
+.topbar.account-menu-open .wordmark{color:#fff}
+.topbar.account-menu-open .today-pill{color:#fff}
+.topbar.account-menu-open .account-open{background:var(--orange);color:#fff}
+.topbar.account-menu-open .account-menu{position:static}
+.topbar.account-menu-open .account-dropdown{top:calc(100% - 1px);right:-12px;left:-12px;width:auto;max-width:none;padding:8px 12px 14px;border:0;border-radius:0 0 23px 23px;animation:none}
+.topbar.account-menu-open .account-dropdown button{background:#ffffff0d;margin:0 0 6px}
+.topbar.account-menu-open .account-dropdown button:hover{background:#ffffff1c}

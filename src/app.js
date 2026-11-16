@@ -1064,6 +1064,7 @@ function setAccountMenuOpen(open) {
     return;
   }
   $('#account-dropdown').hidden = !open;
+  document.querySelector('.topbar').classList.toggle('account-menu-open', open);
   $('#account-open').setAttribute('aria-expanded', String(open));
 }
 const accountMenu = $('#account-menu');
