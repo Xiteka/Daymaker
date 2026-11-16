@@ -70,8 +70,10 @@ const shiftIsComplete = shift => shift.completed !== false;
 const esc = value => String(value ?? '').replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
 const persist = () => {
   try {
-    if (window.DaymakerCloud) window.DaymakerCloud.save(state);
-    else localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    const compacted = window.DaymakerXCoinStorage.compactDocument(state);
+    if (window.DaymakerCloud) window.DaymakerCloud.save(compacted);
+    else localStorage.setItem(STORAGE_KEY, JSON.stringify(compacted));
+    state = compacted;
   } catch (error) {
     render();
     toast(error.message || 'Could not save on this device. Download a backup before closing the app.');
@@ -80,6 +82,18 @@ const persist = () => {
   render();
   return true;
 };
+// Compact on initial load, incoming sync data and local-day rollover, then persist it.
+function renderWithXCoinStorage() {
+  try {
+    if (window.DaymakerXCoinStorage.compactDocument(state) !== state) return persist();
+  } catch (error) {
+    render();
+    toast(error.message);
+    return false;
+  }
+  render();
+  return true;
+}
 const empty = (title, hint, symbol = '✳') => `<div class="empty-state"><span>${symbol}</span><strong>${title}</strong><p>${hint}</p></div>`;
 let toastTimer;
 function toast(message) {
@@ -570,7 +584,10 @@ function gamblingTotals(entries) {
   return entries.reduce((totals, entry) => {
     if (!Number.isSafeInteger(entry.amountCents)) return totals;
     totals.balance += entry.amountCents;
-    if (entry.amountCents > 0) totals.incoming += entry.amountCents;
+    if (entry.kind === 'daily') {
+      totals.incoming += entry.inCents;
+      totals.outgoing += entry.outCents;
+    } else if (entry.amountCents > 0) totals.incoming += entry.amountCents;
     else totals.outgoing -= entry.amountCents;
     return totals;
   }, { balance: 0, incoming: 0, outgoing: 0 });
@@ -663,11 +680,12 @@ function gamblingSwipeRow(entry, content, label, type = 'gambling') {
 }
 function gamblingTransactionRow(entry) {
   const incoming = entry.amountCents > 0;
-  const label = entry.note || (incoming ? 'In' : 'Out');
+  const outgoing = entry.amountCents < 0;
+  const label = entry.kind === 'daily' ? 'Daily result' : entry.note || (incoming ? 'In' : 'Out');
   return gamblingSwipeRow(entry, `<article class="record-row">
-    <span class="record-icon${incoming ? '' : ' expense-icon'}" aria-hidden="true">${incoming ? '＋' : '−'}</span>
+    <span class="record-icon${outgoing ? ' expense-icon' : ''}" aria-hidden="true">${incoming ? '＋' : outgoing ? '−' : '↕'}</span>
     <div class="record-main"><strong>${esc(label)}</strong><span>${longDate(entry.date)}</span></div>
-    <div class="record-amount${incoming ? '' : ' expense-amount'}">${incoming ? '+' : '−'}${gamblingMoney(Math.abs(entry.amountCents))}</div>
+    <div class="record-amount${outgoing ? ' expense-amount' : ''}">${gamblingSignedMoney(entry.amountCents)}</div>
   </article>`, label);
 }
 function renderGambling() {
@@ -1558,7 +1576,7 @@ $('#saving-form').addEventListener('submit', event => {
 });
 
 $('#date-stamp').textContent = new Date().toLocaleDateString('en-GB', { month: 'short', year: 'numeric' }).toUpperCase();
-render();
+renderWithXCoinStorage();
 function openWorkReminder(date) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date || '')) return;
   const parsed = new Date(`${date}T12:00:00`);
@@ -1596,7 +1614,7 @@ dismissAppLoader();
 
 if (window.DaymakerCloud) void window.DaymakerCloud.start({
   read: () => state,
-  replace: document => { state = { ...fresh(), ...document }; render(); },
+  replace: document => { state = { ...fresh(), ...document }; renderWithXCoinStorage(); },
   closeEditors: () => { document.querySelectorAll('dialog[open]').forEach(dialog => dialog.close()); },
   openAccount: () => showPage('account', true),
   openAccountMenu: () => setAccountMenuOpen($('#account-dropdown').hidden),
@@ -1619,7 +1637,7 @@ function refreshForNewDay() {
     calendarDay = null;
   }
   resetSwipe();
-  render();
+  renderWithXCoinStorage();
 }
 function scheduleDayRefresh() {
   clearTimeout(midnightTimer);

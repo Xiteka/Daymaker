@@ -44,3 +44,14 @@ Run `work-reminders.sql`, deploy `functions/daymaker-work-reminders/index.ts` wi
 Users enable reminders on each iPhone from Account. The browser stores its opt-in state in IndexedDB and unsubscribes when reminders are disabled or the account signs out. The sender uses the timezone captured at opt-in and current, synced, unfinished shifts. It checks each minute for starts 60 minutes away, retries at most three times inside a five-minute delivery window, and uses delivery claims and notification tags to suppress duplicates. Completed shifts and friends' calendars are excluded.
 
 A real iPhone must grant notification permission and receive the optional test notification to verify device delivery.
+
+
+## X-Coin daily storage
+
+The active `gamblingEntries` collection now compacts each closed local day into one `kind: "daily"` record. The summary stores the date, net amount and aggregate In/Out cents. Individual transaction notes and per-entry amount objects are discarded. A sorted list of original record IDs remains solely to prevent older-device or guest-import replays from counting the same money twice.
+
+Compaction runs when the updated app loads, on local-day rollover while it is open, and before local/account saves and account sync. A closed app completes the catch-up next time it opens and syncs. Today's individual transactions, the previous-total opening record, future-dated records and all other app collections are preserved. The original device backup and existing database backup snapshots are not purged.
+
+The cloud save compares against the actual stored document so an already-normalized screen still writes the compact representation to Supabase. Existing JSON document storage accepts daily records; no SQL migration is required. Simultaneous conflicting changes to the same daily result use the existing sync-conflict flow. Unrecognized/unsafe daily records stop compaction instead of guessing totals.
+
+Run `npm test` for compaction and cloud-sync regression checks, including rollover, replay deduplication, offline saves, revision retries and edits made during a request. These checks use fictional in-memory records and do not contact Supabase.

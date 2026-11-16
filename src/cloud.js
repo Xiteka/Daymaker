@@ -18,7 +18,7 @@
     for (const name of COLLECTIONS) {
       if (!Array.isArray(value[name]) || value[name].some(item => !item || typeof item.id !== 'string')) throw new Error('A saved record needs attention. Download a backup before continuing.');
     }
-    return value;
+    return window.DaymakerXCoinStorage.compactDocument(value);
   };
   let owner = localStorage.getItem(ACTIVE);
   let client = null;
@@ -60,7 +60,7 @@
       for (const id of ids) {
         const values = maps.map(map => map.get(id));
         const item = values[1] || values[2] || values[0];
-        const chosen = choose(...values, item.title || item.note || item.name || (key === 'shifts' ? `Shift ${item.date}` : key));
+        const chosen = choose(...values, item.title || item.note || item.name || (key === 'shifts' ? `Shift ${item.date}` : key === 'gamblingEntries' ? `X-Coin ${item.date}` : key));
         if (chosen !== undefined) result[key].push(copy(chosen));
       }
     }
@@ -117,6 +117,7 @@
     return cache ? cache.local : readJSON(LEGACY) || defaults();
   }
   function save(document) {
+    document = normalize(document);
     // A sign-out in another tab must not direct a stale account edit into guest storage.
     if (localStorage.getItem(ACTIVE) !== owner) throw new Error('The account changed in another tab. Reopen Daymaker before editing.');
     if (owner) {
@@ -193,8 +194,9 @@
         if (readError) throw readError;
         if (owner !== id || session?.user.id !== id) return;
         const cache = cacheFor(id);
-        const captured = copy(cache.local);
-        const remote = normalize(remoteRow?.document || defaults());
+        const captured = normalize(copy(cache.local));
+        const storedRemote = remoteRow?.document || defaults();
+        const remote = normalize(storedRemote);
         const revision = remoteRow?.revision || 0;
         const choiceValid = resolution && resolution.revision === revision && same(resolution.local, captured);
         const merged = merge(cache.base, captured, remote, choiceValid ? resolution.choice : undefined);
@@ -210,7 +212,7 @@
         await uploadBackups(id);
         if (owner !== id) return;
         let result = { saved: true, document: remote, revision };
-        if (!remoteRow || !same(merged.document, remote)) {
+        if (!remoteRow || !same(merged.document, storedRemote)) {
           const { data, error } = await client.rpc('daymaker_save', { p_expected_revision: revision, p_document: merged.document });
           if (error) throw error;
           result = data;
