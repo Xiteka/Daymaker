@@ -1,7 +1,8 @@
 importScripts('./reminder-device.js?v=1');
-const CACHE_NAME = 'daymaker-shell-v119';
+const CACHE_NAME = 'daymaker-shell-v120';
 const SHELL = [
-  './', './index.html', './style.css?v=99', './app.js?v=81', './xcoin-storage.js?v=1', './cloud.js?v=11', './friends.js?v=4', './supabase-config.js?v=1', './reminder-device.js?v=1', './reminders.js?v=2', './vendor/supabase-2.119.0.js', './manifest.webmanifest?v=4',
+  './', './index.html', './style.css?v=100', './app.js?v=81', './xcoin-storage.js?v=1', './cloud.js?v=11', './friends.js?v=4', './supabase-config.js?v=1', './reminder-device.js?v=1', './reminders.js?v=2', './vendor/supabase-2.119.0.js', './manifest.webmanifest?v=4',
+  './images/loader-mountain.jpg',
   './icons/daymaker-spark.svg', './icons/daymaker-spark-180.png', './icons/daymaker-spark-192.png', './icons/daymaker-spark-512.png', './icons/daymaker-spark-maskable-512.png'
 ];
 
