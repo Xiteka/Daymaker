@@ -628,16 +628,3 @@ button:disabled{cursor:default;opacity:.6}
 
 @media(max-width:699px){.topbar.account-menu-open::before{top:8px}}
 @media(min-width:700px){.topbar.account-menu-open::before,.topbar.account-menu-open .account-dropdown{border-radius:0}}
-
-/* Orange, softly lit launch screen. */
-.app-loader{background:radial-gradient(ellipse 80% 75% at 7% 12%,#fff0db 0%,#ffc18e 36%,transparent 74%),radial-gradient(ellipse 85% 80% at 20% 80%,#fa8a53 0%,#d9421f 53%,transparent 83%),linear-gradient(135deg,#f8b486 0%,#e8582d 43%,#641909 100%)}
-.app-loader-brand{transform:none}
-.app-loader-mark{width:min(58vw,240px);height:auto;margin:0;background:none;border-radius:0;overflow:visible}
-.app-loader-star{transform-box:fill-box;transform-origin:center;animation:daymaker-star-spin .45s linear 3 both}
-@keyframes daymaker-star-spin{0%,100%{transform:scaleX(1);opacity:1}25%,75%{transform:scaleX(.08);opacity:.75}50%{transform:scaleX(-1);opacity:1}}
-@media(prefers-reduced-motion:reduce){.app-loader-star{animation:none}}
-
-/* Fine ridges over warm light create the launch screen's abstract texture. */
-.app-loader{background:repeating-linear-gradient(90deg,rgba(0,0,0,.8) 0px,rgba(0,0,0,.25) 2px,rgba(255,131,51,.10) 3px,rgba(0,0,0,.38) 5px,rgba(0,0,0,.84) 7px),radial-gradient(ellipse 34% 39% at 50% 48%,#ff7024 0%,#e6430c 25%,transparent 72%),radial-gradient(ellipse 42% 22% at 39% 19%,#db430f 0%,transparent 70%),radial-gradient(ellipse 45% 18% at 87% 80%,#fa5112 0%,transparent 75%),radial-gradient(ellipse 45% 22% at 38% 91%,#a02d0b 0%,transparent 70%),#090403}
-.app-loader-brand{display:grid;place-items:center;width:min(84vw,340px);min-height:240px;padding:26px;border-radius:28px;background:rgba(24,27,25,.94);box-shadow:0 18px 48px #0004}
-.app-loader-mark{width:min(42vw,190px);max-width:100%;height:auto}

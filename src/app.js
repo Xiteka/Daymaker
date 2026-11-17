@@ -1658,7 +1658,7 @@ function dismissAppLoader() {
   const loader = $('#app-loader');
   const app = $('.app-shell');
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const remaining = Math.max(0, (reduceMotion ? 0 : 1500) - performance.now());
+  const remaining = Math.max(0, (reduceMotion ? 0 : 700) - performance.now());
   window.setTimeout(() => {
     document.body.classList.remove('app-loading');
     app.inert = false;
