@@ -512,7 +512,7 @@ for (const picker of workPeriodPickers) {
     if (!choice) return;
     const today = dateKey();
     const isWork = picker === workShiftMonth || picker === workShiftYear;
-    const [year, month] = ((isWork ? selectedWorkPeriod : selectedGamblingPeriod) || today.slice(0, 7)).split('-');
+    const [year, month] = ((isWork ? selectedWorkPeriod : selectedGamblingPeriod) || (isWork ? today : window.DaymakerXCoinStorage.xcoinDay()).slice(0, 7)).split('-');
     const value = choice.dataset.periodValue;
     const period = picker === workShiftMonth || picker === gamblingMonth ? `${year}-${value}` : `${value}-${month}`;
     if (isWork) selectedWorkPeriod = period;
@@ -624,7 +624,7 @@ function gamblingMonthlyResults(entries, through = new Date()) {
   }
   return months;
 }
-// Daily history is a view over original entries; never merge or discard saved records.
+// Group the current X-Coin day and closed daily results for display.
 function gamblingDailyGroups(entries, today, period) {
   const days = new Map();
   for (const entry of [...entries].reverse()) {
@@ -643,7 +643,7 @@ function gamblingTodayTotals(entries, today) {
 const gamblingResultClass = cents => cents > 0 ? 'xcoin-gain' : cents < 0 ? 'xcoin-loss' : 'xcoin-even';
 const gamblingSignedMoney = cents => `${cents > 0 ? '+' : cents < 0 ? '−' : ''}${gamblingMoney(Math.abs(cents))}`;
 function renderGamblingChart() {
-  const months = gamblingMonthlyResults(state.gamblingEntries);
+  const months = gamblingMonthlyResults(state.gamblingEntries, new Date(`${window.DaymakerXCoinStorage.xcoinDay()}T12:00:00`));
   const current = months[months.length - 1];
   $('#xcoin-current-month').textContent = current.label;
   const net = $('#xcoin-month-net');
@@ -680,7 +680,7 @@ function addGamblingEntry(direction, amount, note, opening = false) {
     gamblingEntries: [...entries, {
       ...(previousOpening || {}),
       id: opening ? previousOpening?.id || 'xcoin-opening-balance-v1' : crypto.randomUUID(),
-      date: previousOpening?.date || dateKey(), amountCents: direction * cents,
+      date: previousOpening?.date || window.DaymakerXCoinStorage.xcoinDay(), amountCents: direction * cents,
       note: opening ? 'Previous total' : String(note || '').trim().slice(0, 60),
       ...(opening ? { kind: 'opening' } : {})
     }]
@@ -704,7 +704,7 @@ function gamblingTransactionRow(entry) {
   </article>`, label);
 }
 function renderGambling() {
-  const today = dateKey();
+  const today = window.DaymakerXCoinStorage.xcoinDay();
   const period = selectedGamblingPeriod || today.slice(0, 7);
   const [year, month] = period.split('-');
   const currentYear = new Date().getFullYear();
@@ -717,7 +717,7 @@ function renderGambling() {
   renderWorkPeriodPicker(gamblingYear, [...years].sort((a, b) => a - b).map(value => ({ value: String(value), label: String(value) })), year);
   const totals = gamblingTotals(state.gamblingEntries);
   renderDotValue($('#gambling-balance'), gamblingDotNumber(totals.balance), gamblingMoney(totals.balance), 'kr', 'balance');
-  const monthly = gamblingMonthlyResults(state.gamblingEntries)[5];
+  const monthly = gamblingMonthlyResults(state.gamblingEntries, new Date(`${today}T12:00:00`))[5];
   $('#gambling-month-direction').textContent = monthly.cents < 0 ? 'out' : 'in';
   $('#gambling-month-amount').textContent = gamblingMoney(Math.abs(monthly.cents));
   $('#gambling-balance-month').textContent = `${monthly.label.toUpperCase()} ${monthly.year}`;
@@ -1541,7 +1541,7 @@ function requestDelete(button) {
   const type = button.dataset.delete;
   if (type === 'gambling-day') {
     const date = button.dataset.id;
-    const entries = state.gamblingEntries.filter(entry => entry.kind !== 'opening' && entry.date === date && date < dateKey());
+    const entries = state.gamblingEntries.filter(entry => entry.kind !== 'opening' && entry.date === date && date < window.DaymakerXCoinStorage.xcoinDay());
     if (!entries.length) return;
     pendingDelete = { type, ids: entries.map(entry => entry.id) };
     $('#delete-confirm-title').textContent = 'Delete this day’s result?';
@@ -1683,10 +1683,13 @@ if (window.DaymakerCloud) void window.DaymakerCloud.start({
 }).catch(() => toast('Cloud login could not start. Your device data is still kept here.'));
 
 let currentAppDay = dateKey();
+let currentXCoinDay = window.DaymakerXCoinStorage.xcoinDay();
 let midnightTimer;
 function refreshForNewDay() {
   const today = dateKey();
-  if (today === currentAppDay) return;
+  const xcoinToday = window.DaymakerXCoinStorage.xcoinDay();
+  if (today === currentAppDay && xcoinToday === currentXCoinDay) return;
+  currentXCoinDay = xcoinToday;
   const previousMonth = currentAppDay.slice(0, 7);
   currentAppDay = today;
   if (dateKey(calendarMonth).slice(0, 7) === previousMonth && today.slice(0, 7) !== previousMonth) {
@@ -1701,7 +1704,9 @@ function scheduleDayRefresh() {
   clearTimeout(midnightTimer);
   const now = new Date();
   const nextDay = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
-  midnightTimer = setTimeout(() => { refreshForNewDay(); scheduleDayRefresh(); }, nextDay - now + 100);
+  const nextXCoinDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 6);
+  if (nextXCoinDay <= now) nextXCoinDay.setDate(nextXCoinDay.getDate() + 1);
+  midnightTimer = setTimeout(() => { refreshForNewDay(); scheduleDayRefresh(); }, Math.min(nextDay - now, nextXCoinDay - now) + 100);
 }
 document.addEventListener('visibilitychange', () => {
   if (!document.hidden) { refreshForNewDay(); scheduleDayRefresh(); }

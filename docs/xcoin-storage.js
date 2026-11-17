@@ -2,6 +2,11 @@
 (() => {
   'use strict';
   const dayKey = date => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+  function xcoinDay(date = new Date()) {
+    const local = new Date(date.getTime());
+    if (local.getHours() < 6) local.setDate(local.getDate() - 1);
+    return dayKey(local);
+  }
   const validDate = value => typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value)
     && dayKey(new Date(`${value}T12:00:00`)) === value;
   const add = (a, b) => {
@@ -9,7 +14,7 @@
     if (!Number.isSafeInteger(value)) throw new Error('An X-Coin total is too large to compact safely. Your entries have been kept.');
     return value;
   };
-  function compactEntries(entries, today = dayKey(new Date())) {
+  function compactEntries(entries, today = xcoinDay()) {
     if (!Array.isArray(entries) || !validDate(today)) throw new Error('X-Coin storage could not be checked. Your entries have been kept.');
     const days = new Map();
     for (const entry of entries) {
@@ -60,5 +65,5 @@
     const entries = compactEntries(document.gamblingEntries || [], today);
     return entries === document.gamblingEntries ? document : { ...document, gamblingEntries: entries };
   }
-  window.DaymakerXCoinStorage = Object.freeze({ compactEntries, compactDocument });
+  window.DaymakerXCoinStorage = Object.freeze({ compactEntries, compactDocument, xcoinDay });
 })();

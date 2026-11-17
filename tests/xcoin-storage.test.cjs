@@ -66,3 +66,17 @@ test('app balances, In/Out totals, charts and zero-result rows accept daily reco
  assert.deepEqual(clean(api.gamblingTodayTotals(after,day)),{balance:60000,incoming:80000,outgoing:20000});
  const row=api.gamblingTransactionRow({id:'zero',kind:'daily',date:day,amountCents:0,inCents:100,outCents:100,sourceIds:['a','b']});assert.match(row,/Daily result/);assert.ok(!row.includes('−0,00'));assert.ok(!row.includes('expense-amount'));
 });
+
+
+test('X-Coin day changes at 06:00 local time, including month and year boundaries',()=>{
+ const {xcoinDay}=ctx.window.DaymakerXCoinStorage;
+ assert.equal(xcoinDay(new Date(2026,10,17,0,0)), '2026-11-16');
+ assert.equal(xcoinDay(new Date(2026,10,17,5,59)), '2026-11-16');
+ assert.equal(xcoinDay(new Date(2026,10,17,6,0)), '2026-11-17');
+ assert.equal(xcoinDay(new Date(2027,0,1,5,59)), '2026-12-31');
+ assert.equal(xcoinDay(new Date(2027,0,1,6,0)), '2027-01-01');
+ const entries=[entry('late','2026-11-16',100),entry('later','2026-11-16',-30)];
+ assert.equal(compactEntries(entries,xcoinDay(new Date(2026,10,17,5,59))),entries);
+ const compacted=compactEntries(entries,xcoinDay(new Date(2026,10,17,6,0)));
+ assert.equal(compacted.length,1);assert.equal(compacted[0].amountCents,70);
+});
