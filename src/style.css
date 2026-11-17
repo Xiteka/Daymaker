@@ -628,3 +628,11 @@ button:disabled{cursor:default;opacity:.6}
 
 @media(max-width:699px){.topbar.account-menu-open::before{top:8px}}
 @media(min-width:700px){.topbar.account-menu-open::before,.topbar.account-menu-open .account-dropdown{border-radius:0}}
+
+/* Orange, softly lit launch screen. */
+.app-loader{background:radial-gradient(ellipse 80% 75% at 7% 12%,#fff0db 0%,#ffc18e 36%,transparent 74%),radial-gradient(ellipse 85% 80% at 20% 80%,#fa8a53 0%,#d9421f 53%,transparent 83%),linear-gradient(135deg,#f8b486 0%,#e8582d 43%,#641909 100%)}
+.app-loader-brand{transform:none}
+.app-loader-mark{width:min(58vw,240px);height:auto;margin:0;background:none;border-radius:0;overflow:visible}
+.app-loader-star{transform-box:fill-box;transform-origin:center;animation:daymaker-star-spin 1.35s cubic-bezier(.45,0,.2,1) both}
+@keyframes daymaker-star-spin{0%{transform:perspective(300px) rotateY(0deg)}100%{transform:perspective(300px) rotateY(720deg)}}
+@media(prefers-reduced-motion:reduce){.app-loader-star{animation:none}}
