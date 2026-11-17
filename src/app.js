@@ -659,7 +659,7 @@ function renderGamblingChart() {
     const signY = y - 6;
     return `<g class="${gamblingResultClass(month.cents)}">
       <title>${esc(`${month.fullLabel}: ${gamblingSignedMoney(month.cents)}`)}</title>
-      ${height ? `<rect x="${x - 13}" y="${y}" width="26" height="${height}" rx="6" fill="currentColor"/><text x="${x}" y="${signY}" text-anchor="middle" fill="currentColor" class="xcoin-chart-sign">${month.cents > 0 ? '+' : '−'}</text>` : `<line x1="${x - 8}" x2="${x + 8}" y1="${baseline}" y2="${baseline}" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>`}
+      ${height ? `<rect x="${x - 13}" y="${y}" width="26" height="${height}" rx="6" fill="currentColor"/><text x="${x}" y="${signY}" text-anchor="middle" fill="currentColor" class="xcoin-chart-sign">${month.cents > 0 ? '+' : '−'}</text>` : ''}
     </g>`;
   }).join('');
   $('#xcoin-monthly-chart').innerHTML = `<svg viewBox="0 0 300 100" role="img" aria-label="${esc(`Monthly net results. ${description}`)}"><line x1="0" x2="300" y1="${baseline}" y2="${baseline}" stroke="#ffffff24"/>${bars}</svg>
@@ -698,7 +698,7 @@ function gamblingTransactionRow(entry) {
   const outgoing = entry.amountCents < 0;
   const label = entry.kind === 'daily' ? 'Daily result' : entry.note || (incoming ? 'In' : 'Out');
   return gamblingSwipeRow(entry, `<article class="record-row">
-    <span class="record-icon${outgoing ? ' expense-icon' : ''}" aria-hidden="true">${incoming ? '＋' : outgoing ? '−' : '↕'}</span>
+    ${incoming || outgoing ? `<span class="record-icon${outgoing ? ' expense-icon' : ''}" aria-hidden="true">${incoming ? '＋' : '−'}</span>` : ''}
     <div class="record-main"><strong>${esc(label)}</strong><span>${longDate(entry.date)}</span></div>
     <div class="record-amount${outgoing ? ' expense-amount' : ''}">${gamblingSignedMoney(entry.amountCents)}</div>
   </article>`, label);
